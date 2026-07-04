@@ -8,12 +8,15 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class Book {
     @Id
     @Column(name = "book_id")
@@ -42,4 +45,16 @@ public class Book {
 
     @Column(name = "is_delete")
     private boolean isDelete;
+
+    @Column(name = "url_image")
+    private String urlImg;
+
+    @Column(name = "avg_rating")
+    private float avgRating;
+
+    @Column(name = "cnt_review")
+    private int cntReview;
+
+    @Column(name = "buy_count")
+    private int buyCount;
 }
