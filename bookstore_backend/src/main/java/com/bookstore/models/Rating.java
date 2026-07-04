@@ -8,28 +8,29 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-
+import jakarta.persistence.OneToOne;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "book_genre")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class BookGenre {
+public class Rating {
     @Id
-    @Column(name = "book_genre_id")
+    @Column(name = "rating_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int bookGenreId;
+    private int ratingId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "book_id", nullable = false)
     private Book book;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "genre_id", nullable = false)
-    private Genre genre;
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    @Column(name = "rating_value")
+    private int ratingValue;
 }
