@@ -19,7 +19,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class Book {
     @Id
-    @Column(name = "book_id")
+    @Column(name = "book_id", nullable = false)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int bookId;
 
@@ -52,8 +52,8 @@ public class Book {
     @Column(name = "avg_rating")
     private float avgRating;
 
-    @Column(name = "cnt_review")
-    private int cntReview;
+    @Column(name = "cnt_rating")
+    private int cntRating;
 
     @Column(name = "buy_count")
     private int buyCount;
