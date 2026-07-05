@@ -57,4 +57,7 @@ public class Book {
 
     @Column(name = "buy_count")
     private int buyCount;
+
+    @Column(name = "public_id")
+    private String publicId;
 }
