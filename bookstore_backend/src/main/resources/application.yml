@@ -1,3 +1,34 @@
 spring:
   application:
     name: bookstore
+
+  config:
+    import: "optional:file:.env[.properties]"
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres}
+    username: ${DB_USERNAME:postgres.djzbiljtmmfyawnhqwbq}
+    password: ${DB_PASSWORD:E,!kA@x65J?377f}
+    driver-class-name: org.postgresql.Driver
+
+  
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      idle-timeout: 30000
+      connection-timeout: 30000
+      max-lifetime: 600000
+      data-source-properties:
+        sslmode: require
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+server:
+  port: 8080

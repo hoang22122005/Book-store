@@ -33,7 +33,7 @@ public class Book {
     private String publisher;
     
     @Column(name = "publish_year")
-    private String publishYear;
+    private Integer publishYear;
 
     private BigDecimal price;
 
@@ -43,8 +43,8 @@ public class Book {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
-    @Column(name = "is_delete")
-    private boolean isDelete;
+    @Column(name = "is_deleted")
+    private boolean isDeleted;
 
     @Column(name = "url_image")
     private String urlImg;

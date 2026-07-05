@@ -1,9 +1,12 @@
 package com.bookstore.models;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -16,13 +19,14 @@ import lombok.NoArgsConstructor;
 public class User {
     @Id
     @Column(name = "user_id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int userId;
 
     private String name;
     private String email;
     private String role;
     private String address;
-    private LocalDateTime dob;
+    private LocalDate dob;
     private String phone;
     private String gender;
     private String career;
