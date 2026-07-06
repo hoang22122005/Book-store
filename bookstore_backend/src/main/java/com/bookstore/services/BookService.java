@@ -17,7 +17,7 @@ public interface BookService {
     PageResponse<BookResponse> getBooks(String keyword, String author, Integer categoryId,
                                         BigDecimal minPrice, BigDecimal maxPrice, Pageable pageable);
     BookResponse getBookDetail(int bookId);
-    boolean deleteBook(int bookId);
-    BookResponse updateBook(Book book, MultipartFile imgFile) throws IOException;
+    void deleteBook(int bookId);
+    BookResponse updateBook(int bookId, Book book, MultipartFile imgFile) throws IOException;
     BookResponse addBook(Book book, MultipartFile imgFile) throws IOException;
 }

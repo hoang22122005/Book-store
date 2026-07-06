@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.bookstore.common.response.BookResponse;
 import com.bookstore.common.response.PageResponse;
 import com.bookstore.exception.BadRequestException;
+import com.bookstore.exception.ConflictException;
 import com.bookstore.exception.NotFoundException;
 import com.bookstore.models.Book;
 import com.bookstore.repository.BookRepo;
@@ -73,32 +74,33 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    public boolean deleteBook(int bookId) {
-        return bookRepo.softDeleteBook(bookId) == 1;
+    public void deleteBook(int bookId) {
+        Book book = bookRepo.findByBookIdAndIsDeletedFalse(bookId)
+                .orElseThrow(() -> new NotFoundException("Khong tim thay sach co ID: " + bookId));
+        bookRepo.softDeleteBook(book.getBookId());
     }
 
     @Override
-    public BookResponse updateBook(Book book, MultipartFile imgFile) throws IOException {
+    public BookResponse updateBook(int bookId, Book book, MultipartFile imgFile) throws IOException {
+        if (bookId != book.getBookId())
+            throw new ConflictException("ID sach khong dong bo voi api");
+
+        Book oldBook = bookRepo.findById(book.getBookId())
+                .orElseThrow(() -> new NotFoundException("Khong tim thay sach co ID: " + book.getBookId()));
+
         if (imgFile != null && !imgFile.isEmpty()) {
-            Book oldBook = bookRepo.findById(book.getBookId()).orElse(null);
-            if (oldBook == null) {
-                System.out.println("invalid book id");
-                return null;
-            }
-
             String oldPublicId = oldBook.getPublicId();
-            try {
-                cloudinary.uploader().destroy(oldPublicId, null);
-                Map<?, ?> uploadResult = cloudinary.uploader().upload(imgFile.getBytes(), ObjectUtils.emptyMap());
-                String secureUrl = uploadResult.get("secure_url").toString();
-                String publicId = uploadResult.get("public_id").toString();
 
-                book.setUrlImg(secureUrl);
-                book.setPublicId(publicId);
-            } catch (Exception e) {
-                e.printStackTrace();
-                return null;
-            }
+            cloudinary.uploader().destroy(oldPublicId, null);
+            Map<?, ?> uploadResult = cloudinary.uploader().upload(imgFile.getBytes(), ObjectUtils.emptyMap());
+            String secureUrl = uploadResult.get("secure_url").toString();
+            String publicId = uploadResult.get("public_id").toString();
+
+            book.setUrlImg(secureUrl);
+            book.setPublicId(publicId);
+        } else {
+            book.setUrlImg(oldBook.getUrlImg());
+            book.setPublicId(oldBook.getPublicId());
         }
 
         book.setCreatedAt(LocalDateTime.now());
@@ -106,26 +108,19 @@ public class BookServiceImpl implements BookService {
         return BookResponse.toBookResponse(bookRepo.save(book));
     }
 
+    @Override
     public BookResponse addBook(Book book, MultipartFile imgFile) throws IOException {
-        Book existingBook = bookRepo.findById(book.getBookId()).orElse(null);
-        if (existingBook == null) {
-            System.out.println("invalid book id");
-            return null;
-        }
+        if (book.getBookId() != 0 && bookRepo.existsById(book.getBookId()))
+            throw new ConflictException("da ton tai sach co ID: " + book.getBookId());
 
         book.setCreatedAt(LocalDateTime.now());
 
-        try {
-            Map<?, ?> uploadResult = cloudinary.uploader().upload(imgFile.getBytes(), ObjectUtils.emptyMap());
-            String secureUrl = uploadResult.get("secure_url").toString();
-            String publicId = uploadResult.get("public_id").toString();
+        Map<?, ?> uploadResult = cloudinary.uploader().upload(imgFile.getBytes(), ObjectUtils.emptyMap());
+        String secureUrl = uploadResult.get("secure_url").toString();
+        String publicId = uploadResult.get("public_id").toString();
 
-            book.setUrlImg(secureUrl);
-            book.setPublicId(publicId);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
+        book.setUrlImg(secureUrl);
+        book.setPublicId(publicId);
 
         return BookResponse.toBookResponse(bookRepo.save(book));
     }
@@ -155,4 +150,5 @@ public class BookServiceImpl implements BookService {
 
         return PageRequest.of(page, size, sort);
     }
+
 }
