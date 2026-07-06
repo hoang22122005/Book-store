@@ -31,8 +31,8 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void register(RegisterRequest req) {
-        //kiểm tra email tồn tại
-        if(userRepository.existsByEmail(req.getEmail())){
+        // kiểm tra email tồn tại
+        if (userRepository.existsByEmail(req.getEmail())) {
             throw new ConflictException("Email was existed");
         }
 
@@ -41,7 +41,7 @@ public class AuthServiceImpl implements AuthService {
         User user = User.builder()
                 .name(req.getName())
                 .email(req.getEmail())
-                .role("user")
+                .role(Role.USER.name().toLowerCase())
                 .address(req.getAddress())
                 .dob(req.getDob())
                 .phone(req.getPhone())
@@ -60,12 +60,11 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public AuthResponse login(LoginRequest req) {
-        //Tìm user theo email
+        // Tìm user theo email
         User user = userRepository.findByEmail(req.getEmail())
                 .orElseThrow(() -> new UnauthorizedException("Invalid email or password"));
 
-
-        //So sánh password
+        // So sánh password
         boolean isValidPass = passwordEncoder.matches(req.getPassword(), user.getPassword());
         if (!isValidPass) {
             throw new UnauthorizedException("Invalid email or password");
@@ -87,7 +86,6 @@ public class AuthServiceImpl implements AuthService {
                 .build();
         refreshTokenRepository.save(refreshTokenEntity);
 
-
         return AuthResponse.builder().accessToken(accessToken).refreshToken(refreshToken).build();
 
     }
@@ -101,6 +99,5 @@ public class AuthServiceImpl implements AuthService {
     public void logout(String refreshToken) {
 
     }
-
 
 }
