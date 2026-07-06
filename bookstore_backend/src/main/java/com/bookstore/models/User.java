@@ -3,16 +3,17 @@ package com.bookstore.models;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.bookstore.models.enums.Role;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
 
+@Builder
 @Entity
+@Table(name = "\"user\"")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -24,7 +25,10 @@ public class User {
 
     private String name;
     private String email;
+
+    //@Enumerated(EnumType.STRING)
     private String role;
+
     private String address;
     private LocalDate dob;
     private String phone;
@@ -32,6 +36,7 @@ public class User {
     private String career;
 
     @Column(name = "created_at")
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
     @Column(name = "is_deleted")
