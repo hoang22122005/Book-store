@@ -1,55 +1,18 @@
 package com.bookstore.services;
 
-import java.io.IOException;
-import java.time.LocalDateTime;
+import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
 
-import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Pageable;
 
+import com.bookstore.common.response.BookResponse;
+import com.bookstore.common.response.PageResponse;
 import com.bookstore.models.Book;
-import com.bookstore.repository.BookRepo;
-import com.cloudinary.Cloudinary;
 
-@Service
-public class BookService {
-    private BookRepo bookRepo;
-    private Cloudinary cloudinary;
-
-    public BookService(BookRepo bookRepo, Cloudinary cloudinary) {
-        this.bookRepo = bookRepo;
-        this.cloudinary = cloudinary;
-    }
-
-    public List<Book> getAllBooks() {
-        return bookRepo.findAll();
-    }
-
-    public void deleteBook(int bookId) {
-        bookRepo.deleteById(bookId);
-    }
-
-    public Book getBookById(int bookId) {
-        return bookRepo.findById(bookId).orElse(null);
-    }
-
-    public Book updateBook(Book book) throws IOException {
-        Optional<Book> oldBook = bookRepo.findById(book.getBookId());
-
-        if (oldBook.isPresent()) {
-            if (!oldBook.get().getPublicId().equals(book.getPublicId())) {
-                cloudinary.uploader().destroy(oldBook.get().getPublicId(), null);
-            }
-        }
-
-        book.setCreatedAt(LocalDateTime.now());
-
-        return bookRepo.save(book);
-    }
-
-    public Book addBook(Book book) {
-        book.setCreatedAt(LocalDateTime.now());
-        return bookRepo.save(book);
-    }
-
+public interface BookService {
+    List<Book> getAllBooks();
+    Book getBookById(int bookId);
+    PageResponse<BookResponse> getBooks(String keyword, String author, Integer categoryId,
+                                        BigDecimal minPrice, BigDecimal maxPrice, Pageable pageable);
+    BookResponse getBookDetail(int bookId);
 }

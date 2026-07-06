@@ -24,7 +24,7 @@ public class AuthController {
     public ResponseEntity<ApiResponse<AuthResponse>> register(
             @Valid @RequestBody RegisterRequest req){
         authService.register(req);
-        ApiResponse<AuthResponse> res = ApiResponse.success("Register successfully ");
+        ApiResponse<AuthResponse> res = ApiResponse.success("Register successfully ", null);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(res);
 
