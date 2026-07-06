@@ -3,15 +3,16 @@ spring:
     name: bookstore
 
   config:
-    import: "optional:file:.env[.properties]"
+    import:
+      - optional:file:.env[.properties]
+      - optional:file:bookstore_backend/.env[.properties]
 
   datasource:
-    url: ${DB_URL:jdbc:postgresql://aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres}
-    username: ${DB_USERNAME:postgres.djzbiljtmmfyawnhqwbq}
-    password: ${DB_PASSWORD:E,!kA@x65J?377f}
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
-  
     hikari:
       maximum-pool-size: 10
       minimum-idle: 2
@@ -29,6 +30,9 @@ spring:
     properties:
       hibernate:
         format_sql: true
+jwt:
+  secret-key: ${JWT_SECRET_KEY}
+  access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:900000} # 15 phút
 
 server:
   port: 8080

@@ -1,8 +1,11 @@
 package com.bookstore.controller;
 
 import java.io.IOException;
-import java.util.List;
+import java.math.BigDecimal;
 
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -15,26 +18,43 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.bookstore.common.response.BookResponse;
+import com.bookstore.common.response.PageResponse;
 import com.bookstore.models.Book;
-import com.bookstore.services.BookService;
+import com.bookstore.common.response.ApiResponse;
+import com.bookstore.services.impl.BookServiceImpl;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/public")
 public class BookController {
-    private BookService bookService;
+    private final BookServiceImpl bookService;
 
-    public BookController(BookService bookService) {
+    public BookController(BookServiceImpl bookService) {
         this.bookService = bookService;
     }
 
-    @GetMapping("/public/books")
-    public ResponseEntity<List<Book>> getAllBooks() {
-        return new ResponseEntity<>(bookService.getAllBooks(), HttpStatus.OK);
+    @GetMapping("/books")
+    public ResponseEntity<ApiResponse<PageResponse<BookResponse>>> getBooks(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String author,
+            @RequestParam(required = false) Integer categoryId,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @PageableDefault(size = 12, sort = "bookId", direction = Sort.Direction.DESC) Pageable pageable) {
+
+        PageResponse<BookResponse> books = bookService.getBooks(keyword, author, categoryId, minPrice, maxPrice, pageable);
+        return ResponseEntity.ok(ApiResponse.success("Books fetched successfully", books));
+    }
+
+    @GetMapping("/books/{bookId}")
+    public ResponseEntity<ApiResponse<BookResponse>> getBookById(@PathVariable int bookId) {
+        BookResponse book = bookService.getBookDetail(bookId);
+        return ResponseEntity.ok(ApiResponse.success("Book fetched successfully", book));
     }
 
     @PostMapping("/book")
     public ResponseEntity<?> addBook(@RequestParam Book book, @RequestParam MultipartFile imgFile) throws IOException {
-        Book result = bookService.addBook(book, imgFile);
+        BookResponse result = bookService.addBook(book, imgFile);
         if (result != null)
             return new ResponseEntity<>(result, HttpStatus.OK);
         return new ResponseEntity<>("Error in add book", HttpStatus.BAD_REQUEST);
@@ -46,7 +66,7 @@ public class BookController {
         if (book.getBookId() != bookId)
             return new ResponseEntity<>("invalid book id", HttpStatus.BAD_REQUEST);
 
-        Book result = bookService.updateBook(book, imgFile);
+        BookResponse result = bookService.updateBook(book, imgFile);
         if (result != null)
             return new ResponseEntity<>(result, HttpStatus.OK);
         return new ResponseEntity<>("Error in update book", HttpStatus.BAD_REQUEST);
