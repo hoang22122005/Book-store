@@ -7,10 +7,13 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.bookstore.models.Book;
+
+import jakarta.transaction.Transactional;
 
 public interface BookRepo extends JpaRepository<Book, Integer> {
     List<Book> findByIsDeletedFalse();
@@ -30,5 +33,12 @@ public interface BookRepo extends JpaRepository<Book, Integer> {
                            @Param("minPrice") BigDecimal minPrice,
                            @Param("maxPrice") BigDecimal maxPrice,
                            Pageable pageable);
+
+       @Modifying
+       @Transactional
+       @Query(value = """
+                     UPDATE book SET is_deleted = true WHERE book_id = ?1
+                     """, nativeQuery = true)
+       int softDeleteBook(int bookId);
 }
 

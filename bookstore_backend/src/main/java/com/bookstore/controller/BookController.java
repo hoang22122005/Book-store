@@ -1,47 +1,85 @@
 package com.bookstore.controller;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.bookstore.common.response.BookResponse;
 import com.bookstore.common.response.PageResponse;
+import com.bookstore.models.Book;
 import com.bookstore.common.response.ApiResponse;
 import com.bookstore.services.impl.BookServiceImpl;
 
+import lombok.RequiredArgsConstructor;
+
 @RestController
-@RequestMapping("/api/public")
+@RequestMapping("/api/")
+@RequiredArgsConstructor
 public class BookController {
     private final BookServiceImpl bookService;
 
-    public BookController(BookServiceImpl bookService) {
-        this.bookService = bookService;
-    }
-
-    @GetMapping("/books")
+    @GetMapping("/public/books")
     public ResponseEntity<ApiResponse<PageResponse<BookResponse>>> getBooks(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String author,
             @RequestParam(required = false) Integer categoryId,
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice,
-            @PageableDefault(size = 12, sort = "bookId", direction = Sort.Direction.DESC) Pageable pageable) {
+            @PageableDefault(size = 12, sort = "bookId", direction = Sort.Direction.ASC) Pageable pageable) {
 
-        PageResponse<BookResponse> books = bookService.getBooks(keyword, author, categoryId, minPrice, maxPrice, pageable);
+        PageResponse<BookResponse> books = bookService.getBooks(keyword, author, categoryId, minPrice, maxPrice,
+                pageable);
         return ResponseEntity.ok(ApiResponse.success("Books fetched successfully", books));
     }
 
-    @GetMapping("/books/{bookId}")
-    public ResponseEntity<ApiResponse<BookResponse>> getBookById(@PathVariable int bookId) {
+    @GetMapping("/public/books/{bookId}")
+    public ResponseEntity<ApiResponse<BookResponse>> getBookDetail(@PathVariable int bookId) {
         BookResponse book = bookService.getBookDetail(bookId);
         return ResponseEntity.ok(ApiResponse.success("Book fetched successfully", book));
+    }
+
+    @GetMapping("/books/{bookId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<Book>> getBookById(@PathVariable int bookId) {
+        Book book = bookService.getBookById(bookId);
+        return ResponseEntity.ok(ApiResponse.success("Book fetched successfully", book));
+    }
+
+    @PostMapping("/books")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<BookResponse>> addBook(@RequestPart Book book, @RequestPart MultipartFile imgFile)
+            throws IOException {
+        BookResponse result = bookService.addBook(book, imgFile);
+        return ResponseEntity.ok(ApiResponse.success("Add book successfully", result));
+    }
+
+    @PutMapping("/books/{bookId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<BookResponse>> updateBook(@RequestPart Book book, @PathVariable int bookId,
+            @RequestPart MultipartFile imgFile) throws IOException {
+        BookResponse result = bookService.updateBook(bookId, book, imgFile);
+        return ResponseEntity.ok(ApiResponse.success("Update book successfully", result));
+    }
+
+    @DeleteMapping("/books/{bookId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<Void>> deleteBook(@PathVariable int bookId) {
+        bookService.deleteBook(bookId);
+        return ResponseEntity.ok(ApiResponse.success("Delete successfully", null));
     }
 }
