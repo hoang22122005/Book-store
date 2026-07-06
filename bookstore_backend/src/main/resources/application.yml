@@ -32,7 +32,7 @@ spring:
         format_sql: true
 jwt:
   secret-key: ${JWT_SECRET_KEY}
-  access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:900000} # 15 phút
+  access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:604800000} # 7 ngay
 
 server:
   port: 8080
