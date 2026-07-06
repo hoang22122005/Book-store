@@ -30,7 +30,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class BookServiceImpl implements BookService {
     private static final int MAX_PAGE_SIZE = 50;
-    private static final Sort DEFAULT_SORT = Sort.by(Sort.Direction.DESC, "bookId");
+    private static final Sort DEFAULT_SORT = Sort.by(Sort.Direction.ASC, "bookId");
 
     private final BookRepo bookRepo;
     private final Cloudinary cloudinary;
@@ -42,7 +42,8 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public Book getBookById(int bookId) {
-        return bookRepo.findByBookIdAndIsDeletedFalse(bookId).orElse(null);
+        return bookRepo.findByBookIdAndIsDeletedFalse(bookId)
+                .orElseThrow(() -> new NotFoundException("Khong tim thay sach"));
     }
 
     @Override
