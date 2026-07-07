@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.bookstore.common.response.PageResponse;
-import com.bookstore.common.response.RatingResponse;
+import com.bookstore.dto.review.RatingResponse;
 import com.bookstore.dto.review.RatingRequest;
 import com.bookstore.exception.ConflictException;
 import com.bookstore.exception.ForbiddenException;
@@ -31,15 +31,15 @@ public class RatingServiceImpl implements RatingService {
     @Override
     public PageResponse<RatingResponse> getRatings(Integer bookId, Pageable pageable) {
         Page<RatingResponse> ratings = bookId == null
-                ? ratingRepository.findAll(pageable).map(RatingResponse::fromRating)
-                : ratingRepository.findByBookBookId(bookId, pageable).map(RatingResponse::fromRating);
+                ? ratingRepository.findAll(pageable).map(RatingResponse::toRating)
+                : ratingRepository.findByBookBookId(bookId, pageable).map(RatingResponse::toRating);
 
         return PageResponse.toPageResponse(ratings);
     }
 
     @Override
     public RatingResponse getRatingById(int ratingId) {
-        return RatingResponse.fromRating(findRating(ratingId));
+        return RatingResponse.toRating(findRating(ratingId));
     }
 
     @Override
@@ -56,7 +56,7 @@ public class RatingServiceImpl implements RatingService {
 
         Rating savedRating = ratingRepository.save(rating);
         updateBookRatingSummary(savedRating.getBook().getBookId());
-        return RatingResponse.fromRating(savedRating);
+        return RatingResponse.toRating(savedRating);
     }
 
     @Override
@@ -79,7 +79,7 @@ public class RatingServiceImpl implements RatingService {
         Rating savedRating = ratingRepository.save(rating);
         updateBookRatingSummary(oldBookId);
         updateBookRatingSummary(savedRating.getBook().getBookId());
-        return RatingResponse.fromRating(savedRating);
+        return RatingResponse.toRating(savedRating);
     }
 
     @Override

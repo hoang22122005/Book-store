@@ -9,7 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import com.bookstore.common.response.BookResponse;
+import com.bookstore.dto.product.BookResponse;
 import com.bookstore.common.response.PageResponse;
 import com.bookstore.exception.BadRequestException;
 import com.bookstore.exception.NotFoundException;

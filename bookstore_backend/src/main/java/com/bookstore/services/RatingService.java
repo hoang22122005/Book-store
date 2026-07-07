@@ -3,7 +3,7 @@ package com.bookstore.services;
 import org.springframework.data.domain.Pageable;
 
 import com.bookstore.common.response.PageResponse;
-import com.bookstore.common.response.RatingResponse;
+import com.bookstore.dto.review.RatingResponse;
 import com.bookstore.dto.review.RatingRequest;
 
 public interface RatingService {

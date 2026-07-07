@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.bookstore.common.response.BookResponse;
+import com.bookstore.dto.product.BookResponse;
 import com.bookstore.common.response.PageResponse;
 import com.bookstore.common.response.ApiResponse;
 import com.bookstore.services.impl.BookServiceImpl;

@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.springframework.data.domain.Pageable;
 
-import com.bookstore.common.response.BookResponse;
+import com.bookstore.dto.product.BookResponse;
 import com.bookstore.common.response.PageResponse;
 import com.bookstore.models.Book;
 
