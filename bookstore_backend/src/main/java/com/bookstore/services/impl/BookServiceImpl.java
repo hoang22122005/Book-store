@@ -15,6 +15,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.bookstore.common.response.BookResponse;
 import com.bookstore.common.response.PageResponse;
+import com.bookstore.dto.book.BookAddRequest;
+import com.bookstore.dto.book.BookUpdateRequest;
 import com.bookstore.exception.BadRequestException;
 import com.bookstore.exception.ConflictException;
 import com.bookstore.exception.NotFoundException;
@@ -82,12 +84,11 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    public BookResponse updateBook(int bookId, Book book, MultipartFile imgFile) throws IOException {
-        if (bookId != book.getBookId())
-            throw new ConflictException("ID sach khong dong bo voi api");
+    public Book updateBook(int bookId, BookUpdateRequest newBook, MultipartFile imgFile) throws IOException {
+        Book oldBook = bookRepo.findById(bookId)
+                .orElseThrow(() -> new NotFoundException("Khong tim thay sach co ID: " + bookId));
 
-        Book oldBook = bookRepo.findById(book.getBookId())
-                .orElseThrow(() -> new NotFoundException("Khong tim thay sach co ID: " + book.getBookId()));
+        checkUpdateBook(newBook, oldBook);
 
         if (imgFile != null && !imgFile.isEmpty()) {
             String oldPublicId = oldBook.getPublicId();
@@ -97,24 +98,16 @@ public class BookServiceImpl implements BookService {
             String secureUrl = uploadResult.get("secure_url").toString();
             String publicId = uploadResult.get("public_id").toString();
 
-            book.setUrlImg(secureUrl);
-            book.setPublicId(publicId);
-        } else {
-            book.setUrlImg(oldBook.getUrlImg());
-            book.setPublicId(oldBook.getPublicId());
+            oldBook.setUrlImg(secureUrl);
+            oldBook.setPublicId(publicId);
         }
 
-        book.setCreatedAt(LocalDateTime.now());
-
-        return BookResponse.toBookResponse(bookRepo.save(book));
+        return bookRepo.save(oldBook);
     }
 
     @Override
-    public BookResponse addBook(Book book, MultipartFile imgFile) throws IOException {
-        if (book.getBookId() != 0 && bookRepo.existsById(book.getBookId()))
-            throw new ConflictException("da ton tai sach co ID: " + book.getBookId());
-
-        book.setCreatedAt(LocalDateTime.now());
+    public Book addBook(BookAddRequest newBook, MultipartFile imgFile) throws IOException {
+        Book book = checkAddBook(newBook);
 
         Map<?, ?> uploadResult = cloudinary.uploader().upload(imgFile.getBytes(), ObjectUtils.emptyMap());
         String secureUrl = uploadResult.get("secure_url").toString();
@@ -123,7 +116,7 @@ public class BookServiceImpl implements BookService {
         book.setUrlImg(secureUrl);
         book.setPublicId(publicId);
 
-        return BookResponse.toBookResponse(bookRepo.save(book));
+        return bookRepo.save(book);
     }
 
     private void validatePriceRange(BigDecimal minPrice, BigDecimal maxPrice) {
@@ -152,4 +145,32 @@ public class BookServiceImpl implements BookService {
         return PageRequest.of(page, size, sort);
     }
 
+    private void checkUpdateBook(BookUpdateRequest newBook, Book oldBook) {
+        oldBook.setAuthor(newBook.getAuthor());
+        oldBook.setDescription(newBook.getDescription());
+        oldBook.setName(newBook.getName());
+        oldBook.setPrice(newBook.getPrice());
+        oldBook.setQuantityInStock(newBook.getQuantityInStock());
+        oldBook.setVip(newBook.isVip());
+        oldBook.setDeleted(newBook.isDeleted());
+        if (!newBook.isDeleted()) oldBook.setDeletedAt(null);
+        oldBook.setPageCount(newBook.getPageCount());
+    }
+
+    private Book checkAddBook(BookAddRequest newBook) {
+        Book book = new Book();
+
+        book.setAuthor(newBook.getAuthor());
+        book.setDescription(newBook.getDescription());
+        book.setName(newBook.getName());
+        book.setPrice(newBook.getPrice());
+        book.setQuantityInStock(newBook.getQuantityInStock());
+        book.setVip(newBook.isVip());
+        book.setDeleted(false);
+        book.setDeletedAt(null);
+        book.setPageCount(newBook.getPageCount());
+        book.setCreatedAt(LocalDateTime.now());
+
+        return book;
+    }
 }

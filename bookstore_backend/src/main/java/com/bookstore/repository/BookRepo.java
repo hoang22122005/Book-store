@@ -40,5 +40,7 @@ public interface BookRepo extends JpaRepository<Book, Integer> {
                      UPDATE book SET is_deleted = true WHERE book_id = ?1
                      """, nativeQuery = true)
        int softDeleteBook(int bookId);
+
+       
 }
 

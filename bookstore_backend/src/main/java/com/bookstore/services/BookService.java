@@ -9,6 +9,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.bookstore.common.response.BookResponse;
 import com.bookstore.common.response.PageResponse;
+import com.bookstore.dto.book.BookAddRequest;
+import com.bookstore.dto.book.BookUpdateRequest;
 import com.bookstore.models.Book;
 
 public interface BookService {
@@ -18,6 +20,6 @@ public interface BookService {
                                         BigDecimal minPrice, BigDecimal maxPrice, Pageable pageable);
     BookResponse getBookDetail(int bookId);
     void deleteBook(int bookId);
-    BookResponse updateBook(int bookId, Book book, MultipartFile imgFile) throws IOException;
-    BookResponse addBook(Book book, MultipartFile imgFile) throws IOException;
+    Book updateBook(int bookId, BookUpdateRequest book, MultipartFile imgFile) throws IOException;
+    Book addBook(BookAddRequest bookRequest, MultipartFile imgFile) throws IOException;
 }
