@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.bookstore.common.response.ApiResponse;
 import com.bookstore.common.response.PageResponse;
-import com.bookstore.common.response.RatingResponse;
+import com.bookstore.dto.review.RatingResponse;
 import com.bookstore.dto.review.RatingRequest;
 import com.bookstore.security.CurrentUser;
 import com.bookstore.services.RatingService;

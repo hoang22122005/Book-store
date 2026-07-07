@@ -24,6 +24,7 @@ public class Book {
     private int bookId;
 
     private String name;
+    private String isbn;
     private String author;
     private String description;
     
@@ -60,4 +61,10 @@ public class Book {
 
     @Column(name = "public_id")
     private String publicId;
+
+    @Column(name = "page_count")
+    private Integer pageCount;
+
+    @Column(name = "is_vip")
+    private boolean isVip = false;
 }
