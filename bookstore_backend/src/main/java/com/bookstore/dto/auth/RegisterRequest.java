@@ -24,11 +24,10 @@ public class RegisterRequest {
     @Size(min=6, message = "Password must be at least 6 characters")
     private String password;
 
-    @NotNull(message = "Date of birth must not be null")
-    @Past(message = "Date of birth must be in the past")
+
     private LocalDate dob;
 
-    @NotBlank(message = "Address must not be blank")
+
     private String address;
 
     private String phone;

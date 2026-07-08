@@ -167,7 +167,7 @@ public class BookServiceImpl implements BookService {
 
         book.setAuthor(bookAddRequest.getAuthor());
         book.setDescription(bookAddRequest.getDescription());
-        book.setName(bookAddRequest.getName()); 
+        book.setName(bookAddRequest.getName());
         book.setPrice(bookAddRequest.getPrice());
         book.setQuantityInStock(bookAddRequest.getQuantityInStock());
         book.setVip(bookAddRequest.isVip());

@@ -4,6 +4,7 @@ import com.bookstore.dto.auth.AuthResponse;
 import com.bookstore.dto.auth.LoginRequest;
 import com.bookstore.dto.auth.RegisterRequest;
 import com.bookstore.exception.ConflictException;
+import com.bookstore.exception.NotFoundException;
 import com.bookstore.exception.UnauthorizedException;
 import com.bookstore.models.RefreshToken;
 import com.bookstore.models.User;
@@ -91,12 +92,39 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public AuthResponse refreshToken(String refreshToken) {
-        return null;
+    public AuthResponse refreshToken(String refreshToken){
+
+        //1. Tìm refresh token
+        RefreshToken token = refreshTokenRepository.findByToken(refreshToken)
+                .orElseThrow(()-> new UnauthorizedException("Invalid refresh token"));
+
+        //2. check hết hạn  quá khứ-hiện tại-tương lai
+        if(token.getExpiresAt().isBefore(LocalDateTime.now())){
+            throw new UnauthorizedException("Refresh token expired ");
+        }
+
+        //3. check đã thu hồi chưa
+        if(token.isRevoked()){
+            throw new UnauthorizedException("Refresh token revoked");
+        }
+
+        //4. tạo access token mới
+        String newAccessToken = jwtService.generateToken(token.getUser());
+
+        return AuthResponse.builder()
+                .accessToken(newAccessToken)
+                .refreshToken(refreshToken)
+                .build();
     }
 
     @Override
     public void logout(String refreshToken) {
+        RefreshToken token = refreshTokenRepository.findByToken(refreshToken)
+                .orElseThrow(() -> new NotFoundException("Refresh token is not found ") );
+        token.setRevoked(true);
+        token.setRevokedAt(LocalDateTime.now());
+
+        refreshTokenRepository.save(token);
 
     }
 

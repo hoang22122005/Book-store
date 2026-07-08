@@ -2,6 +2,8 @@ package com.bookstore.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -25,6 +27,7 @@ public class GlobalExceptionHandler {
         return error(HttpStatus.CONFLICT, ex.getMessage());
     }
 
+
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<ApiResponse<Void>> handleBadRequest(BadRequestException ex) {
         return error(HttpStatus.BAD_REQUEST, ex.getMessage());
@@ -33,6 +36,23 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ApiResponse<Void>> handleNotFound(NotFoundException ex) {
         return error(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<Void>> handleValidationException(
+        MethodArgumentNotValidException ex) {
+
+        StringBuilder errorMessage = new StringBuilder();
+
+        for (FieldError error : ex.getBindingResult().getFieldErrors()) {
+
+            errorMessage.append(error.getField());
+            errorMessage.append(": ");
+            errorMessage.append(error.getDefaultMessage());
+               errorMessage.append(", ");
+        }    
+
+         return error(HttpStatus.BAD_REQUEST, errorMessage.toString());
     }
 
     @ExceptionHandler(Exception.class)
