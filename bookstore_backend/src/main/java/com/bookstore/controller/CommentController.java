@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.bookstore.common.response.ApiResponse;
-import com.bookstore.common.response.CommentResponse;
+import com.bookstore.dto.review.CommentResponse;
 import com.bookstore.common.response.PageResponse;
 import com.bookstore.dto.review.CommentRequest;
 import com.bookstore.security.CurrentUser;
@@ -26,14 +26,13 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/comments")
-@PreAuthorize("isAuthenticated()")
+@RequestMapping("/api")
 @RequiredArgsConstructor
 public class CommentController {
     private final CommentService commentService;
     private final CurrentUser currentUser;
 
-    @GetMapping
+    @GetMapping("/public/comments")
     public ResponseEntity<ApiResponse<PageResponse<CommentResponse>>> getComments(
             @RequestParam(required = false) Integer bookId,
             @PageableDefault(size = 20, sort = "commentId", direction = Sort.Direction.DESC) Pageable pageable) {
@@ -42,21 +41,21 @@ public class CommentController {
                 commentService.getComments(bookId, pageable)));
     }
 
-    @GetMapping("/{commentId}")
+    @GetMapping("/public/{commentId}")
     public ResponseEntity<ApiResponse<CommentResponse>> getCommentById(@PathVariable int commentId) {
         return ResponseEntity.ok(ApiResponse.success(
                 "Comment fetched successfully",
                 commentService.getCommentById(commentId)));
     }
 
-    @PostMapping
+    @PostMapping("/comments")
     public ResponseEntity<ApiResponse<CommentResponse>> createComment(@Valid @RequestBody CommentRequest request) {
         return ResponseEntity.ok(ApiResponse.success(
                 "Comment created successfully",
                 commentService.createComment(currentUser.getUserId(), request)));
     }
 
-    @PutMapping("/{commentId}")
+    @PutMapping("/comments/{commentId}")
     public ResponseEntity<ApiResponse<CommentResponse>> updateComment(
             @PathVariable int commentId,
             @Valid @RequestBody CommentRequest request) {
@@ -65,7 +64,7 @@ public class CommentController {
                 commentService.updateComment(commentId, currentUser.getUserId(), request)));
     }
 
-    @DeleteMapping("/{commentId}")
+    @DeleteMapping("/comments/{commentId}")
     public ResponseEntity<ApiResponse<Void>> deleteComment(@PathVariable int commentId) {
         commentService.deleteComment(commentId, currentUser.getUserId());
         return ResponseEntity.ok(ApiResponse.success("Comment deleted successfully", null));

@@ -24,9 +24,9 @@ public class Book {
     private int bookId;
 
     private String name;
+    private String isbn;
     private String author;
     private String description;
-    private String isbn;
 
     @Column(name = "is_vip")
     private boolean isVip;
@@ -67,5 +67,4 @@ public class Book {
 
     @Column(name = "public_id")
     private String publicId;
-    
 }

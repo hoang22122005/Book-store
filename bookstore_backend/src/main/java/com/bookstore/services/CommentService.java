@@ -2,7 +2,7 @@ package com.bookstore.services;
 
 import org.springframework.data.domain.Pageable;
 
-import com.bookstore.common.response.CommentResponse;
+import com.bookstore.dto.review.CommentResponse;
 import com.bookstore.common.response.PageResponse;
 import com.bookstore.dto.review.CommentRequest;
 

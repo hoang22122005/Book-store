@@ -7,15 +7,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.bookstore.common.response.CommentResponse;
+import com.bookstore.dto.review.CommentResponse;
 import com.bookstore.common.response.PageResponse;
 import com.bookstore.dto.review.CommentRequest;
 import com.bookstore.exception.ForbiddenException;
 import com.bookstore.exception.NotFoundException;
-import com.bookstore.models.Book;
 import com.bookstore.models.Comment;
 import com.bookstore.models.User;
-import com.bookstore.repository.BookRepo;
 import com.bookstore.repository.CommentRepository;
 import com.bookstore.repository.UserRepository;
 import com.bookstore.services.CommentService;
@@ -26,33 +24,31 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class CommentServiceImpl implements CommentService {
     private final CommentRepository commentRepository;
-    private final BookRepo bookRepo;
     private final UserRepository userRepository;
 
     @Override
     public PageResponse<CommentResponse> getComments(Integer bookId, Pageable pageable) {
         Page<CommentResponse> comments = bookId == null
-                ? commentRepository.findAll(pageable).map(CommentResponse::fromComment)
-                : commentRepository.findByBookBookId(bookId, pageable).map(CommentResponse::fromComment);
+                ? commentRepository.findAll(pageable).map(CommentResponse::toComment)
+                : commentRepository.findByBookBookId(bookId, pageable).map(CommentResponse::toComment);
 
         return PageResponse.toPageResponse(comments);
     }
 
     @Override
     public CommentResponse getCommentById(int commentId) {
-        return CommentResponse.fromComment(findComment(commentId));
+        return CommentResponse.toComment(findComment(commentId));
     }
 
     @Override
     @Transactional
     public CommentResponse createComment(int userId, CommentRequest request) {
         Comment comment = new Comment();
-        comment.setBook(findBook(request.getBookId()));
         comment.setUser(findUser(userId));
         comment.setContent(request.getContent().trim());
         comment.setCreatedAt(LocalDateTime.now());
 
-        return CommentResponse.fromComment(commentRepository.save(comment));
+        return CommentResponse.toComment(commentRepository.save(comment));
     }
 
     @Override
@@ -60,11 +56,9 @@ public class CommentServiceImpl implements CommentService {
     public CommentResponse updateComment(int commentId, int userId, CommentRequest request) {
         Comment comment = findComment(commentId);
         ensureCommentOwner(comment, userId);
-        comment.setBook(findBook(request.getBookId()));
-        comment.setUser(findUser(userId));
         comment.setContent(request.getContent().trim());
 
-        return CommentResponse.fromComment(commentRepository.save(comment));
+        return CommentResponse.toComment(commentRepository.save(comment));
     }
 
     @Override
@@ -78,11 +72,6 @@ public class CommentServiceImpl implements CommentService {
     private Comment findComment(int commentId) {
         return commentRepository.findById(commentId)
                 .orElseThrow(() -> new NotFoundException("Khong tim thay binh luan"));
-    }
-
-    private Book findBook(int bookId) {
-        return bookRepo.findByBookIdAndIsDeletedFalse(bookId)
-                .orElseThrow(() -> new NotFoundException("Khong tim thay sach"));
     }
 
     private User findUser(int userId) {
