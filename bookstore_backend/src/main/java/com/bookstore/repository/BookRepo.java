@@ -47,7 +47,7 @@ public interface BookRepo extends JpaRepository<Book, Integer> {
        @Transactional
        @Query(value = """
                      UPDATE book SET name = ?1, author = ?2, description = ?3, price = ?4,
-                     quantity_in_stock = ?5, is_vip = ?6, is_deleted = ?7, 
+                     quantity_in_stock = ?5, is_vip = ?6, is_deleted = ?7,
                      deleted_at = ?8, page_count = ?9 WHERE book_id = ?10
                      RETURNING *
                      """, nativeQuery = true)

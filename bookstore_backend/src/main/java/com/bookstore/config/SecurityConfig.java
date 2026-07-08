@@ -32,8 +32,7 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable()) //tấn công qua cookie
                 .authorizeHttpRequests(auth-> auth
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/public/**").permitAll()
+                        .requestMatchers("/api/auth/**","/api/public/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
 
