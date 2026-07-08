@@ -21,6 +21,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.bookstore.dto.product.BookResponse;
 import com.bookstore.common.response.PageResponse;
+import com.bookstore.dto.book.BookAddRequest;
+import com.bookstore.dto.book.BookUpdateRequest;
 import com.bookstore.models.Book;
 import com.bookstore.common.response.ApiResponse;
 import com.bookstore.services.impl.BookServiceImpl;
@@ -28,7 +30,7 @@ import com.bookstore.services.impl.BookServiceImpl;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/")
+@RequestMapping("/api")
 @RequiredArgsConstructor
 public class BookController {
     private final BookServiceImpl bookService;
@@ -53,31 +55,24 @@ public class BookController {
         return ResponseEntity.ok(ApiResponse.success("Book fetched successfully", book));
     }
 
-    @GetMapping("/books/{bookId}")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ApiResponse<Book>> getBookById(@PathVariable int bookId) {
-        Book book = bookService.getBookById(bookId);
-        return ResponseEntity.ok(ApiResponse.success("Book fetched successfully", book));
-    }
-
-    @PostMapping("/books")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ApiResponse<BookResponse>> addBook(@RequestPart Book book, @RequestPart MultipartFile imgFile)
+    @PostMapping("/admin/books")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Book>> addBook(@RequestPart BookAddRequest bookAddRequest, @RequestPart MultipartFile imgFile)
             throws IOException {
-        BookResponse result = bookService.addBook(book, imgFile);
+        Book result = bookService.addBook(bookAddRequest, imgFile);
         return ResponseEntity.ok(ApiResponse.success("Add book successfully", result));
     }
 
-    @PutMapping("/books/{bookId}")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ApiResponse<BookResponse>> updateBook(@RequestPart Book book, @PathVariable int bookId,
+    @PutMapping("/admin/books/{bookId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Book>> updateBook(@RequestPart BookUpdateRequest bookUpdateRequest, @PathVariable int bookId,
             @RequestPart MultipartFile imgFile) throws IOException {
-        BookResponse result = bookService.updateBook(bookId, book, imgFile);
+        Book result = bookService.updateBook(bookId, bookUpdateRequest, imgFile);
         return ResponseEntity.ok(ApiResponse.success("Update book successfully", result));
     }
 
-    @DeleteMapping("/books/{bookId}")
-    @PreAuthorize("isAuthenticated()")
+    @DeleteMapping("/admin/books/{bookId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteBook(@PathVariable int bookId) {
         bookService.deleteBook(bookId);
         return ResponseEntity.ok(ApiResponse.success("Delete successfully", null));

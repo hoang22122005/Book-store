@@ -27,6 +27,12 @@ public class Book {
     private String isbn;
     private String author;
     private String description;
+
+    @Column(name = "is_vip")
+    private boolean isVip;
+
+    @Column(name = "page_count")
+    private int pageCount;
     
     @Column(name = "quantity_in_stock")
     private int quantityInStock;
@@ -61,10 +67,4 @@ public class Book {
 
     @Column(name = "public_id")
     private String publicId;
-
-    @Column(name = "page_count")
-    private Integer pageCount;
-
-    @Column(name = "is_vip")
-    private boolean isVip = false;
 }
