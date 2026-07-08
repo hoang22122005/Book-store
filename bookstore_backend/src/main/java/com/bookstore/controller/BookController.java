@@ -30,7 +30,7 @@ import com.bookstore.services.impl.BookServiceImpl;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/")
+@RequestMapping("/api")
 @RequiredArgsConstructor
 public class BookController {
     private final BookServiceImpl bookService;
@@ -55,23 +55,23 @@ public class BookController {
         return ResponseEntity.ok(ApiResponse.success("Book fetched successfully", book));
     }
 
-    @PostMapping("/books")
+    @PostMapping("/admin/books")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<Book>> addBook(@RequestPart BookAddRequest book, @RequestPart MultipartFile imgFile)
+    public ResponseEntity<ApiResponse<Book>> addBook(@RequestPart BookAddRequest bookAddRequest, @RequestPart MultipartFile imgFile)
             throws IOException {
-        Book result = bookService.addBook(book, imgFile);
+        Book result = bookService.addBook(bookAddRequest, imgFile);
         return ResponseEntity.ok(ApiResponse.success("Add book successfully", result));
     }
 
-    @PutMapping("/books/{bookId}")
+    @PutMapping("/admin/books/{bookId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<Book>> updateBook(@RequestPart BookUpdateRequest book, @PathVariable int bookId,
+    public ResponseEntity<ApiResponse<Book>> updateBook(@RequestPart BookUpdateRequest bookUpdateRequest, @PathVariable int bookId,
             @RequestPart MultipartFile imgFile) throws IOException {
-        Book result = bookService.updateBook(bookId, book, imgFile);
+        Book result = bookService.updateBook(bookId, bookUpdateRequest, imgFile);
         return ResponseEntity.ok(ApiResponse.success("Update book successfully", result));
     }
 
-    @DeleteMapping("/books/{bookId}")
+    @DeleteMapping("/admin/books/{bookId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteBook(@PathVariable int bookId) {
         bookService.deleteBook(bookId);

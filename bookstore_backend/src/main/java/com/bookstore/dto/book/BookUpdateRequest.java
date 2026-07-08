@@ -1,6 +1,7 @@
 package com.bookstore.dto.book;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -20,4 +21,5 @@ public class BookUpdateRequest {
     private boolean isVip;
     private boolean isDeleted;
     private int pageCount;
+    private LocalDateTime deletedAt;
 }

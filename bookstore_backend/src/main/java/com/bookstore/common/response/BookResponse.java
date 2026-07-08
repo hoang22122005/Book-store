@@ -31,6 +31,7 @@ public class BookResponse {
     float avgRating;
     int cntRating;
     int buyCount;
+    boolean isVip;
 
     public static BookResponse toBookResponse(Book book) {
         return BookResponse.builder()
@@ -47,6 +48,7 @@ public class BookResponse {
                 .avgRating(book.getAvgRating())
                 .cntRating(book.getCntRating())
                 .buyCount(book.getBuyCount())
+                .isVip(book.isVip())
                 .build();
     }
 }

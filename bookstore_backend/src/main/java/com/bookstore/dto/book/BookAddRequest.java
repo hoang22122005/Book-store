@@ -1,6 +1,7 @@
 package com.bookstore.dto.book;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,7 +18,7 @@ public class BookAddRequest {
     private String publisher;
     private Integer publishYear;
     private BigDecimal price;
-    private boolean createdAt;
+    private LocalDateTime createdAt;
     private boolean isVip;
     private int pageCount;
 }
