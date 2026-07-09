@@ -21,9 +21,9 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class CartServiceImpl implements CartService {
-    private CartRepo cartRepo;
-    private CartDetailRepo cartDetailRepo;
-    private UserRepository userRepository;
+    private final CartRepo cartRepo;
+    private final CartDetailRepo cartDetailRepo;
+    private final UserRepository userRepository;
 
     @Override
     public Cart getCart(int userId) {
