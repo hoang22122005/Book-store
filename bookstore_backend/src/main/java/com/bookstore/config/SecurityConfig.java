@@ -28,12 +28,14 @@ public class SecurityConfig {
     private final ObjectMapper objectMapper;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) //tấn công qua cookie
-                .authorizeHttpRequests(auth-> auth
-                        .requestMatchers("/api/auth/**","/api/public/**").permitAll()
+                .csrf(csrf -> csrf.disable()) // tấn công qua cookie
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/public/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/ws/**").permitAll()
                         .anyRequest().authenticated()
 
                 )
@@ -49,17 +51,16 @@ public class SecurityConfig {
                                     response,
                                     HttpServletResponse.SC_FORBIDDEN,
                                     "Bạn không có quyền truy cập chức năng này");
-                        })
-                )
+                        }))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
-        //UsernamePasswordAuthen filter mặc định truyền thông ở trước
+        // UsernamePasswordAuthen filter mặc định truyền thông ở trước
         return http.build();
 
     }
 
     @Bean
-    PasswordEncoder passwordEncoder(){
+    PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 

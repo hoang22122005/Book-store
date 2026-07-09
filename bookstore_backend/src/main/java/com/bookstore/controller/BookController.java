@@ -19,6 +19,9 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import jakarta.validation.Valid;
+
+import com.bookstore.dto.product.BookRequest;
 import com.bookstore.dto.product.BookResponse;
 import com.bookstore.common.response.PageResponse;
 import com.bookstore.dto.book.BookAddRequest;
@@ -55,24 +58,29 @@ public class BookController {
         return ResponseEntity.ok(ApiResponse.success("Book fetched successfully", book));
     }
 
+    @GetMapping("/admin/books/{bookId}")
+    public ResponseEntity<ApiResponse<BookResponse>> getBookById(@PathVariable int bookId) {
+        Book book = bookService.getBookById(bookId);
+        return ResponseEntity.ok(ApiResponse.success("Book fetched successfully", BookResponse.toBookResponse(book)));
+    }
+
     @PostMapping("/admin/books")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<Book>> addBook(@RequestPart BookAddRequest bookAddRequest, @RequestPart MultipartFile imgFile)
+    public ResponseEntity<ApiResponse<BookResponse>> addBook(@Valid @RequestPart("book") BookRequest bookRequest,
+            @RequestPart MultipartFile imgFile)
             throws IOException {
-        Book result = bookService.addBook(bookAddRequest, imgFile);
+        BookResponse result = bookService.addBook(bookRequest, imgFile);
         return ResponseEntity.ok(ApiResponse.success("Add book successfully", result));
     }
 
     @PutMapping("/admin/books/{bookId}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<Book>> updateBook(@RequestPart BookUpdateRequest bookUpdateRequest, @PathVariable int bookId,
+    public ResponseEntity<ApiResponse<BookResponse>> updateBook(@Valid @RequestPart("book") BookRequest bookRequest,
+            @PathVariable int bookId,
             @RequestPart MultipartFile imgFile) throws IOException {
-        Book result = bookService.updateBook(bookId, bookUpdateRequest, imgFile);
+        BookResponse result = bookService.updateBook(bookId, bookRequest, imgFile);
         return ResponseEntity.ok(ApiResponse.success("Update book successfully", result));
     }
 
     @DeleteMapping("/admin/books/{bookId}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteBook(@PathVariable int bookId) {
         bookService.deleteBook(bookId);
         return ResponseEntity.ok(ApiResponse.success("Delete successfully", null));

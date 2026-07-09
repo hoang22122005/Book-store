@@ -7,6 +7,7 @@ import java.util.List;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.bookstore.dto.product.BookRequest;
 import com.bookstore.dto.product.BookResponse;
 import com.bookstore.common.response.PageResponse;
 import com.bookstore.dto.book.BookAddRequest;
@@ -20,6 +21,6 @@ public interface BookService {
                                         BigDecimal minPrice, BigDecimal maxPrice, Pageable pageable);
     BookResponse getBookDetail(int bookId);
     void deleteBook(int bookId);
-    Book updateBook(int bookId, BookUpdateRequest book, MultipartFile imgFile) throws IOException;
-    Book addBook(BookAddRequest bookRequest, MultipartFile imgFile) throws IOException;
+    BookResponse updateBook(int bookId, BookRequest book, MultipartFile imgFile) throws IOException;
+    BookResponse addBook(BookRequest book, MultipartFile imgFile) throws IOException;
 }
