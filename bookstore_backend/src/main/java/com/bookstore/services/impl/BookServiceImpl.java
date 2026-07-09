@@ -34,8 +34,8 @@ public class BookServiceImpl implements BookService {
     private static final int MAX_PAGE_SIZE = 50;
     private static final Sort DEFAULT_SORT = Sort.by(Sort.Direction.ASC, Book_.BOOK_ID);
 
-    private final BookRepo bookRepo;
-    private final Cloudinary cloudinary;
+    private BookRepo bookRepo;
+    private Cloudinary cloudinary;
 
     @Override
     public List<Book> getAllBooks() {
