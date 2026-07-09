@@ -13,6 +13,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.bookstore.dto.product.BookRequest;
 import com.bookstore.dto.product.BookResponse;
 import com.bookstore.common.response.PageResponse;
 import com.bookstore.dto.book.BookAddRequest;
@@ -84,16 +85,30 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    public Book updateBook(int bookId, BookUpdateRequest bookUpdateRequest, MultipartFile imgFile) throws IOException {
-        Book oldBook = bookRepo.findById(bookId)
+    public BookResponse updateBook(int bookId, BookRequest bookRequest, MultipartFile imgFile) throws IOException {
+        Book oldBook = bookRepo.findByBookIdAndIsDeletedFalse(bookId)
                 .orElseThrow(() -> new NotFoundException("Khong tim thay sach co ID: " + bookId));
 
-        checkUpdateBook(bookUpdateRequest, oldBook);
+        oldBook.setName(bookRequest.getName());
+        oldBook.setIsbn(bookRequest.getIsbn());
+        oldBook.setAuthor(bookRequest.getAuthor());
+        oldBook.setDescription(bookRequest.getDescription());
+        oldBook.setQuantityInStock(bookRequest.getQuantityInStock());
+        oldBook.setPublisher(bookRequest.getPublisher());
+        oldBook.setPublishYear(bookRequest.getPublishYear());
+        oldBook.setPrice(bookRequest.getPrice());
+        oldBook.setPageCount(bookRequest.getPageCount());
+        oldBook.setVip(bookRequest.isVip());
 
         if (imgFile != null && !imgFile.isEmpty()) {
             String oldPublicId = oldBook.getPublicId();
-            cloudinary.uploader().destroy(oldPublicId, null);
-
+            if (oldPublicId != null && !oldPublicId.isEmpty()) {
+                try {
+                    cloudinary.uploader().destroy(oldPublicId, ObjectUtils.emptyMap());
+                } catch (Exception e) {
+                    // Ignore or log error
+                }
+            }
             Map<?, ?> uploadResult = cloudinary.uploader().upload(imgFile.getBytes(), ObjectUtils.emptyMap());
             String secureUrl = uploadResult.get("secure_url").toString();
             String publicId = uploadResult.get("public_id").toString();
@@ -102,14 +117,27 @@ public class BookServiceImpl implements BookService {
             oldBook.setPublicId(publicId);
         }
 
-        return bookRepo.updateBook(oldBook.getName(), oldBook.getAuthor(), oldBook.getDescription(), oldBook.getPrice(),
-                oldBook.getQuantityInStock(), oldBook.isVip(), oldBook.isDeleted(), oldBook.getDeletedAt(),
-                oldBook.getPageCount(), oldBook.getBookId());
+        return BookResponse.toBookResponse(bookRepo.save(oldBook));
     }
 
     @Override
-    public Book addBook(BookAddRequest bookAddRequest, MultipartFile imgFile) throws IOException {
-        Book book = checkAddBook(bookAddRequest);
+    public BookResponse addBook(BookRequest bookRequest, MultipartFile imgFile) throws IOException {
+        if (imgFile == null || imgFile.isEmpty()) {
+            throw new BadRequestException("Anh bia sach khong duoc de trong");
+        }
+
+        Book book = new Book();
+        book.setName(bookRequest.getName());
+        book.setIsbn(bookRequest.getIsbn());
+        book.setAuthor(bookRequest.getAuthor());
+        book.setDescription(bookRequest.getDescription());
+        book.setQuantityInStock(bookRequest.getQuantityInStock());
+        book.setPublisher(bookRequest.getPublisher());
+        book.setPublishYear(bookRequest.getPublishYear());
+        book.setPrice(bookRequest.getPrice());
+        book.setPageCount(bookRequest.getPageCount());
+        book.setVip(bookRequest.isVip());
+        book.setCreatedAt(LocalDateTime.now());
 
         Map<?, ?> uploadResult = cloudinary.uploader().upload(imgFile.getBytes(), ObjectUtils.emptyMap());
         String secureUrl = uploadResult.get("secure_url").toString();
