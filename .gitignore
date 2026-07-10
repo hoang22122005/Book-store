@@ -4,10 +4,3 @@
 .env.*.local
 bookstore_backend/.env
 bookstore_frontend/.env
-
-# Editor/IDE directories
-.idea/
-.vscode/
-
-# Python cache
-**/__pycache__/
