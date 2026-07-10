@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.bookstore.exception.ConflictException;
 import com.bookstore.exception.NotFoundException;
@@ -13,6 +14,7 @@ import com.bookstore.models.CartDetailId;
 import com.bookstore.models.User;
 import com.bookstore.repository.CartDetailRepo;
 import com.bookstore.repository.CartRepo;
+import com.bookstore.repository.BookRepo;
 import com.bookstore.repository.UserRepository;
 import com.bookstore.services.CartService;
 
@@ -24,6 +26,7 @@ public class CartServiceImpl implements CartService {
     private final CartRepo cartRepo;
     private final CartDetailRepo cartDetailRepo;
     private final UserRepository userRepository;
+    private final BookRepo bookRepo;
 
     @Override
     public Cart getCart(int userId) {
@@ -48,21 +51,43 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
+    @Transactional
     public void deleteCartDetail(CartDetailId cartDetailId) {
+        Book book = bookRepo.findById(cartDetailId.getBookId())
+            .orElseThrow(() -> new NotFoundException("Khong tim thay san pham"));
+        CartDetail cartDetail = cartDetailRepo.findById(cartDetailId)
+            .orElseThrow(() -> new NotFoundException("Khong tim thay san pham trong gio hang"));
+
+        BigDecimal updateTotal = book.getPrice().multiply(BigDecimal.valueOf(cartDetail.getQuantity()));
+        cartRepo.updateTotalAmount(updateTotal.negate(), cartDetailId.getCartId());
         cartDetailRepo.deleteById(cartDetailId);
     }
 
     @Override
+    @Transactional
     public void addCartDetail(CartDetailId cartDetailId) {
-        cartDetailRepo.addCartDetail(cartDetailId.getCartId(), cartDetailId.getBookId(), 1);
+        if (cartDetailRepo.findbyId(cartDetailId) == null) 
+            cartDetailRepo.addCartDetail(cartDetailId.getCartId(), cartDetailId.getBookId(), 1);
+        
+        Book book = bookRepo.findById(cartDetailId.getBookId())
+            .orElseThrow(() -> new NotFoundException("Khong tim thay san pham"));
+
+        cartRepo.updateTotalAmount(book.getPrice(), cartDetailId.getCartId());
     }
 
     @Override
+    @Transactional
     public void increaseQuatityCartDetail(CartDetailId cartDetailId) {
         cartDetailRepo.increaseQuatityCartDetail(cartDetailId.getCartId(), cartDetailId.getBookId());
+
+        Book book = bookRepo.findById(cartDetailId.getBookId())
+            .orElseThrow(() -> new NotFoundException("Khong tim thay san pham"));
+
+        cartRepo.updateTotalAmount(book.getPrice(), cartDetailId.getCartId());
     }
 
     @Override
+    @Transactional
     public void decreaseQuatityCartDetail(CartDetailId cartDetailId) {
         CartDetail cartDetail = cartDetailRepo.findById(cartDetailId)
                 .orElseThrow(() -> new NotFoundException("Khong tim thay san pham trong gio hang"));
@@ -72,5 +97,11 @@ public class CartServiceImpl implements CartService {
         }
 
         cartDetailRepo.decreaseQuatityCartDetail(cartDetailId.getCartId(), cartDetailId.getBookId());
+
+        Book book = bookRepo.findById(cartDetailId.getBookId())
+            .orElseThrow(() -> new NotFoundException("Khong tim thay san pham"));
+
+        cartRepo.updateTotalAmount(book.getPrice().negate(), cartDetailId.getCartId());
     }
+
 }
