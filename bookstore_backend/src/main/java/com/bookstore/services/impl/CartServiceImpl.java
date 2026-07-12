@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.bookstore.exception.ConflictException;
 import com.bookstore.exception.NotFoundException;
+import com.bookstore.models.Book;
 import com.bookstore.models.Cart;
 import com.bookstore.models.CartDetail;
 import com.bookstore.models.CartDetailId;
@@ -66,7 +67,7 @@ public class CartServiceImpl implements CartService {
     @Override
     @Transactional
     public void addCartDetail(CartDetailId cartDetailId) {
-        if (cartDetailRepo.findbyId(cartDetailId) == null) 
+        if (cartDetailRepo.findById(cartDetailId) == null) 
             cartDetailRepo.addCartDetail(cartDetailId.getCartId(), cartDetailId.getBookId(), 1);
         
         Book book = bookRepo.findById(cartDetailId.getBookId())
