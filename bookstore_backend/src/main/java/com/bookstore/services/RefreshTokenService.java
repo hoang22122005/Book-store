@@ -11,6 +11,8 @@ public interface RefreshTokenService {
     RefreshToken validateAndGet(String rawToken);
 
     void revoke(RefreshToken entity);
+
+    String rotate(RefreshToken oldToken);
 }
     
 

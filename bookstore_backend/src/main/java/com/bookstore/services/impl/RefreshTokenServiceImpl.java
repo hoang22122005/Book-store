@@ -1,16 +1,16 @@
 package com.bookstore.services.impl;
 
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+import org.apache.commons.codec.digest.DigestUtils;
+import org.springframework.stereotype.Service;
+
 import com.bookstore.exception.UnauthorizedException;
 import com.bookstore.models.RefreshToken;
 import com.bookstore.models.User;
 import com.bookstore.repository.RefreshTokenRepository;
 import com.bookstore.services.RefreshTokenService;
-
-import java.time.LocalDateTime;
-import java.util.UUID;
-
-import org.springframework.stereotype.Service;
-import org.apache.commons.codec.digest.DigestUtils;
 
 import lombok.RequiredArgsConstructor;
 
@@ -53,5 +53,16 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         entity.setRevokedAt(LocalDateTime.now());
         refreshTokenRepository.save(entity);
     }
+    
+    //cơ chế rotation refreshtoken 
+    @Override
+    public String rotate(RefreshToken oldToken) {
+    oldToken.setRevoked(true);
+    oldToken.setRevokedAt(LocalDateTime.now());
+    refreshTokenRepository.save(oldToken);
+
+    // tạo token mới cho cùng user
+    return createRefreshToken(oldToken.getUser());
+   }
     
 }

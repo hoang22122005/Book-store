@@ -1,30 +1,23 @@
 package com.bookstore.services.impl;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.bookstore.dto.auth.AuthResponse;
 import com.bookstore.dto.auth.LoginRequest;
 import com.bookstore.dto.auth.RegisterRequest;
 import com.bookstore.exception.ConflictException;
-import com.bookstore.exception.NotFoundException;
 import com.bookstore.exception.UnauthorizedException;
 import com.bookstore.models.RefreshToken;
 import com.bookstore.models.User;
 import com.bookstore.models.enums.Role;
-import com.bookstore.repository.RefreshTokenRepository;
 import com.bookstore.repository.UserRepository;
-import com.bookstore.services.AuthService;
 import com.bookstore.security.JwtService;
-
-import org.springframework.transaction.annotation.Transactional;
+import com.bookstore.services.AuthService;
+import com.bookstore.services.RefreshTokenService;
 
 import lombok.RequiredArgsConstructor;
-
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
-import java.util.UUID;
-
-import com.bookstore.services.RefreshTokenService;
 
 @Service
 @RequiredArgsConstructor
@@ -91,10 +84,13 @@ public class AuthServiceImpl implements AuthService {
 
         //4. tạo access token mới
         String newAccessToken = jwtService.generateToken(oldToken.getUser());
+
+        // rotation: revoke token cũ, tạo refresh token mới
+        String newRefreshToken = refreshTokenService.rotate(oldToken);
         
         return AuthResponse.builder()
                 .accessToken(newAccessToken)
-                .refreshToken(refreshToken)
+                .refreshToken(  newRefreshToken)
                 .build();
     }
 
