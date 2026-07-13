@@ -4,3 +4,4 @@
 .env.*.local
 bookstore_backend/.env
 bookstore_frontend/.env
+.vscode/
