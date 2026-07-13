@@ -1,6 +1,7 @@
 package com.bookstore.models;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -30,4 +31,7 @@ public class Cart {
 
     @Column(name = "total_amount")
     private BigDecimal totalAmount;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 }

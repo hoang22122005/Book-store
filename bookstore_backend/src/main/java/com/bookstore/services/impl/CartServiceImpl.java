@@ -1,6 +1,7 @@
 package com.bookstore.services.impl;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -42,8 +43,9 @@ public class CartServiceImpl implements CartService {
         Cart cart = new Cart();
         cart.setUser(user);
         cart.setTotalAmount(new BigDecimal("0"));
+        cart.setCreatedAt(LocalDateTime.now());
 
-        return cartRepo.save(cart);
+        return cartRepo.saveAndFlush(cart);
     }
 
     @Override
@@ -66,12 +68,13 @@ public class CartServiceImpl implements CartService {
 
     @Override
     @Transactional
-    public void addCartDetail(CartDetailId cartDetailId) {
-        if (cartDetailRepo.findById(cartDetailId) == null) 
-            cartDetailRepo.addCartDetail(cartDetailId.getCartId(), cartDetailId.getBookId(), 1);
-        
+    public void addCartDetail(CartDetailId cartDetailId, int userId) {
         Book book = bookRepo.findById(cartDetailId.getBookId())
             .orElseThrow(() -> new NotFoundException("Khong tim thay san pham"));
+
+        if (cartDetailId.getCartId() == 0) createCart(userId);
+
+        cartDetailRepo.addCartDetail(cartDetailId.getCartId(), cartDetailId.getBookId(), 1, LocalDateTime.now());
 
         cartRepo.updateTotalAmount(book.getPrice(), cartDetailId.getCartId());
     }
@@ -79,10 +82,10 @@ public class CartServiceImpl implements CartService {
     @Override
     @Transactional
     public void increaseQuatityCartDetail(CartDetailId cartDetailId) {
-        cartDetailRepo.increaseQuatityCartDetail(cartDetailId.getCartId(), cartDetailId.getBookId());
-
         Book book = bookRepo.findById(cartDetailId.getBookId())
             .orElseThrow(() -> new NotFoundException("Khong tim thay san pham"));
+
+        cartDetailRepo.increaseQuatityCartDetail(cartDetailId.getCartId(), cartDetailId.getBookId());
 
         cartRepo.updateTotalAmount(book.getPrice(), cartDetailId.getCartId());
     }
@@ -90,6 +93,9 @@ public class CartServiceImpl implements CartService {
     @Override
     @Transactional
     public void decreaseQuatityCartDetail(CartDetailId cartDetailId) {
+        Book book = bookRepo.findById(cartDetailId.getBookId())
+            .orElseThrow(() -> new NotFoundException("Khong tim thay san pham"));
+
         CartDetail cartDetail = cartDetailRepo.findById(cartDetailId)
                 .orElseThrow(() -> new NotFoundException("Khong tim thay san pham trong gio hang"));
 
@@ -98,9 +104,6 @@ public class CartServiceImpl implements CartService {
         }
 
         cartDetailRepo.decreaseQuatityCartDetail(cartDetailId.getCartId(), cartDetailId.getBookId());
-
-        Book book = bookRepo.findById(cartDetailId.getBookId())
-            .orElseThrow(() -> new NotFoundException("Khong tim thay san pham"));
 
         cartRepo.updateTotalAmount(book.getPrice().negate(), cartDetailId.getCartId());
     }

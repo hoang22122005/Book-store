@@ -1,5 +1,6 @@
 package com.bookstore.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -20,9 +21,9 @@ public interface CartDetailRepo extends JpaRepository<CartDetail, CartDetailId> 
     @Modifying
     @Transactional
     @Query(value = """
-            INSERT INTO cart_detail(cart_id, book_id, quantity) VALUES(?1, ?2, ?3)
+            INSERT INTO cart_detail(cart_id, book_id, quantity, created_at) VALUES(?1, ?2, ?3, ?4)
             """, nativeQuery = true)
-    void addCartDetail(int cartId, int bookId, int quantity);
+    void addCartDetail(int cartId, int bookId, int quantity, LocalDateTime createdAt);
 
     @Modifying
     @Transactional

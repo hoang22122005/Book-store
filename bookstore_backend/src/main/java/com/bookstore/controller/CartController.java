@@ -3,6 +3,7 @@ package com.bookstore.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.bookstore.common.response.ApiResponse;
 import com.bookstore.dto.cart.CartDetailRequest;
-import com.bookstore.dto.cart.CartRequest;
 import com.bookstore.models.Cart;
 import com.bookstore.models.CartDetail;
 import com.bookstore.models.CartDetailId;
@@ -23,50 +23,65 @@ import com.bookstore.services.impl.CartServiceImpl;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/carts")
 @RequiredArgsConstructor
 public class CartController {
     private final CartServiceImpl cartService;
 
-    @GetMapping("/carts/{userId}")
-    public ResponseEntity<ApiResponse<Cart>> getCart(@PathVariable int userId) {
-        Cart cart = cartService.getCart(userId);
-        return ResponseEntity.ok(ApiResponse.success("Get cart successfull", cart));
+    @GetMapping
+    public ResponseEntity<ApiResponse<Cart>> getCart(Authentication authentication) {
+        Cart cart = cartService.getCart((Integer) authentication.getDetails());
+        return ResponseEntity.ok(ApiResponse.success("Get cart successfully", cart));
     }
 
-    @PostMapping("/carts")
-    public ResponseEntity<ApiResponse<Cart>> createCart(@RequestBody CartRequest cartRequest) {
-        Cart cart = cartService.createCart(cartRequest.getUserId());
-        return ResponseEntity.ok(ApiResponse.success("Create cart successfull", cart));
+    @PostMapping
+    public ResponseEntity<ApiResponse<Cart>> createCart(Authentication authentication) {
+        Cart cart = cartService.createCart((Integer) authentication.getDetails());
+        return ResponseEntity.ok(ApiResponse.success("Create cart successfully", cart));
     }
 
-    @GetMapping("/cartDetails/{cartId}")
-    public ResponseEntity<ApiResponse<List<CartDetail>>> getCartDetails(@PathVariable int cartId) {
-        List<CartDetail> cartDetails = cartService.getCartDetails(cartId);
-        return ResponseEntity.ok(ApiResponse.success("Get cart details successfull", cartDetails));
+    @GetMapping("/cartDetails")
+    public ResponseEntity<ApiResponse<List<CartDetail>>> getCartDetails(Authentication authentication) {
+        Cart cart = cartService.getCart((Integer) authentication.getDetails());
+        List<CartDetail> cartDetails = cartService.getCartDetails(cart.getCartId());
+        return ResponseEntity.ok(ApiResponse.success("Get cart details successfully", cartDetails));
     }
 
     @PostMapping("/cartDetails")
-    public ResponseEntity<ApiResponse<Void>> addCartDetail(@RequestBody CartDetailRequest cartDetailRequest) {
-        cartService.addCartDetail(new CartDetailId(cartDetailRequest.getBookId(), cartDetailRequest.getCartId()));
+    public ResponseEntity<ApiResponse<Void>> addCartDetail(Authentication authentication,
+            @RequestBody CartDetailRequest cartDetailRequest) {
+        Cart cart = cartService.getCart((Integer) authentication.getDetails());
+
+        if (cart == null)
+            cartService.addCartDetail(new CartDetailId(0, cartDetailRequest.getBookId()),
+                    (Integer) authentication.getDetails());
+        else
+            cartService.addCartDetail(new CartDetailId(cart.getCartId(), cartDetailRequest.getBookId()),
+                    (Integer) authentication.getDetails());
+
         return ResponseEntity.ok(ApiResponse.success("Add cart detail successfully", null));
     }
 
-    @PutMapping("/cartDetails/{cartId}/{bookId}/increase")
-    public ResponseEntity<ApiResponse<Void>> increaseQuatityCartDetail(@PathVariable int cartId, @PathVariable int bookId) {
-        cartService.increaseQuatityCartDetail(new CartDetailId(cartId, bookId));
+    @PutMapping("/cartDetails/{bookId}/increase")
+    public ResponseEntity<ApiResponse<Void>> increaseQuatityCartDetail(Authentication authentication,
+            @PathVariable int bookId) {
+        Cart cart = cartService.getCart((Integer) authentication.getDetails());
+        cartService.increaseQuatityCartDetail(new CartDetailId(cart.getCartId(), bookId));
         return ResponseEntity.ok(ApiResponse.success("Increase quantity in cart detail successfully", null));
     }
 
-    @PutMapping("/cartDetails/{cartId}/{bookId}/decrease")
-    public ResponseEntity<ApiResponse<Void>> decreaseQuatityCartDetail(@PathVariable int cartId, @PathVariable int bookId) {
-        cartService.decreaseQuatityCartDetail(new CartDetailId(cartId, bookId));
+    @PutMapping("/cartDetails/{bookId}/decrease")
+    public ResponseEntity<ApiResponse<Void>> decreaseQuatityCartDetail(Authentication authentication,
+            @PathVariable int bookId) {
+        Cart cart = cartService.getCart((Integer) authentication.getDetails());
+        cartService.decreaseQuatityCartDetail(new CartDetailId(cart.getCartId(), bookId));
         return ResponseEntity.ok(ApiResponse.success("Decrease quantity in cart detail successfully", null));
     }
 
-    @DeleteMapping("/cartDetails/{cartId}/{bookId}")
-    public ResponseEntity<ApiResponse<Void>> deleteCartDetail(@PathVariable int cartId, @PathVariable int bookId) {
-        cartService.deleteCartDetail(new CartDetailId(cartId, bookId));
+    @DeleteMapping("/cartDetails/{bookId}")
+    public ResponseEntity<ApiResponse<Void>> deleteCartDetail(Authentication authentication, @PathVariable int bookId) {
+        Cart cart = cartService.getCart((Integer) authentication.getDetails());
+        cartService.deleteCartDetail(new CartDetailId(cart.getCartId(), bookId));
         return ResponseEntity.ok(ApiResponse.success("Delete cart detail successfully", null));
     }
 }

@@ -11,7 +11,7 @@ public interface CartService {
     Cart createCart(int userId);
     List<CartDetail> getCartDetails(int cartId);
     void deleteCartDetail(CartDetailId cartDetailId);
-    void addCartDetail(CartDetailId cartDetailId);
+    void addCartDetail(CartDetailId cartDetailId, int userId);
     void increaseQuatityCartDetail(CartDetailId cartDetailId);
     void decreaseQuatityCartDetail(CartDetailId cartDetailId);
 }
