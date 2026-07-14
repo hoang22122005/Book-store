@@ -57,9 +57,9 @@ public class CartServiceImpl implements CartService {
     @Transactional
     public void deleteCartDetail(CartDetailId cartDetailId) {
         Book book = bookRepo.findById(cartDetailId.getBookId())
-            .orElseThrow(() -> new NotFoundException("Khong tim thay san pham"));
+                .orElseThrow(() -> new NotFoundException("Khong tim thay san pham"));
         CartDetail cartDetail = cartDetailRepo.findById(cartDetailId)
-            .orElseThrow(() -> new NotFoundException("Khong tim thay san pham trong gio hang"));
+                .orElseThrow(() -> new NotFoundException("Khong tim thay san pham trong gio hang"));
 
         BigDecimal updateTotal = book.getPrice().multiply(BigDecimal.valueOf(cartDetail.getQuantity()));
         cartRepo.updateTotalAmount(updateTotal.negate(), cartDetailId.getCartId());
@@ -70,11 +70,17 @@ public class CartServiceImpl implements CartService {
     @Transactional
     public void addCartDetail(CartDetailId cartDetailId, int userId) {
         Book book = bookRepo.findById(cartDetailId.getBookId())
-            .orElseThrow(() -> new NotFoundException("Khong tim thay san pham"));
+                .orElseThrow(() -> new NotFoundException("Khong tim thay san pham"));
 
-        if (cartDetailId.getCartId() == 0) createCart(userId);
+        if (cartDetailId.getCartId() == 0)
+            createCart(userId);
 
-        cartDetailRepo.addCartDetail(cartDetailId.getCartId(), cartDetailId.getBookId(), 1, LocalDateTime.now());
+        System.out.println("HELLO......................................." + cartDetailRepo.findById(cartDetailId));
+
+        if (cartDetailRepo.findById(cartDetailId).isEmpty())
+            cartDetailRepo.addCartDetail(cartDetailId.getCartId(), cartDetailId.getBookId(), 1, LocalDateTime.now());
+        else
+            cartDetailRepo.increaseQuatityCartDetail(cartDetailId.getCartId(), cartDetailId.getBookId());
 
         cartRepo.updateTotalAmount(book.getPrice(), cartDetailId.getCartId());
     }
@@ -83,7 +89,7 @@ public class CartServiceImpl implements CartService {
     @Transactional
     public void increaseQuatityCartDetail(CartDetailId cartDetailId) {
         Book book = bookRepo.findById(cartDetailId.getBookId())
-            .orElseThrow(() -> new NotFoundException("Khong tim thay san pham"));
+                .orElseThrow(() -> new NotFoundException("Khong tim thay san pham"));
 
         cartDetailRepo.increaseQuatityCartDetail(cartDetailId.getCartId(), cartDetailId.getBookId());
 
@@ -94,7 +100,7 @@ public class CartServiceImpl implements CartService {
     @Transactional
     public void decreaseQuatityCartDetail(CartDetailId cartDetailId) {
         Book book = bookRepo.findById(cartDetailId.getBookId())
-            .orElseThrow(() -> new NotFoundException("Khong tim thay san pham"));
+                .orElseThrow(() -> new NotFoundException("Khong tim thay san pham"));
 
         CartDetail cartDetail = cartDetailRepo.findById(cartDetailId)
                 .orElseThrow(() -> new NotFoundException("Khong tim thay san pham trong gio hang"));
