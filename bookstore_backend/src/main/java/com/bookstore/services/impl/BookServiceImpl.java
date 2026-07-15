@@ -20,8 +20,12 @@ import com.bookstore.dto.book.BookUpdateRequest;
 import com.bookstore.exception.BadRequestException;
 import com.bookstore.exception.NotFoundException;
 import com.bookstore.models.Book;
+import com.bookstore.models.BookGenre;
 import com.bookstore.models.Book_;
+import com.bookstore.models.Genre;
+import com.bookstore.repository.BookGenreRepo;
 import com.bookstore.repository.BookRepo;
+import com.bookstore.repository.GenreRepo;
 import com.bookstore.services.BookService;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
@@ -35,6 +39,8 @@ public class BookServiceImpl implements BookService {
     private static final Sort DEFAULT_SORT = Sort.by(Sort.Direction.ASC, Book_.BOOK_ID);
 
     private final BookRepo bookRepo;
+    private final BookGenreRepo bookGenreRepo;
+    private final GenreRepo genreRepo;
     private final Cloudinary cloudinary;
 
     @Override
@@ -100,7 +106,8 @@ public class BookServiceImpl implements BookService {
 
             oldBook.setUrlImg(secureUrl);
             oldBook.setPublicId(publicId);
-        }
+        } else
+            throw new BadRequestException("Vui lòng tai len anh cua sach");
 
         return bookRepo.updateBook(oldBook.getName(), oldBook.getAuthor(), oldBook.getDescription(), oldBook.getPrice(),
                 oldBook.getQuantityInStock(), oldBook.isVip(), oldBook.isDeleted(), oldBook.getDeletedAt(),
@@ -109,6 +116,9 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public Book addBook(BookAddRequest bookAddRequest, MultipartFile imgFile) throws IOException {
+        if (imgFile == null || imgFile.isEmpty())
+            throw new BadRequestException("Vui lòng tai len anh cua sach");
+
         Book book = checkAddBook(bookAddRequest);
 
         Map<?, ?> uploadResult = cloudinary.uploader().upload(imgFile.getBytes(), ObjectUtils.emptyMap());
@@ -118,7 +128,11 @@ public class BookServiceImpl implements BookService {
         book.setUrlImg(secureUrl);
         book.setPublicId(publicId);
 
-        return bookRepo.save(book);
+        bookRepo.save(book);
+
+        checkGenre(bookAddRequest, book);
+
+        return book;
     }
 
     private void validatePriceRange(BigDecimal minPrice, BigDecimal maxPrice) {
@@ -167,7 +181,7 @@ public class BookServiceImpl implements BookService {
 
         book.setAuthor(bookAddRequest.getAuthor());
         book.setDescription(bookAddRequest.getDescription());
-        book.setName(bookAddRequest.getName()); 
+        book.setName(bookAddRequest.getName());
         book.setPrice(bookAddRequest.getPrice());
         book.setQuantityInStock(bookAddRequest.getQuantityInStock());
         book.setVip(bookAddRequest.isVip());
@@ -180,5 +194,14 @@ public class BookServiceImpl implements BookService {
         book.setBuyCount(0);
 
         return book;
+    }
+
+    private void checkGenre(BookAddRequest bookAddRequest, Book book) {
+        Genre genre = genreRepo.findByName(bookAddRequest.getGenreName())
+                .orElseThrow(() -> new NotFoundException("Khong tim thay the loai tuong ung"));
+        BookGenre bookGenre = new BookGenre();
+        bookGenre.setBook(book);
+        bookGenre.setGenre(genre);
+        bookGenreRepo.save(bookGenre);
     }
 }

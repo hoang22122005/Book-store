@@ -1,5 +1,6 @@
 package com.bookstore.controller;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.bookstore.common.response.ApiResponse;
 import com.bookstore.dto.cart.CartDetailRequest;
+import com.bookstore.dto.cart.CartDetailResponse;
+import com.bookstore.dto.cart.CartResponse;
 import com.bookstore.models.Cart;
 import com.bookstore.models.CartDetail;
 import com.bookstore.models.CartDetailId;
@@ -29,22 +32,28 @@ public class CartController {
     private final CartServiceImpl cartService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<Cart>> getCart(Authentication authentication) {
+    public ResponseEntity<ApiResponse<CartResponse>> getCart(Authentication authentication) {
         Cart cart = cartService.getCart((Integer) authentication.getDetails());
-        return ResponseEntity.ok(ApiResponse.success("Get cart successfully", cart));
+        return ResponseEntity.ok(ApiResponse.success("Get cart successfully", CartResponse.toCart(cart)));
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<Cart>> createCart(Authentication authentication) {
+    public ResponseEntity<ApiResponse<CartResponse>> createCart(Authentication authentication) {
         Cart cart = cartService.createCart((Integer) authentication.getDetails());
-        return ResponseEntity.ok(ApiResponse.success("Create cart successfully", cart));
+        return ResponseEntity.ok(ApiResponse.success("Create cart successfully", CartResponse.toCart(cart)));
     }
 
     @GetMapping("/cartDetails")
-    public ResponseEntity<ApiResponse<List<CartDetail>>> getCartDetails(Authentication authentication) {
+    public ResponseEntity<ApiResponse<List<CartDetailResponse>>> getCartDetails(Authentication authentication) {
         Cart cart = cartService.getCart((Integer) authentication.getDetails());
         List<CartDetail> cartDetails = cartService.getCartDetails(cart.getCartId());
-        return ResponseEntity.ok(ApiResponse.success("Get cart details successfully", cartDetails));
+
+        List<CartDetailResponse> result = new ArrayList<CartDetailResponse>();
+        for (CartDetail cartDetail : cartDetails) {
+            result.add(CartDetailResponse.toCartDetail(cartDetail));
+        }
+
+        return ResponseEntity.ok(ApiResponse.success("Get cart details successfully", result));
     }
 
     @PostMapping("/cartDetails")

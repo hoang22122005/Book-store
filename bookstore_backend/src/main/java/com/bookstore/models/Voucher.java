@@ -32,6 +32,7 @@ public class Voucher {
     private LocalDateTime expiredAt;
 
     private String code;
+    private String scope;
 
     @Column(name = "scope")
     private String scope;
