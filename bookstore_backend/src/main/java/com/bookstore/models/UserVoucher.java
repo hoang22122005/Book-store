@@ -1,49 +1,44 @@
 package com.bookstore.models;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
-
-import com.bookstore.models.enums.BillStatus;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Data
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class Bill {
+@Table(name = "user_voucher")
+public class UserVoucher {
     @Id
-    @Column(name = "bill_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int billId;
+    private int id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id")
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "voucher_id")
     private Voucher voucher;
 
-    @Column(name = "total_amount")
-    private BigDecimal totalAmount;
+    @Column(name = "is_used")
+    private boolean isUsed;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false, length = 30)
-    private BillStatus status;
-
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    @Column(name = "used_at")
+    private LocalDateTime usedAt;
 }

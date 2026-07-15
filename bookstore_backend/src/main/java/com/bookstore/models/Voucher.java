@@ -25,10 +25,6 @@ public class Voucher {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int voucherId;
 
-    // @ManyToOne(fetch = FetchType.LAZY)
-    // @JoinColumn(name = "user_id", nullable = false)
-    // private User user;
-
     @Column(name = "discount_percent")
     private float discount;
 
@@ -38,9 +34,6 @@ public class Voucher {
     private String code;
     private String scope;
 
-    // @Column(name = "is_used")
-    // private boolean isUsed;
-
-    // @Column(name = "used_at")
-    // private LocalDateTime usedAt;
+    @Column(name = "scope")
+    private String scope;
 }

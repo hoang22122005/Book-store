@@ -3,6 +3,7 @@ package com.bookstore.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,6 +27,7 @@ public class RecommendationController {
     private final CurrentUser currentUser;
 
     @GetMapping("/recommendations/user")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<PageResponse<BookResponse>>> getUserRecommendations(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
