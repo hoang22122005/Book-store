@@ -21,4 +21,5 @@ public class BookAddRequest {
     private LocalDateTime createdAt;
     private boolean isVip;
     private int pageCount;
+    private String genreName;
 }

@@ -75,8 +75,6 @@ public class CartServiceImpl implements CartService {
         if (cartDetailId.getCartId() == 0)
             createCart(userId);
 
-        System.out.println("HELLO......................................." + cartDetailRepo.findById(cartDetailId));
-
         if (cartDetailRepo.findById(cartDetailId).isEmpty())
             cartDetailRepo.addCartDetail(cartDetailId.getCartId(), cartDetailId.getBookId(), 1, LocalDateTime.now());
         else
