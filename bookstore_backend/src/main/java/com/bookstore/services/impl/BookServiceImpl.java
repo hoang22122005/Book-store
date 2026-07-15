@@ -128,9 +128,11 @@ public class BookServiceImpl implements BookService {
         book.setUrlImg(secureUrl);
         book.setPublicId(publicId);
 
+        bookRepo.save(book);
+
         checkGenre(bookAddRequest, book);
 
-        return bookRepo.save(book);
+        return book;
     }
 
     private void validatePriceRange(BigDecimal minPrice, BigDecimal maxPrice) {
