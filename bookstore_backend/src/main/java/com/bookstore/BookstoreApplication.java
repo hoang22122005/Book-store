@@ -8,7 +8,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 public class BookstoreApplication {
 
-
 	public static void main(String[] args) {
 		SpringApplication.run(BookstoreApplication.class, args);
 	}

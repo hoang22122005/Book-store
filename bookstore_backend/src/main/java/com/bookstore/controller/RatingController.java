@@ -26,14 +26,13 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/ratings")
-@PreAuthorize("isAuthenticated()")
+@RequestMapping("/api")
 @RequiredArgsConstructor
 public class RatingController {
     private final RatingService ratingService;
     private final CurrentUser currentUser;
 
-    @GetMapping
+    @GetMapping("/public/ratings")
     public ResponseEntity<ApiResponse<PageResponse<RatingResponse>>> getRatings(
             @RequestParam(required = false) Integer bookId,
             @PageableDefault(size = 20, sort = "ratingId", direction = Sort.Direction.DESC) Pageable pageable) {
@@ -42,21 +41,23 @@ public class RatingController {
                 ratingService.getRatings(bookId, pageable)));
     }
 
-    @GetMapping("/{ratingId}")
+    @GetMapping("/public/ratings/{ratingId}")
     public ResponseEntity<ApiResponse<RatingResponse>> getRatingById(@PathVariable int ratingId) {
         return ResponseEntity.ok(ApiResponse.success(
                 "Rating fetched successfully",
                 ratingService.getRatingById(ratingId)));
     }
 
-    @PostMapping
+    @PostMapping("/ratings")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<RatingResponse>> createRating(@Valid @RequestBody RatingRequest request) {
         return ResponseEntity.ok(ApiResponse.success(
                 "Rating created successfully",
                 ratingService.createRating(currentUser.getUserId(), request)));
     }
 
-    @PutMapping("/{ratingId}")
+    @PutMapping("/ratings/{ratingId}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<RatingResponse>> updateRating(
             @PathVariable int ratingId,
             @Valid @RequestBody RatingRequest request) {
@@ -65,7 +66,8 @@ public class RatingController {
                 ratingService.updateRating(ratingId, currentUser.getUserId(), request)));
     }
 
-    @DeleteMapping("/{ratingId}")
+    @DeleteMapping("/ratings/{ratingId}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<Void>> deleteRating(@PathVariable int ratingId) {
         ratingService.deleteRating(ratingId, currentUser.getUserId());
         return ResponseEntity.ok(ApiResponse.success("Rating deleted successfully", null));

@@ -41,7 +41,7 @@ public class CommentController {
                 commentService.getComments(bookId, pageable)));
     }
 
-    @GetMapping("/public/{commentId}")
+    @GetMapping("/public/comments/{commentId}")
     public ResponseEntity<ApiResponse<CommentResponse>> getCommentById(@PathVariable int commentId) {
         return ResponseEntity.ok(ApiResponse.success(
                 "Comment fetched successfully",
@@ -49,6 +49,7 @@ public class CommentController {
     }
 
     @PostMapping("/comments")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<CommentResponse>> createComment(@Valid @RequestBody CommentRequest request) {
         return ResponseEntity.ok(ApiResponse.success(
                 "Comment created successfully",
@@ -56,6 +57,7 @@ public class CommentController {
     }
 
     @PutMapping("/comments/{commentId}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<CommentResponse>> updateComment(
             @PathVariable int commentId,
             @Valid @RequestBody CommentRequest request) {
@@ -65,6 +67,7 @@ public class CommentController {
     }
 
     @DeleteMapping("/comments/{commentId}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<Void>> deleteComment(@PathVariable int commentId) {
         commentService.deleteComment(commentId, currentUser.getUserId());
         return ResponseEntity.ok(ApiResponse.success("Comment deleted successfully", null));
