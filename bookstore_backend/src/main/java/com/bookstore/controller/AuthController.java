@@ -2,9 +2,13 @@ package com.bookstore.controller;
 
 import com.bookstore.common.response.ApiResponse;
 import com.bookstore.dto.auth.AuthResponse;
+import com.bookstore.dto.auth.ForgotPasswordRequest;
 import com.bookstore.dto.auth.LoginRequest;
 import com.bookstore.dto.auth.RefreshTokenRequest;import com.bookstore.dto.auth.RegisterRequest;
+import com.bookstore.dto.auth.ResetPasswordRequest;
 import com.bookstore.services.AuthService;
+import com.bookstore.services.PasswordResetService;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,6 +23,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class AuthController {
     private final AuthService authService;
+
+    private final PasswordResetService passwordResetService;
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<AuthResponse>> register(
@@ -47,6 +53,20 @@ public class AuthController {
         AuthResponse response = authService.refreshToken(refreshToken);
         return ResponseEntity.ok(ApiResponse.success("Access Token is  refreshed", response));
     }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ApiResponse<Void>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        passwordResetService.forgotPassword(request.getEmail());
+        return ResponseEntity.ok(ApiResponse.success(
+            "Nếu email tồn tại trong hệ thống, link đặt lại mật khẩu đã được gửi.", null));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse<Void>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        passwordResetService.resetPassword(request.getToken(), request.getNewPassword());
+        return ResponseEntity.ok(ApiResponse.success("Đặt lại mật khẩu thành công.", null));
+    }
+
 
 
 
