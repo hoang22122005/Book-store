@@ -2,6 +2,7 @@ package com.bookstore.dto.product;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import com.bookstore.models.Book;
 
@@ -34,8 +35,13 @@ public class BookResponse {
     String isbn;
     Integer pageCount;
     boolean isVip;
+    List<String> genres;
 
     public static BookResponse toBookResponse(Book book) {
+        return toBookResponse(book, List.of());
+    }
+
+    public static BookResponse toBookResponse(Book book, List<String> genres) {
         return BookResponse.builder()
                 .bookId(book.getBookId())
                 .name(book.getName())
@@ -53,6 +59,7 @@ public class BookResponse {
                 .isbn(book.getIsbn())
                 .pageCount(book.getPageCount())
                 .isVip(book.isVip())
+                .genres(genres)
                 .build();
     }
 }

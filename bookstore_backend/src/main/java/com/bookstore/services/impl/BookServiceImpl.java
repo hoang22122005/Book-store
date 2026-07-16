@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -63,15 +64,19 @@ public class BookServiceImpl implements BookService {
         String normalizedAuthor = normalize(author);
         Pageable safePageable = limitPageSize(pageable);
 
-        Page<BookResponse> bookPage = bookRepo.searchBooks(
+        Page<Book> bookPage = bookRepo.searchBooks(
                 normalizedKeyword,
                 normalizedAuthor,
                 categoryId,
                 minPrice,
                 maxPrice,
-                safePageable).map(BookResponse::toBookResponse);
+                safePageable);
+        Map<Integer, List<String>> genresByBookId = getGenresByBookId(bookPage.getContent());
+        Page<BookResponse> responsePage = bookPage.map(book -> BookResponse.toBookResponse(
+                book,
+                genresByBookId.getOrDefault(book.getBookId(), List.of())));
 
-        return PageResponse.toPageResponse(bookPage);
+        return PageResponse.toPageResponse(responsePage);
     }
 
     @Override
@@ -79,7 +84,7 @@ public class BookServiceImpl implements BookService {
         Book book = bookRepo.findByBookIdAndIsDeletedFalse(bookId)
                 .orElseThrow(() -> new NotFoundException("Khong tim thay sach"));
 
-        return BookResponse.toBookResponse(book);
+        return BookResponse.toBookResponse(book, getGenreNames(book.getBookId()));
     }
 
     @Override
@@ -203,5 +208,26 @@ public class BookServiceImpl implements BookService {
         bookGenre.setBook(book);
         bookGenre.setGenre(genre);
         bookGenreRepo.save(bookGenre);
+    }
+
+    private Map<Integer, List<String>> getGenresByBookId(List<Book> books) {
+        if (books.isEmpty()) {
+            return Map.of();
+        }
+
+        List<Integer> bookIds = books.stream()
+                .map(Book::getBookId)
+                .toList();
+
+        return bookGenreRepo.findWithGenreByBookIds(bookIds).stream()
+                .collect(Collectors.groupingBy(
+                        bookGenre -> bookGenre.getBook().getBookId(),
+                        Collectors.mapping(bookGenre -> bookGenre.getGenre().getName(), Collectors.toList())));
+    }
+
+    private List<String> getGenreNames(int bookId) {
+        return bookGenreRepo.findWithGenreByBookId(bookId).stream()
+                .map(bookGenre -> bookGenre.getGenre().getName())
+                .toList();
     }
 }
