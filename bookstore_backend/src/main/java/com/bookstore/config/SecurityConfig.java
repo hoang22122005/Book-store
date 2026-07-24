@@ -37,6 +37,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/dashboard/**")
                         .hasAnyRole("ADMIN", "STAFF", "ACCOUNTANT", "WAREHOUSE_KEEPER")
+                        .requestMatchers("/api/stock/**").hasRole( "WAREHOUSE_KEEPER")
                         .requestMatchers("/ws/**").permitAll()
                         .anyRequest().authenticated()
 
