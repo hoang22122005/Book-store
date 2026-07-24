@@ -19,6 +19,7 @@ import jakarta.transaction.Transactional;
 public interface BookRepo extends JpaRepository<Book, Integer> {
        List<Book> findByIsDeletedFalse();
 
+
        Optional<Book> findByBookIdAndIsDeletedFalse(int bookId);
 
        @Query("SELECT b FROM Book b WHERE " +

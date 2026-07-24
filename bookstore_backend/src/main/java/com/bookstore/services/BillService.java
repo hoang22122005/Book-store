@@ -18,4 +18,8 @@ public interface BillService {
     BillResponse createBillFromMyCart(int userId, CreateBillRequest request);
 
     BillResponse updateBillStatusForAdmin(int billId, String status);
+
+    BillResponse updateBillStatusForStaff(int billId, String status);
+
+    BillResponse confirmDeliveryResult(int billId, boolean successful);
 }
