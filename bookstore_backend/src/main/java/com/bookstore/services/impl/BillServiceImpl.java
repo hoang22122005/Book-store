@@ -140,6 +140,39 @@ public class BillServiceImpl implements BillService {
         return toBillResponse(billRepository.save(bill));
     }
 
+    @Override
+    @Transactional
+    public BillResponse updateBillStatusForStaff(int billId, String status) {
+        Bill bill = findBill(billId);
+        BillStatus targetStatus = BillStatus.from(status);
+        validateStaffTransition(bill.getStatus(), targetStatus);
+        bill.setStatus(targetStatus);
+        return toBillResponse(billRepository.save(bill));
+    }
+
+    @Override
+    @Transactional
+    public BillResponse confirmDeliveryResult(int billId, boolean successful) {
+        Bill bill = findBill(billId);
+        if (bill.getStatus() != BillStatus.SHIPPING) {
+            throw new ConflictException("Chi co the xac nhan ket qua khi don hang dang giao");
+        }
+        bill.setStatus(successful ? BillStatus.COMPLETED : BillStatus.CANCELLED);
+        return toBillResponse(billRepository.save(bill));
+    }
+
+    private void validateStaffTransition(BillStatus currentStatus, BillStatus targetStatus) {
+        boolean valid = switch (currentStatus) {
+            case PENDING -> targetStatus == BillStatus.CONFIRMED || targetStatus == BillStatus.CANCELLED;
+            case CONFIRMED -> targetStatus == BillStatus.SHIPPING || targetStatus == BillStatus.CANCELLED;
+            case SHIPPING -> targetStatus == BillStatus.COMPLETED || targetStatus == BillStatus.CANCELLED;
+            case COMPLETED, CANCELLED -> false;
+        };
+        if (!valid) {
+            throw new ConflictException("Khong the chuyen trang thai tu " + currentStatus + " sang " + targetStatus);
+        }
+    }
+
     private Bill findBill(int billId) {
         return billRepository.findById(billId)
                 .orElseThrow(() -> new NotFoundException("Khong tim thay hoa don"));
