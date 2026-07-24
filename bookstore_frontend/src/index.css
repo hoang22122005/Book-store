@@ -1,0 +1,123 @@
+@import "tailwindcss";
+
+/* Định nghĩa cấu hình Theme theo chuẩn Tailwind v4 */
+@theme {
+  /* Khai báo bảng màu tự định nghĩa */
+  --color-tertiary-fixed: #d3e4fe;
+  --color-error-container: #ffdad6;
+  --color-background: #f7f9fb;
+  --color-surface-dim: #d8dadc;
+  --color-tertiary-fixed-dim: #b7c8e1;
+  --color-primary-fixed: #d6e3ff;
+  --color-surface-container-lowest: #ffffff;
+  --color-primary: #002045;
+  --color-outline-variant: #c4c6cf;
+  --color-primary-container: #1a365d;
+  --color-surface-container-highest: #e0e3e5;
+  --color-on-surface: #191c1e;
+  --color-on-secondary-container: #684000;
+  --color-on-error: #ffffff;
+  --color-surface-variant: #e0e3e5;
+  --color-on-background: #191c1e;
+  --color-tertiary-container: #27374b;
+  --color-secondary: #855300;
+  --color-inverse-on-surface: #eff1f3;
+  --color-outline: #74777f;
+  --color-on-surface-variant: #43474e;
+  --color-inverse-surface: #2d3133;
+  --color-surface-container-low: #f2f4f6;
+  --color-surface-container-high: #e6e8ea;
+  --color-surface: #f7f9fb;
+  --color-on-tertiary-container: #90a0b9;
+  --color-on-primary: #ffffff;
+  --color-secondary-fixed: #ffddb8;
+  --color-secondary-container: #fea619;
+  --color-on-tertiary-fixed-variant: #38485d;
+  --color-on-primary-fixed: #001b3c;
+  --color-error: #ba1a1a;
+  --color-on-tertiary-fixed: #0b1c30;
+  --color-on-secondary: #ffffff;
+  --color-surface-tint: #455f88;
+  --color-surface-container: #eceef0;
+  --color-inverse-primary: #adc7f7;
+  --color-on-primary-container: #86a0cd;
+  --color-on-tertiary: #ffffff;
+  --color-on-error-container: #93000a;
+  --color-on-primary-fixed-variant: #2d476f;
+  --color-secondary-fixed-dim: #ffb95f;
+  --color-primary-fixed-dim: #adc7f7;
+  --color-on-secondary-fixed-variant: #653e00;
+  --color-surface-bright: #f7f9fb;
+  --color-tertiary: #112235;
+  --color-on-secondary-fixed: #2a1700;
+
+  /* Cấu hình Border Radius */
+  --radius-default: 0.25rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-full: 9999px;
+
+  /* Cấu hình Spacing */
+  --spacing-container-max: 1280px;
+  --spacing-stack-sm: 8px;
+  --spacing-stack-md: 16px;
+  --spacing-unit: 4px;
+  --spacing-none: 0px;
+  --spacing-stack-lg: 32px;
+  --spacing-gutter: 24px;
+  --spacing-margin-mobile: 16px;
+  --spacing-margin-desktop: 48px;
+
+  /* Cấu hình Font Family */
+  --font-body-md: "Inter", sans-serif;
+  --font-body-lg: "Inter", sans-serif;
+  --font-headline-lg: "Inter", sans-serif;
+  --font-headline-lg-mobile: "Inter", sans-serif;
+  --font-headline-md: "Inter", sans-serif;
+  --font-headline-xl: "Inter", sans-serif;
+  --font-label-md: "Inter", sans-serif;
+  --font-caption: "Inter", sans-serif;
+
+  /* Cấu hình Font Size (v4 cho phép định nghĩa size đi kèm line-height/weight qua CSS variables) */
+  --text-body-md: 16px;
+  --text-body-lg: 18px;
+  --text-headline-lg: 32px;
+  --text-headline-lg-mobile: 24px;
+  --text-headline-md: 24px;
+  --text-headline-xl: 48px;
+  --text-label-md: 14px;
+  --text-caption: 12px;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: white;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+.material-symbols-outlined[data-weight="fill"] {
+  font-variation-settings: 'FILL' 1;
+}
+
+.book-card-shadow {
+  box-shadow: 0 4px 10px 0px rgba(26, 54, 93, 0.15), 0 2px 4px 0px rgba(26, 54, 93, 0.1);
+}
+
+.sticky-summary {
+  position: sticky;
+  top: 100px;
+}
+
+html {
+  color-scheme: light !important;
+}

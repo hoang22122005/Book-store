@@ -31,6 +31,7 @@ import com.bookstore.services.BookService;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -88,6 +89,7 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
+    @Transactional
     public void deleteBook(int bookId) {
         Book book = bookRepo.findByBookIdAndIsDeletedFalse(bookId)
                 .orElseThrow(() -> new NotFoundException("Khong tim thay sach co ID: " + bookId));
@@ -95,6 +97,7 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
+    @Transactional
     public Book updateBook(int bookId, BookUpdateRequest bookUpdateRequest, MultipartFile imgFile) throws IOException {
         Book oldBook = bookRepo.findById(bookId)
                 .orElseThrow(() -> new NotFoundException("Khong tim thay sach co ID: " + bookId));
@@ -120,6 +123,7 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
+    @Transactional
     public Book addBook(BookAddRequest bookAddRequest, MultipartFile imgFile) throws IOException {
         if (imgFile == null || imgFile.isEmpty())
             throw new BadRequestException("Vui lòng tai len anh cua sach");
