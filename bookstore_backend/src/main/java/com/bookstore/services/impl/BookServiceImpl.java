@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
@@ -19,6 +20,7 @@ import com.bookstore.common.response.PageResponse;
 import com.bookstore.dto.book.BookAddRequest;
 import com.bookstore.dto.book.BookUpdateRequest;
 import com.bookstore.exception.BadRequestException;
+import com.bookstore.exception.ConflictException;
 import com.bookstore.exception.NotFoundException;
 import com.bookstore.models.Book;
 import com.bookstore.models.BookGenre;
@@ -53,7 +55,7 @@ public class BookServiceImpl implements BookService {
     @Override
     public Book getBookById(int bookId) {
         return bookRepo.findByBookIdAndIsDeletedFalse(bookId)
-                .orElseThrow(() -> new NotFoundException("Khong tim thay sach"));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy sách"));
     }
 
     @Override
@@ -83,7 +85,7 @@ public class BookServiceImpl implements BookService {
     @Override
     public BookResponse getBookDetail(int bookId) {
         Book book = bookRepo.findByBookIdAndIsDeletedFalse(bookId)
-                .orElseThrow(() -> new NotFoundException("Khong tim thay sach"));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy sách"));
 
         return BookResponse.toBookResponse(book, getGenreNames(book.getBookId()));
     }
@@ -92,7 +94,7 @@ public class BookServiceImpl implements BookService {
     @Transactional
     public void deleteBook(int bookId) {
         Book book = bookRepo.findByBookIdAndIsDeletedFalse(bookId)
-                .orElseThrow(() -> new NotFoundException("Khong tim thay sach co ID: " + bookId));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy sách có ID: " + bookId));
         bookRepo.softDeleteBook(LocalDateTime.now(), book.getBookId());
     }
 
@@ -100,9 +102,9 @@ public class BookServiceImpl implements BookService {
     @Transactional
     public Book updateBook(int bookId, BookUpdateRequest bookUpdateRequest, MultipartFile imgFile) throws IOException {
         Book oldBook = bookRepo.findById(bookId)
-                .orElseThrow(() -> new NotFoundException("Khong tim thay sach co ID: " + bookId));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy sách có ID: " + bookId));
 
-        checkUpdateBook(bookUpdateRequest, oldBook);
+        prepareUpdateBook(bookUpdateRequest, oldBook);
 
         if (imgFile != null && !imgFile.isEmpty()) {
             String oldPublicId = oldBook.getPublicId();
@@ -115,7 +117,7 @@ public class BookServiceImpl implements BookService {
             oldBook.setUrlImg(secureUrl);
             oldBook.setPublicId(publicId);
         } else
-            throw new BadRequestException("Vui lòng tai len anh cua sach");
+            throw new BadRequestException("Vui lòng tải lên ảnh của sách");
 
         return bookRepo.updateBook(oldBook.getName(), oldBook.getAuthor(), oldBook.getDescription(), oldBook.getPrice(),
                 oldBook.getQuantityInStock(), oldBook.isVip(), oldBook.isDeleted(), oldBook.getDeletedAt(),
@@ -126,9 +128,9 @@ public class BookServiceImpl implements BookService {
     @Transactional
     public Book addBook(BookAddRequest bookAddRequest, MultipartFile imgFile) throws IOException {
         if (imgFile == null || imgFile.isEmpty())
-            throw new BadRequestException("Vui lòng tai len anh cua sach");
+            throw new BadRequestException("Vui lòng tải lên ảnh của sách");
 
-        Book book = checkAddBook(bookAddRequest);
+        Book book = prepareAddBook(bookAddRequest);
 
         Map<?, ?> uploadResult = cloudinary.uploader().upload(imgFile.getBytes(), ObjectUtils.emptyMap());
         String secureUrl = uploadResult.get("secure_url").toString();
@@ -150,7 +152,7 @@ public class BookServiceImpl implements BookService {
         }
 
         if (minPrice.compareTo(maxPrice) > 0) {
-            throw new BadRequestException("Gia min phai nho hon hoac bang gia max");
+            throw new BadRequestException("Giá nhỏ nhất phải nhỏ hơn hoặc bằng giá lớn nhất");
         }
     }
 
@@ -170,7 +172,7 @@ public class BookServiceImpl implements BookService {
         return PageRequest.of(page, size, sort);
     }
 
-    private void checkUpdateBook(BookUpdateRequest bookUpdateRequest, Book oldBook) {
+    private void prepareUpdateBook(BookUpdateRequest bookUpdateRequest, Book oldBook) {
         oldBook.setAuthor(bookUpdateRequest.getAuthor());
         oldBook.setDescription(bookUpdateRequest.getDescription());
         oldBook.setName(bookUpdateRequest.getName());
@@ -185,7 +187,7 @@ public class BookServiceImpl implements BookService {
         oldBook.setPageCount(bookUpdateRequest.getPageCount());
     }
 
-    private Book checkAddBook(BookAddRequest bookAddRequest) {
+    private Book prepareAddBook(BookAddRequest bookAddRequest) {
         Book book = new Book();
 
         book.setAuthor(bookAddRequest.getAuthor());
@@ -207,7 +209,7 @@ public class BookServiceImpl implements BookService {
 
     private void checkGenre(BookAddRequest bookAddRequest, Book book) {
         Genre genre = genreRepo.findByName(bookAddRequest.getGenreName())
-                .orElseThrow(() -> new NotFoundException("Khong tim thay the loai tuong ung"));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy thể loại tương ứng"));
         BookGenre bookGenre = new BookGenre();
         bookGenre.setBook(book);
         bookGenre.setGenre(genre);
@@ -220,7 +222,8 @@ public class BookServiceImpl implements BookService {
         }
 
         List<Integer> bookIds = books.stream()
-                .map(Book::getBookId)
+                .map(book -> Optional.ofNullable(book.getBookId())
+                        .orElseThrow(() -> new ConflictException("Sách không tồn tại")))
                 .toList();
 
         return bookGenreRepo.findWithGenreByBookIds(bookIds).stream()

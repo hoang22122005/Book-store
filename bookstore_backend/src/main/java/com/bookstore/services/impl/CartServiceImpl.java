@@ -38,7 +38,7 @@ public class CartServiceImpl implements CartService {
     @Override
     public Cart createCart(int userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Khong tim thay nguoi dung"));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy người dùng"));
 
         Cart cart = new Cart();
         cart.setUser(user);
@@ -57,9 +57,9 @@ public class CartServiceImpl implements CartService {
     @Transactional
     public void deleteCartDetail(CartDetailId cartDetailId) {
         Book book = bookRepo.findById(cartDetailId.getBookId())
-                .orElseThrow(() -> new NotFoundException("Khong tim thay san pham"));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy sản phẩm"));
         CartDetail cartDetail = cartDetailRepo.findById(cartDetailId)
-                .orElseThrow(() -> new NotFoundException("Khong tim thay san pham trong gio hang"));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy sản phẩm trong giỏ hàng"));
 
         BigDecimal updateTotal = book.getPrice().multiply(BigDecimal.valueOf(cartDetail.getQuantity()));
         cartRepo.updateTotalAmount(updateTotal.negate(), cartDetailId.getCartId());
@@ -70,7 +70,7 @@ public class CartServiceImpl implements CartService {
     @Transactional
     public void addCartDetail(CartDetailId cartDetailId, int userId) {
         Book book = bookRepo.findById(cartDetailId.getBookId())
-                .orElseThrow(() -> new NotFoundException("Khong tim thay san pham"));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy sản phẩm"));
 
         if (cartDetailId.getCartId() == 0)
             createCart(userId);
@@ -87,7 +87,7 @@ public class CartServiceImpl implements CartService {
     @Transactional
     public void increaseQuatityCartDetail(CartDetailId cartDetailId) {
         Book book = bookRepo.findById(cartDetailId.getBookId())
-                .orElseThrow(() -> new NotFoundException("Khong tim thay san pham"));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy sản phẩm"));
 
         cartDetailRepo.increaseQuatityCartDetail(cartDetailId.getCartId(), cartDetailId.getBookId());
 
@@ -98,10 +98,10 @@ public class CartServiceImpl implements CartService {
     @Transactional
     public void decreaseQuatityCartDetail(CartDetailId cartDetailId) {
         Book book = bookRepo.findById(cartDetailId.getBookId())
-                .orElseThrow(() -> new NotFoundException("Khong tim thay san pham"));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy sản phẩm"));
 
         CartDetail cartDetail = cartDetailRepo.findById(cartDetailId)
-                .orElseThrow(() -> new NotFoundException("Khong tim thay san pham trong gio hang"));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy sản phẩm trong giỏ hàng"));
 
         if (cartDetail.getQuantity() == 1) {
             throw new ConflictException("Khong the giam tiep so luong san pham");

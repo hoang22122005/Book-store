@@ -27,6 +27,7 @@ import com.bookstore.models.Book;
 import com.bookstore.common.response.ApiResponse;
 import com.bookstore.services.impl.BookServiceImpl;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -57,7 +58,7 @@ public class BookController {
 
     @PostMapping("/admin/books")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<Book>> addBook(@RequestPart BookAddRequest bookAddRequest, @RequestPart MultipartFile imgFile)
+    public ResponseEntity<ApiResponse<Book>> addBook(@Valid @RequestPart BookAddRequest bookAddRequest, @RequestPart MultipartFile imgFile)
             throws IOException {
         Book result = bookService.addBook(bookAddRequest, imgFile);
         return ResponseEntity.ok(ApiResponse.success("Add book successfully", result));
@@ -65,7 +66,7 @@ public class BookController {
 
     @PutMapping("/admin/books/{bookId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<Book>> updateBook(@RequestPart BookUpdateRequest bookUpdateRequest, @PathVariable int bookId,
+    public ResponseEntity<ApiResponse<Book>> updateBook(@Valid @RequestPart BookUpdateRequest bookUpdateRequest, @PathVariable int bookId,
             @RequestPart MultipartFile imgFile) throws IOException {
         Book result = bookService.updateBook(bookId, bookUpdateRequest, imgFile);
         return ResponseEntity.ok(ApiResponse.success("Update book successfully", result));
