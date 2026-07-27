@@ -3,6 +3,7 @@ package com.bookstore.models;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import com.bookstore.models.enums.AccountStatus;
 import com.bookstore.models.enums.Role;
 import com.bookstore.models.enums.RoleConverter;
 import jakarta.persistence.*;
@@ -29,6 +30,10 @@ public class User {
 
     @Convert(converter = RoleConverter.class)
     private Role role;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private AccountStatus status;
 
     private String address;
     private LocalDate dob;

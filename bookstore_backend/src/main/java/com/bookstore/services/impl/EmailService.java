@@ -32,4 +32,22 @@ public class EmailService {
 
         mailSender.send(message);
     }
+
+    public void sendVerificationEmail(String toEmail, String token) {
+        String link = "http://localhost:8080/api/auth/verify-email?token=" + token;
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(fromEmail);
+        message.setTo(toEmail);
+        message.setSubject("Xác minh email của bạn - BookStore");
+        message.setText(
+            "Xin chào,\n\n" +
+            "Bạn vừa đăng ký tài khoản. Vui lòng click vào link dưới đây để xác minh email (hết hạn sau 30 phút):\n\n" +
+            link + "\n\n" +
+            "Nếu bạn không yêu cầu điều này, vui lòng bỏ qua email này."
+        );
+
+        mailSender.send(message);
+        
+    }
 }
