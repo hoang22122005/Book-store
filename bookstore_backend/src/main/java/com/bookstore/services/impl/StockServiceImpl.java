@@ -8,6 +8,7 @@ import com.bookstore.exception.BadRequestException;
 import com.bookstore.exception.NotFoundException;
 import com.bookstore.models.Book;
 import com.bookstore.repository.BookRepo;
+import com.bookstore.repository.InventoryRepository;
 import com.bookstore.services.StockService;
 
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class StockServiceImpl implements StockService {
     private final BookRepo bookRepository;
+    private final InventoryRepository inventoryRepository;
 
     @Override
     @Transactional
@@ -27,6 +29,9 @@ public class StockServiceImpl implements StockService {
             throw new BadRequestException("Sách đã bị xóa, không thể nhập kho");
         }
 
+        if (inventoryRepository.increaseStock(bookId, quantity) != 1) {
+            throw new NotFoundException("Khong tim thay ton kho cua sach: " + bookId);
+        }
         book.setQuantityInStock(book.getQuantityInStock() + quantity);
         Book saved = bookRepository.save(book);
 

@@ -16,10 +16,12 @@ import com.bookstore.common.response.ApiResponse;
 import com.bookstore.common.response.PageResponse;
 import com.bookstore.dto.bill.BillResponse;
 import com.bookstore.dto.bill.CreateBillRequest;
+import com.bookstore.dto.payment.CheckoutResponse;
 import com.bookstore.security.CurrentUser;
 import com.bookstore.services.BillService;
 
 import jakarta.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -46,10 +48,22 @@ public class BillController {
     }
 
     @PostMapping("/checkout")
-    public ResponseEntity<ApiResponse<BillResponse>> createBillFromMyCart(
-            @Valid @RequestBody CreateBillRequest request) {
+    public ResponseEntity<ApiResponse<CheckoutResponse>> createBillFromMyCart(
+            @Valid @RequestBody CreateBillRequest request,
+            HttpServletRequest httpRequest) {
         return ResponseEntity.ok(ApiResponse.success(
                 "Bill created successfully",
-                billService.createBillFromMyCart(currentUser.getUserId(), request)));
+                billService.createBillFromMyCart(
+                        currentUser.getUserId(),
+                        request,
+                        getClientIp(httpRequest))));
+    }
+
+    private String getClientIp(HttpServletRequest request) {
+        String forwardedFor = request.getHeader("X-Forwarded-For");
+        if (forwardedFor != null && !forwardedFor.isBlank()) {
+            return forwardedFor.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
     }
 }

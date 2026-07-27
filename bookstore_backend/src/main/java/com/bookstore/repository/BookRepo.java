@@ -45,6 +45,29 @@ public interface BookRepo extends JpaRepository<Book, Integer> {
                      """, nativeQuery = true)
        int softDeleteBook(LocalDateTime deletedAt, int bookId);
 
+       @Modifying
+       @Transactional
+       @Query(value = """
+                     UPDATE book
+                        SET quantity_in_stock = quantity_in_stock - :quantity
+                      WHERE book_id = :bookId
+                        AND quantity_in_stock >= :quantity
+                     """, nativeQuery = true)
+       int deductStock(
+                     @Param("bookId") int bookId,
+                     @Param("quantity") int quantity);
+
+       @Modifying
+       @Transactional
+       @Query(value = """
+                     UPDATE book
+                        SET quantity_in_stock = quantity_in_stock + :quantity
+                      WHERE book_id = :bookId
+                     """, nativeQuery = true)
+       int increaseStock(
+                     @Param("bookId") int bookId,
+                     @Param("quantity") int quantity);
+
        @Transactional
        @Query(value = """
                      UPDATE book SET name = ?1, author = ?2, description = ?3, price = ?4,

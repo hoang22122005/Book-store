@@ -5,6 +5,7 @@ import org.springframework.data.domain.Pageable;
 import com.bookstore.common.response.PageResponse;
 import com.bookstore.dto.bill.BillResponse;
 import com.bookstore.dto.bill.CreateBillRequest;
+import com.bookstore.dto.payment.CheckoutResponse;
 
 public interface BillService {
     PageResponse<BillResponse> getAllBills(Pageable pageable);
@@ -15,7 +16,7 @@ public interface BillService {
 
     BillResponse getMyBillById(int userId, int billId);
 
-    BillResponse createBillFromMyCart(int userId, CreateBillRequest request);
+    CheckoutResponse createBillFromMyCart(int userId, CreateBillRequest request, String clientIp);
 
     BillResponse updateBillStatusForAdmin(int billId, String status);
 

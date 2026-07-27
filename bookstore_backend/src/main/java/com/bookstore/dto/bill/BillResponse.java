@@ -32,6 +32,7 @@ public class BillResponse {
     BigDecimal discountAmount;
     BigDecimal totalAmount;
     String status;
+    String inventoryStatus;
     LocalDateTime createdAt;
     List<BillDetailResponse> details;
 
@@ -54,6 +55,9 @@ public class BillResponse {
                 .discountAmount(discountAmount)
                 .totalAmount(totalAmount)
                 .status(bill.getStatus() == null ? null : bill.getStatus().name())
+                .inventoryStatus(bill.getInventoryStatus() == null
+                        ? null
+                        : bill.getInventoryStatus().name())
                 .createdAt(bill.getCreatedAt())
                 .details(detailResponses);
 

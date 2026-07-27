@@ -3,6 +3,8 @@ package com.bookstore.services.impl;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -26,9 +28,11 @@ import com.bookstore.models.Book;
 import com.bookstore.models.BookGenre;
 import com.bookstore.models.Book_;
 import com.bookstore.models.Genre;
+import com.bookstore.models.Inventory;
 import com.bookstore.repository.BookGenreRepo;
 import com.bookstore.repository.BookRepo;
 import com.bookstore.repository.GenreRepo;
+import com.bookstore.repository.InventoryRepository;
 import com.bookstore.services.BookService;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
@@ -45,6 +49,7 @@ public class BookServiceImpl implements BookService {
     private final BookRepo bookRepo;
     private final BookGenreRepo bookGenreRepo;
     private final GenreRepo genreRepo;
+    private final InventoryRepository inventoryRepository;
     private final Cloudinary cloudinary;
 
     @Override
@@ -141,6 +146,13 @@ public class BookServiceImpl implements BookService {
 
         bookRepo.save(book);
 
+        Inventory inventory = new Inventory();
+        inventory.setBookId(book.getBookId());
+        inventory.setQuantityInStock(book.getQuantityInStock());
+        inventory.setReservedQuantity(0);
+        inventory.setUpdatedAt(OffsetDateTime.now(ZoneOffset.UTC));
+        inventoryRepository.save(inventory);
+
         checkGenre(bookAddRequest, book);
 
         return book;
@@ -177,7 +189,6 @@ public class BookServiceImpl implements BookService {
         oldBook.setDescription(bookUpdateRequest.getDescription());
         oldBook.setName(bookUpdateRequest.getName());
         oldBook.setPrice(bookUpdateRequest.getPrice());
-        oldBook.setQuantityInStock(bookUpdateRequest.getQuantityInStock());
         oldBook.setVip(bookUpdateRequest.isVip());
         oldBook.setDeleted(bookUpdateRequest.isDeleted());
         if (!bookUpdateRequest.isDeleted())
