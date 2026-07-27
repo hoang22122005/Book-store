@@ -19,6 +19,7 @@ import com.bookstore.repository.CartRepo;
 import com.bookstore.repository.BookRepo;
 import com.bookstore.repository.UserRepository;
 import com.bookstore.services.CartService;
+import com.bookstore.services.InventoryService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -29,6 +30,7 @@ public class CartServiceImpl implements CartService {
     private final CartDetailRepo cartDetailRepo;
     private final UserRepository userRepository;
     private final BookRepo bookRepo;
+    private final InventoryService inventoryService;
 
     @Override
     public Cart getCart(int userId) {
@@ -56,7 +58,7 @@ public class CartServiceImpl implements CartService {
     @Override
     @Transactional
     public void deleteCartDetail(CartDetailId cartDetailId) {
-        Book book = bookRepo.findById(cartDetailId.getBookId())
+        Book book = bookRepo.findByBookIdAndIsDeletedFalse(cartDetailId.getBookId())
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy sản phẩm"));
         CartDetail cartDetail = cartDetailRepo.findById(cartDetailId)
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy sản phẩm trong giỏ hàng"));
@@ -69,13 +71,17 @@ public class CartServiceImpl implements CartService {
     @Override
     @Transactional
     public void addCartDetail(CartDetailId cartDetailId, int userId) {
-        Book book = bookRepo.findById(cartDetailId.getBookId())
+        Book book = bookRepo.findByBookIdAndIsDeletedFalse(cartDetailId.getBookId())
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy sản phẩm"));
 
         if (cartDetailId.getCartId() == 0)
             createCart(userId);
 
-        if (cartDetailRepo.findById(cartDetailId).isEmpty())
+        CartDetail currentDetail = cartDetailRepo.findById(cartDetailId).orElse(null);
+        int requestedQuantity = currentDetail == null ? 1 : currentDetail.getQuantity() + 1;
+        inventoryService.ensureAvailable(cartDetailId.getBookId(), requestedQuantity);
+
+        if (currentDetail == null)
             cartDetailRepo.addCartDetail(cartDetailId.getCartId(), cartDetailId.getBookId(), 1, LocalDateTime.now());
         else
             cartDetailRepo.increaseQuatityCartDetail(cartDetailId.getCartId(), cartDetailId.getBookId());
@@ -86,8 +92,14 @@ public class CartServiceImpl implements CartService {
     @Override
     @Transactional
     public void increaseQuatityCartDetail(CartDetailId cartDetailId) {
-        Book book = bookRepo.findById(cartDetailId.getBookId())
+        Book book = bookRepo.findByBookIdAndIsDeletedFalse(cartDetailId.getBookId())
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy sản phẩm"));
+
+        CartDetail cartDetail = cartDetailRepo.findById(cartDetailId)
+                .orElseThrow(() -> new NotFoundException("Khong tim thay san pham trong gio hang"));
+        inventoryService.ensureAvailable(
+                cartDetailId.getBookId(),
+                cartDetail.getQuantity() + 1);
 
         cartDetailRepo.increaseQuatityCartDetail(cartDetailId.getCartId(), cartDetailId.getBookId());
 

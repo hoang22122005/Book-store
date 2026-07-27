@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import com.bookstore.models.enums.BillStatus;
+import com.bookstore.models.enums.InventoryStatus;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -43,6 +44,10 @@ public class Bill {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 30)
     private BillStatus status;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "inventory_status", nullable = false, length = 20)
+    private InventoryStatus inventoryStatus;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
