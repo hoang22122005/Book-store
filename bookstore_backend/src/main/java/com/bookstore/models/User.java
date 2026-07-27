@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import com.bookstore.models.enums.Role;
+import com.bookstore.models.enums.RoleConverter;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,8 +27,8 @@ public class User {
     private String name;
     private String email;
 
-    //@Enumerated(EnumType.STRING)
-    private String role;
+    @Convert(converter = RoleConverter.class)
+    private Role role;
 
     private String address;
     private LocalDate dob;

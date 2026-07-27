@@ -13,6 +13,7 @@ import com.bookstore.exception.NotFoundException;
 import com.bookstore.models.ChatMessage;
 import com.bookstore.models.ChatRoom;
 import com.bookstore.models.User;
+import com.bookstore.models.enums.Role;
 import com.bookstore.repository.ChatMessageRepository;
 import com.bookstore.repository.ChatRoomRepository;
 import com.bookstore.repository.UserRepository;
@@ -107,7 +108,7 @@ public class ChatServiceImpl implements ChatService {
     }
 
     private boolean isStaff(User user) {
-        String role = user.getRole();
-        return role != null && ("ADMIN".equalsIgnoreCase(role) || "INVENTOR".equalsIgnoreCase(role));
+        var role = user.getRole();
+        return role == Role.ADMIN || role == Role.STAFF;
     }
 }
