@@ -32,7 +32,7 @@ public class JwtService {
     public String generateToken(User user ){
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", user.getUserId());
-        claims.put("role", user.getRole());
+        claims.put("role", user.getRole().name());
         return Jwts.builder() //Jwts tạo jwt và parse jwt
                 .setClaims(claims)
                 .setSubject(user.getEmail())

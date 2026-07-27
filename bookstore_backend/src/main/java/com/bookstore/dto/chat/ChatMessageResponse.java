@@ -25,7 +25,7 @@ public class ChatMessageResponse {
                 .chatRoomId(message.getChatRoom().getChatRoomId())
                 .senderId(message.getSender().getUserId())
                 .senderName(message.getSender().getName())
-                .senderRole(message.getSender().getRole())
+                .senderRole(message.getSender().getRole().name())
                 .content(message.getContent())
                 .read(message.isRead())
                 .createdAt(message.getCreatedAt())

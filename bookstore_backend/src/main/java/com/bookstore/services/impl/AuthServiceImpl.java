@@ -40,7 +40,7 @@ public class AuthServiceImpl implements AuthService {
         User user = User.builder()
                 .name(req.getName())
                 .email(req.getEmail())
-                .role(Role.USER.name().toLowerCase())
+                .role(Role.USER)
                 .address(req.getAddress())
                 .dob(req.getDob())
                 .phone(req.getPhone())
