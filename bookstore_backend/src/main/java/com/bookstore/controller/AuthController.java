@@ -13,9 +13,11 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -30,11 +32,17 @@ public class AuthController {
     public ResponseEntity<ApiResponse<AuthResponse>> register(
             @Valid @RequestBody RegisterRequest req){
         authService.register(req);
-        ApiResponse<AuthResponse> res = ApiResponse.success("Register successfully ", null);
+        ApiResponse<AuthResponse> res = ApiResponse.success("Dang ky thanh cong. Vui long kiem tra email de xac minh tai khoan.", null);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(res);
 
 
+    }
+
+    @GetMapping("/verify-email")
+    public ResponseEntity<ApiResponse<Void>> verifyEmail(@RequestParam String token) {
+        authService.verifyEmail(token);
+        return ResponseEntity.ok(ApiResponse.success("Xac minh email thanh cong", null));
     }
 
     @PostMapping("/login")
