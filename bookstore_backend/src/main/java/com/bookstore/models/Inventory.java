@@ -29,3 +29,5 @@ public class Inventory {
     @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt;
 }
+
+
