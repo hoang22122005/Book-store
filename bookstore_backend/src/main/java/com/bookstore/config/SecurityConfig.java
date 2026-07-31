@@ -1,6 +1,7 @@
 package com.bookstore.config;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,6 +14,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.bookstore.common.response.ApiResponse;
 import com.bookstore.security.JwtAuthFilter;
@@ -30,21 +34,35 @@ public class SecurityConfig {
     private final ObjectMapper objectMapper;
 
     @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOriginPatterns(List.of("*"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowCredentials(true);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
+
+    @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // tấn công qua cookie
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/public/**").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/api-docs/**").permitAll()
                         .requestMatchers("/api/payments/vnpay/ipn").permitAll()
                         .requestMatchers("/api/payments/vnpay/return").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/dashboard/**")
                         .hasAnyRole("ADMIN", "STAFF", "ACCOUNTANT", "WAREHOUSE_KEEPER")
+                        .requestMatchers("/api/stock/**").hasRole("WAREHOUSE_KEEPER")
                         .requestMatchers("/api/stock/**", "/api/stock-imports**").hasRole( "WAREHOUSE_KEEPER")
                         .requestMatchers("/ws/**").permitAll()
                         .anyRequest().authenticated()
-
                 )
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint((request, response, authException) -> {
@@ -61,9 +79,8 @@ public class SecurityConfig {
                         }))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
-        // UsernamePasswordAuthen filter mặc định truyền thông ở trước
-        return http.build();
 
+        return http.build();
     }
 
     @Bean

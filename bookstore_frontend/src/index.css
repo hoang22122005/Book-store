@@ -121,3 +121,19 @@ body {
 html {
   color-scheme: light !important;
 }
+
+/* Glass panel and Form input validation styles */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.input-error {
+  border-color: #ba1a1a !important;
+}
+
+.input-error:focus {
+  box-shadow: 0 0 0 3px #ffdad6 !important;
+}

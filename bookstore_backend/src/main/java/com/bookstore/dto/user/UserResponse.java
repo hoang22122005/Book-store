@@ -13,10 +13,12 @@ public class UserResponse {
     private Integer id;
     private String email;
     private String fullName;
+    private String role;
     private String phoneNumber;
     private String address;
     private String gender;
     private String career;
     private String urlAvt;
+
 
 }

@@ -17,12 +17,14 @@ public class UserMapper {
                 .id(user.getUserId())
                 .email(user.getEmail())
                 .fullName(user.getName())
+                .role(user.getRole() != null ? user.getRole().toUpperCase() : "USER")
                 .phoneNumber(user.getPhone())
                 .address(user.getAddress())
                 .gender(user.getGender())
                 .career(user.getCareer())
                 .urlAvt(user.getUrlAvt())
                 .build();
+
     }
 
     public void updateProfile(UpdateUserRequest req, User user) {

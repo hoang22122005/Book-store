@@ -14,6 +14,8 @@ import com.bookstore.exception.AccountNotVerifiedException;
 import com.bookstore.exception.BadRequestException;
 import com.bookstore.exception.ConflictException;
 import com.bookstore.exception.UnauthorizedException;
+import com.bookstore.dto.user.UserResponse;
+import com.bookstore.mapper.UserMapper;
 import com.bookstore.models.RefreshToken;
 import com.bookstore.models.User;
 import com.bookstore.models.VerificationToken;
