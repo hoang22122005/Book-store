@@ -38,6 +38,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final RefreshTokenService refreshTokenService;
     private final EmailService emailService;
+    private final UserMapper userMapper;
 
     @Override
     public void register(RegisterRequest req) {
@@ -94,7 +95,12 @@ public class AuthServiceImpl implements AuthService {
         String accessToken = jwtService.generateToken(user);
         String refreshToken = refreshTokenService.createRefreshToken(user);
 
-        return AuthResponse.builder().accessToken(accessToken).refreshToken(refreshToken).build();
+        return AuthResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .role(user.getRole().name())
+                .user(userMapper.toResponse(user))
+                .build();
     }
 
     @Override

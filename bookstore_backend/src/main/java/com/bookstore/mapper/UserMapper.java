@@ -17,7 +17,7 @@ public class UserMapper {
                 .id(user.getUserId())
                 .email(user.getEmail())
                 .fullName(user.getName())
-                .role(user.getRole() != null ? user.getRole().toUpperCase() : "USER")
+                .role(user.getRole() != null ? user.getRole().name() : "USER")
                 .phoneNumber(user.getPhone())
                 .address(user.getAddress())
                 .gender(user.getGender())
