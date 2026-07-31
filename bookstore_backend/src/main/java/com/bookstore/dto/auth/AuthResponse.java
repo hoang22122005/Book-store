@@ -1,6 +1,8 @@
 package com.bookstore.dto.auth;
 
 
+import com.bookstore.dto.user.UserResponse;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,5 +16,6 @@ import lombok.NoArgsConstructor;
 public class AuthResponse {
     private String accessToken;
     private String refreshToken;
-
+    private String role;
+    private UserResponse user;
 }

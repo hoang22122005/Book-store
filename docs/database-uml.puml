@@ -1,0 +1,214 @@
+@startuml Bookstore_PostgreSQL_ERD
+title Bookstore Database - PostgreSQL / public schema
+
+hide methods
+hide stereotypes
+skinparam linetype ortho
+skinparam shadowing false
+skinparam entity {
+  BackgroundColor #F8FAFC
+  BorderColor #334155
+  FontColor #0F172A
+}
+
+entity "user" as users {
+  * user_id : integer <<PK>>
+  --
+  name : varchar [nullable]
+  email : varchar [nullable, unique]
+  role : varchar [nullable, default: user]
+  created_at : timestamp [nullable]
+  dob : date [nullable]
+  is_deleted : boolean [nullable]
+  address : varchar [nullable]
+  phone : varchar [nullable]
+  gender : varchar [nullable]
+  career : varchar [nullable]
+  password_hash : varchar [nullable]
+  url_avt : varchar [nullable]
+  is_vip : boolean [nullable]
+  vip_expiration : timestamp [nullable]
+}
+
+entity "book" as book {
+  * book_id : integer <<PK>>
+  --
+  name : varchar
+  isbn : varchar [nullable, unique]
+  author : varchar [nullable]
+  description : text [nullable]
+  quantity_in_stock : integer [nullable]
+  publisher : varchar [nullable]
+  publish_year : integer [nullable]
+  price : numeric
+  created_at : timestamp [nullable]
+  deleted_at : timestamp [nullable]
+  is_deleted : boolean [nullable]
+  url_image : varchar [nullable]
+  avg_rating : real [nullable]
+  buy_count : integer [nullable]
+  cnt_rating : integer [nullable]
+  public_id : varchar [nullable]
+  page_count : integer [nullable]
+  is_vip : boolean [nullable]
+}
+
+entity "genre" as genre {
+  * genre_id : integer <<PK>>
+  --
+  name : varchar [unique]
+}
+
+entity "book_genre" as book_genre {
+  * book_genre_id : integer <<PK>>
+  --
+  book_id : integer <<FK>>
+  genre_id : integer <<FK>>
+}
+
+entity "voucher" as voucher {
+  * voucher_id : integer <<PK>>
+  --
+  discount_percent : real
+  code : varchar [unique]
+  expired_at : timestamp
+  scope : varchar [nullable]
+}
+
+entity "bill" as bill {
+  * bill_id : integer <<PK>>
+  --
+  user_id : integer <<FK, nullable>>
+  voucher_id : integer <<FK, nullable>>
+  total_amount : numeric [nullable]
+  created_at : timestamp [nullable]
+  status : varchar [default: PENDING]
+}
+
+entity "bill_detail" as bill_detail {
+  * bill_detail_id : integer <<PK>>
+  --
+  bill_id : integer <<FK, nullable>>
+  book_id : integer <<FK, nullable>>
+  quantity : integer
+  price_at_purchase : numeric
+}
+
+entity "comment" as comment {
+  * comment_id : integer <<PK>>
+  --
+  book_id : integer <<FK, nullable>>
+  user_id : integer <<FK, nullable>>
+  content : varchar
+  created_at : timestamp [nullable]
+}
+
+entity "rating" as rating {
+  * rating_id : integer <<PK>>
+  --
+  book_id : integer <<FK, nullable>>
+  user_id : integer <<FK, nullable>>
+  rate_value : integer
+}
+
+entity "cart" as cart {
+  * cart_id : integer <<PK>>
+  --
+  user_id : integer <<FK, nullable, unique>>
+  total_amount : numeric [nullable]
+  created_at : timestamp [nullable]
+}
+
+entity "cart_detail" as cart_detail {
+  * cart_id : integer <<PK, FK>>
+  * book_id : integer <<PK, FK>>
+  --
+  quantity : integer
+  created_at : timestamp [nullable]
+}
+
+entity "chat_room" as chat_room {
+  * chat_room_id : integer <<PK>>
+  --
+  buyer_id : integer <<FK, unique>>
+  status : varchar [nullable, default: open]
+  created_at : timestamp [nullable]
+}
+
+entity "chat_message" as chat_message {
+  * message_id : integer <<PK>>
+  --
+  chat_room_id : integer <<FK>>
+  sender_id : integer <<FK>>
+  content : varchar
+  is_read : boolean [nullable]
+  created_at : timestamp [nullable]
+}
+
+entity "refresh_tokens" as refresh_tokens {
+  * id : bigint <<PK, identity>>
+  --
+  created_at : timestamp
+  expires_at : timestamp
+  revoked : boolean
+  revoked_at : timestamp [nullable]
+  token : varchar [unique]
+  user_id : integer <<FK>>
+}
+
+entity "password_reset_tokens" as password_reset_tokens {
+  * id : bigint <<PK, identity>>
+  --
+  created_at : timestamp
+  expires_at : timestamp [nullable]
+  token_hash : varchar [unique]
+  used : boolean
+  used_at : timestamp [nullable]
+  user_id : integer <<FK>>
+}
+
+entity "user_voucher" as user_voucher {
+  * id : integer <<PK>>
+  --
+  user_id : integer <<FK, nullable>>
+  voucher_id : integer <<FK, nullable>>
+  is_used : boolean [nullable]
+  used_at : timestamp [nullable]
+}
+
+users |o--o{ bill : places
+voucher |o--o{ bill : applies_to
+bill |o--o{ bill_detail : contains
+book |o--o{ bill_detail : purchased_as
+
+book ||--o{ book_genre : classified_by
+genre ||--o{ book_genre : contains
+
+users |o--o{ comment : writes
+book |o--o{ comment : receives
+users |o--o{ rating : gives
+book |o--o{ rating : receives
+
+users |o--o| cart : owns
+cart ||--o{ cart_detail : contains
+book ||--o{ cart_detail : added_as
+
+users ||--o| chat_room : opens
+chat_room ||--o{ chat_message : contains
+users ||--o{ chat_message : sends
+
+users ||--o{ refresh_tokens : owns
+users ||--o{ password_reset_tokens : requests
+users |o--o{ user_voucher : receives
+voucher |o--o{ user_voucher : assigned_as
+
+legend right
+  |= Ký hiệu |= Ý nghĩa |
+  | <<PK>> | Primary key |
+  | <<FK>> | Foreign key |
+  | || | Bắt buộc, đúng 1 |
+  | |o | Không hoặc 1 |
+  | o{ | Không hoặc nhiều |
+endlegend
+
+@enduml
