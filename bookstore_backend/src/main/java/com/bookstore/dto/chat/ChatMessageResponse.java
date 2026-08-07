@@ -10,6 +10,7 @@ import lombok.Data;
 @Data
 @Builder
 public class ChatMessageResponse {
+    private ChatEventType type;
     private int messageId;
     private int chatRoomId;
     private int senderId;
@@ -21,6 +22,7 @@ public class ChatMessageResponse {
 
     public static ChatMessageResponse from(ChatMessage message) {
         return ChatMessageResponse.builder()
+                .type(ChatEventType.MESSAGE)
                 .messageId(message.getMessageId())
                 .chatRoomId(message.getChatRoom().getChatRoomId())
                 .senderId(message.getSender().getUserId())

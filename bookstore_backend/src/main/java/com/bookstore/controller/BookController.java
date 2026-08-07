@@ -2,6 +2,7 @@ package com.bookstore.controller;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.List;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.bookstore.dto.product.BookResponse;
+import com.bookstore.dto.product.GenreResponse;
 import com.bookstore.common.response.PageResponse;
 import com.bookstore.dto.book.BookAddRequest;
 import com.bookstore.dto.book.BookUpdateRequest;
@@ -54,6 +56,12 @@ public class BookController {
     public ResponseEntity<ApiResponse<BookResponse>> getBookDetail(@PathVariable int bookId) {
         BookResponse book = bookService.getBookDetail(bookId);
         return ResponseEntity.ok(ApiResponse.success("Book fetched successfully", book));
+    }
+
+    @GetMapping("/public/genres")
+    public ResponseEntity<ApiResponse<List<GenreResponse>>> getGenres() {
+        List<GenreResponse> genres = bookService.getAllGenres();
+        return ResponseEntity.ok(ApiResponse.success("Genres fetched successfully", genres));
     }
 
     @PostMapping("/admin/books")

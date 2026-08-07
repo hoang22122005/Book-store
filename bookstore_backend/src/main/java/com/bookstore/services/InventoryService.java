@@ -56,6 +56,10 @@ public class InventoryService {
                     bookRepository.deductStock(bookId, detail.getQuantity()),
                     bookId,
                     "Khong the dong bo ton kho sach ");
+            requireUpdated(
+                    bookRepository.increaseBuyCount(bookId, detail.getQuantity()),
+                    bookId,
+                    "Khong the cap nhat luot mua cho sach ");
         });
     }
 
@@ -79,6 +83,10 @@ public class InventoryService {
                     bookRepository.increaseStock(bookId, detail.getQuantity()),
                     bookId,
                     "Khong the dong bo ton kho sach ");
+            requireUpdated(
+                    bookRepository.decreaseBuyCount(bookId, detail.getQuantity()),
+                    bookId,
+                    "Khong the cap nhat luot mua cho sach ");
         });
     }
 

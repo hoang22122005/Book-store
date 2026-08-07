@@ -2,6 +2,7 @@ package com.bookstore.repository;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,6 +20,7 @@ import jakarta.transaction.Transactional;
 public interface BookRepo extends JpaRepository<Book, Integer> {
        List<Book> findByIsDeletedFalse();
 
+       List<Book> findAllByBookIdInAndIsDeletedFalse(Collection<Integer> bookIds);
 
        Optional<Book> findByBookIdAndIsDeletedFalse(int bookId);
 
@@ -65,6 +67,28 @@ public interface BookRepo extends JpaRepository<Book, Integer> {
                       WHERE book_id = :bookId
                      """, nativeQuery = true)
        int increaseStock(
+                     @Param("bookId") int bookId,
+                     @Param("quantity") int quantity);
+
+       @Modifying
+       @Transactional
+       @Query(value = """
+                     UPDATE book
+                        SET buy_count = COALESCE(buy_count, 0) + :quantity
+                      WHERE book_id = :bookId
+                     """, nativeQuery = true)
+       int increaseBuyCount(
+                     @Param("bookId") int bookId,
+                     @Param("quantity") int quantity);
+
+       @Modifying
+       @Transactional
+       @Query(value = """
+                     UPDATE book
+                        SET buy_count = GREATEST(COALESCE(buy_count, 0) - :quantity, 0)
+                      WHERE book_id = :bookId
+                     """, nativeQuery = true)
+       int decreaseBuyCount(
                      @Param("bookId") int bookId,
                      @Param("quantity") int quantity);
 

@@ -1,20 +1,23 @@
 import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, BookOpen, Tag, ShoppingBag, Package, DollarSign, ArrowLeft, LogOut } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Tag, ShoppingBag, Package, DollarSign, ArrowLeft, LogOut, MessagesSquare } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { canAccessAdminRoute, type AdminRoute } from '../utils/adminAccess';
 
 export const AdminLayout: React.FC = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
 
-  const navItems = [
+  const navItems: { label: string; path: AdminRoute; icon: typeof LayoutDashboard }[] = [
     { label: 'Tổng Quan', path: '/admin', icon: LayoutDashboard },
     { label: 'Quản Lý Sách', path: '/admin/books', icon: BookOpen },
     { label: 'Voucher', path: '/admin/vouchers', icon: Tag },
+    { label: 'Trò chuyện', path: '/admin/chat', icon: MessagesSquare },
     { label: 'Đơn Hàng', path: '/admin/orders', icon: ShoppingBag },
     { label: 'Nhập Kho', path: '/admin/warehouse', icon: Package },
     { label: 'Doanh Thu', path: '/admin/finance', icon: DollarSign },
   ];
+  const visibleNavItems = navItems.filter((item) => canAccessAdminRoute(user?.role, item.path));
 
   return (
     <div className="min-h-screen flex bg-slate-900 text-slate-100 font-sans">
@@ -32,7 +35,7 @@ export const AdminLayout: React.FC = () => {
           </div>
 
           <nav className="space-y-1">
-            {navItems.map((item) => {
+            {visibleNavItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
               return (

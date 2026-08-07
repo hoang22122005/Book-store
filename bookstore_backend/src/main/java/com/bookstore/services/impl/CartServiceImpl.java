@@ -3,10 +3,12 @@ package com.bookstore.services.impl;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.bookstore.dto.discount.ActiveBookDiscount;
 import com.bookstore.exception.ConflictException;
 import com.bookstore.exception.NotFoundException;
 import com.bookstore.models.Book;
@@ -19,6 +21,7 @@ import com.bookstore.repository.CartRepo;
 import com.bookstore.repository.BookRepo;
 import com.bookstore.repository.UserRepository;
 import com.bookstore.services.CartService;
+import com.bookstore.services.DiscountPricingService;
 import com.bookstore.services.InventoryService;
 
 import lombok.RequiredArgsConstructor;
@@ -31,10 +34,14 @@ public class CartServiceImpl implements CartService {
     private final UserRepository userRepository;
     private final BookRepo bookRepo;
     private final InventoryService inventoryService;
+    private final DiscountPricingService discountPricingService;
 
     @Override
+    @Transactional
     public Cart getCart(int userId) {
-        return cartRepo.findByUser_UserId(userId).orElseGet(() -> createCart(userId));
+        Cart cart = cartRepo.findByUser_UserId(userId).orElseGet(() -> createCart(userId));
+        recalculateCartTotal(cart);
+        return cart;
     }
 
     @Override
@@ -63,9 +70,9 @@ public class CartServiceImpl implements CartService {
         CartDetail cartDetail = cartDetailRepo.findById(cartDetailId)
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy sản phẩm trong giỏ hàng"));
 
-        BigDecimal updateTotal = book.getPrice().multiply(BigDecimal.valueOf(cartDetail.getQuantity()));
-        cartRepo.updateTotalAmount(updateTotal.negate(), cartDetailId.getCartId());
         cartDetailRepo.deleteById(cartDetailId);
+        cartDetailRepo.flush();
+        recalculateCartTotal(cartDetailId.getCartId());
     }
 
     @Override
@@ -86,7 +93,7 @@ public class CartServiceImpl implements CartService {
         else
             cartDetailRepo.increaseQuatityCartDetail(cartDetailId.getCartId(), cartDetailId.getBookId());
 
-        cartRepo.updateTotalAmount(book.getPrice(), cartDetailId.getCartId());
+        recalculateCartTotal(cartDetailId.getCartId());
     }
 
     @Override
@@ -103,7 +110,7 @@ public class CartServiceImpl implements CartService {
 
         cartDetailRepo.increaseQuatityCartDetail(cartDetailId.getCartId(), cartDetailId.getBookId());
 
-        cartRepo.updateTotalAmount(book.getPrice(), cartDetailId.getCartId());
+        recalculateCartTotal(cartDetailId.getCartId());
     }
 
     @Override
@@ -121,7 +128,26 @@ public class CartServiceImpl implements CartService {
 
         cartDetailRepo.decreaseQuatityCartDetail(cartDetailId.getCartId(), cartDetailId.getBookId());
 
-        cartRepo.updateTotalAmount(book.getPrice().negate(), cartDetailId.getCartId());
+        recalculateCartTotal(cartDetailId.getCartId());
     }
 
+    private void recalculateCartTotal(int cartId) {
+        Cart cart = cartRepo.findById(cartId)
+                .orElseThrow(() -> new NotFoundException("Khong tim thay gio hang"));
+        recalculateCartTotal(cart);
+    }
+
+    private void recalculateCartTotal(Cart cart) {
+        List<CartDetail> details = cartDetailRepo.findAllCartDetails(cart.getCartId());
+        Map<Integer, ActiveBookDiscount> discounts = discountPricingService.getActiveDiscounts(
+                details.stream().map(detail -> detail.getBook().getBookId()).toList());
+        BigDecimal total = details.stream()
+                .map(detail -> discountPricingService.calculateFinalPrice(
+                                detail.getBook().getPrice(),
+                                discounts.get(detail.getBook().getBookId()))
+                        .multiply(BigDecimal.valueOf(detail.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        cart.setTotalAmount(total);
+        cartRepo.save(cart);
+    }
 }
