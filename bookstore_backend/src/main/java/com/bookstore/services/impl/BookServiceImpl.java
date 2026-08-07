@@ -18,6 +18,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.bookstore.dto.product.BookResponse;
+import com.bookstore.dto.product.GenreResponse;
+import com.bookstore.dto.discount.ActiveBookDiscount;
 import com.bookstore.common.response.PageResponse;
 import com.bookstore.dto.book.BookAddRequest;
 import com.bookstore.dto.book.BookUpdateRequest;
@@ -34,6 +36,7 @@ import com.bookstore.repository.BookRepo;
 import com.bookstore.repository.GenreRepo;
 import com.bookstore.repository.InventoryRepository;
 import com.bookstore.services.BookService;
+import com.bookstore.services.DiscountPricingService;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 
@@ -50,6 +53,7 @@ public class BookServiceImpl implements BookService {
     private final BookGenreRepo bookGenreRepo;
     private final GenreRepo genreRepo;
     private final InventoryRepository inventoryRepository;
+    private final DiscountPricingService discountPricingService;
     private final Cloudinary cloudinary;
 
     @Override
@@ -80,9 +84,16 @@ public class BookServiceImpl implements BookService {
                 maxPrice,
                 safePageable);
         Map<Integer, List<String>> genresByBookId = getGenresByBookId(bookPage.getContent());
-        Page<BookResponse> responsePage = bookPage.map(book -> BookResponse.toBookResponse(
-                book,
-                genresByBookId.getOrDefault(book.getBookId(), List.of())));
+        Map<Integer, ActiveBookDiscount> discounts = discountPricingService.getActiveDiscounts(
+                bookPage.getContent().stream().map(Book::getBookId).toList());
+        Page<BookResponse> responsePage = bookPage.map(book -> {
+            ActiveBookDiscount discount = discounts.get(book.getBookId());
+            return BookResponse.toBookResponse(
+                    book,
+                    genresByBookId.getOrDefault(book.getBookId(), List.of()),
+                    discount,
+                    discountPricingService.calculateFinalPrice(book.getPrice(), discount));
+        });
 
         return PageResponse.toPageResponse(responsePage);
     }
@@ -92,7 +103,21 @@ public class BookServiceImpl implements BookService {
         Book book = bookRepo.findByBookIdAndIsDeletedFalse(bookId)
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy sách"));
 
-        return BookResponse.toBookResponse(book, getGenreNames(book.getBookId()));
+        ActiveBookDiscount discount = discountPricingService
+                .getActiveDiscounts(List.of(bookId))
+                .get(bookId);
+        return BookResponse.toBookResponse(
+                book,
+                getGenreNames(book.getBookId()),
+                discount,
+                discountPricingService.calculateFinalPrice(book.getPrice(), discount));
+    }
+
+    @Override
+    public List<GenreResponse> getAllGenres() {
+        return genreRepo.findAll().stream()
+                .map(GenreResponse::fromEntity)
+                .collect(Collectors.toList());
     }
 
     @Override

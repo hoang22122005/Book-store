@@ -8,6 +8,7 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -19,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.bookstore.common.response.PageResponse;
 import com.bookstore.dto.bill.BillResponse;
 import com.bookstore.dto.bill.CreateBillRequest;
+import com.bookstore.dto.discount.ActiveBookDiscount;
 import com.bookstore.dto.payment.CheckoutResponse;
 import com.bookstore.dto.payment.PaymentResponse;
 import com.bookstore.exception.BadRequestException;
@@ -46,6 +48,7 @@ import com.bookstore.repository.UserRepository;
 import com.bookstore.repository.UserVoucherRepository;
 import com.bookstore.repository.VoucherRepository;
 import com.bookstore.services.BillService;
+import com.bookstore.services.DiscountPricingService;
 import com.bookstore.services.InventoryService;
 import com.bookstore.services.VnPayService;
 
@@ -66,6 +69,7 @@ public class BillServiceImpl implements BillService {
     private final UserVoucherRepository userVoucherRepository;
     private final PaymentRepository paymentRepository;
     private final InventoryService inventoryService;
+    private final DiscountPricingService discountPricingService;
     private final VnPayService vnPayService;
 
     @Override
@@ -119,7 +123,9 @@ public class BillServiceImpl implements BillService {
         // find user voucher check luôn voucher đã sử dụng chưa
         UserVoucher userVoucher = findUsableVoucher(userId, request.getVoucherCode());
         Voucher voucher = userVoucher == null ? null : userVoucher.getVoucher();
-        BigDecimal subTotal = calculateSubTotal(selectedCartDetails);
+        Map<Integer, ActiveBookDiscount> activeDiscounts = discountPricingService.getActiveDiscounts(
+                selectedCartDetails.stream().map(detail -> detail.getBook().getBookId()).toList());
+        BigDecimal subTotal = calculateSubTotal(selectedCartDetails, activeDiscounts);
         BigDecimal totalAmount = applyDiscount(
                 subTotal,
                 voucher == null ? 0 : voucher.getDiscount());
@@ -134,7 +140,10 @@ public class BillServiceImpl implements BillService {
         Bill savedBill = billRepository.save(bill);
 
         List<BillDetail> billDetails = selectedCartDetails.stream()
-                .map(cartDetail -> toBillDetail(savedBill, cartDetail))
+                .map(cartDetail -> toBillDetail(
+                        savedBill,
+                        cartDetail,
+                        activeDiscounts.get(cartDetail.getBook().getBookId())))
                 .toList();
         billDetailRepository.saveAll(billDetails);
 
@@ -385,9 +394,15 @@ public class BillServiceImpl implements BillService {
                 .collect(java.util.stream.Collectors.toSet());
 
         cartDetailRepo.deleteAll(selectedCartDetails);
-        BigDecimal remainingTotal = allCartDetails.stream()
+        List<CartDetail> remainingDetails = allCartDetails.stream()
                 .filter(detail -> !selectedBookIds.contains(detail.getBook().getBookId()))
-                .map(detail -> detail.getBook().getPrice()
+                .toList();
+        Map<Integer, ActiveBookDiscount> remainingDiscounts = discountPricingService.getActiveDiscounts(
+                remainingDetails.stream().map(detail -> detail.getBook().getBookId()).toList());
+        BigDecimal remainingTotal = remainingDetails.stream()
+                .map(detail -> discountPricingService.calculateFinalPrice(
+                                detail.getBook().getPrice(),
+                                remainingDiscounts.get(detail.getBook().getBookId()))
                         .multiply(BigDecimal.valueOf(detail.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         cart.setTotalAmount(remainingTotal);
@@ -462,9 +477,13 @@ public class BillServiceImpl implements BillService {
         });
     }
 
-    private BigDecimal calculateSubTotal(List<CartDetail> cartDetails) {
+    private BigDecimal calculateSubTotal(
+            List<CartDetail> cartDetails,
+            Map<Integer, ActiveBookDiscount> activeDiscounts) {
         return cartDetails.stream()
-                .map(cartDetail -> cartDetail.getBook().getPrice()
+                .map(cartDetail -> discountPricingService.calculateFinalPrice(
+                                cartDetail.getBook().getPrice(),
+                                activeDiscounts.get(cartDetail.getBook().getBookId()))
                         .multiply(BigDecimal.valueOf(cartDetail.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
@@ -475,12 +494,17 @@ public class BillServiceImpl implements BillService {
         return subTotal.subtract(subTotal.multiply(discountRate)).max(BigDecimal.ZERO);
     }
 
-    private BillDetail toBillDetail(Bill bill, CartDetail cartDetail) {
+    private BillDetail toBillDetail(
+            Bill bill,
+            CartDetail cartDetail,
+            ActiveBookDiscount activeDiscount) {
         BillDetail billDetail = new BillDetail();
         billDetail.setBill(bill);
         billDetail.setBook(cartDetail.getBook());
         billDetail.setQuantity(cartDetail.getQuantity());
-        billDetail.setPriceAtPurchase(cartDetail.getBook().getPrice());
+        billDetail.setPriceAtPurchase(discountPricingService.calculateFinalPrice(
+                cartDetail.getBook().getPrice(),
+                activeDiscount));
         return billDetail;
     }
 

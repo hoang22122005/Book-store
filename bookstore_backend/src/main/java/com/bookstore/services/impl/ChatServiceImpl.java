@@ -3,9 +3,12 @@ package com.bookstore.services.impl;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.bookstore.common.response.PageResponse;
 import com.bookstore.dto.chat.ChatMessageResponse;
 import com.bookstore.dto.chat.ChatRoomResponse;
 import com.bookstore.exception.ForbiddenException;
@@ -53,7 +56,33 @@ public class ChatServiceImpl implements ChatService {
         return chatMessageRepository.findByChatRoomChatRoomIdOrderByCreatedAtAsc(chatRoomId)
                 .stream()
                 .map(ChatMessageResponse::from)
+                .filter(m -> m.getContent() != null && !"__TYPING__".equals(m.getContent()) && !"__STOP_TYPING__".equals(m.getContent()))
                 .toList();
+    }
+
+    @Override
+    public PageResponse<ChatMessageResponse> getMessages(int userId, int chatRoomId, Pageable pageable) {
+        ChatRoom chatRoom = findRoom(chatRoomId);
+        User user = findUser(userId);
+        ensureRoomAccess(user, chatRoom);
+
+        Page<ChatMessage> page = chatMessageRepository.findByChatRoomChatRoomId(chatRoomId, pageable);
+        List<ChatMessageResponse> cleanList = page.getContent().stream()
+                .map(ChatMessageResponse::from)
+                .filter(m -> m.getContent() != null && !"__TYPING__".equals(m.getContent()) && !"__STOP_TYPING__".equals(m.getContent()))
+                .toList();
+
+        return PageResponse.<ChatMessageResponse>builder()
+                .content(cleanList)
+                .page(page.getNumber())
+                .size(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .first(page.isFirst())
+                .last(page.isLast())
+                .hasNext(page.hasNext())
+                .hasPrevious(page.hasPrevious())
+                .build();
     }
 
     @Override
@@ -71,6 +100,18 @@ public class ChatServiceImpl implements ChatService {
         message.setCreatedAt(LocalDateTime.now());
 
         return ChatMessageResponse.from(chatMessageRepository.save(message));
+    }
+
+    @Override
+    public void validateRoomAccess(int userId, int chatRoomId) {
+        ensureRoomAccess(findUser(userId), findRoom(chatRoomId));
+    }
+
+    @Override
+    @Transactional
+    public void markRoomRead(int userId, int chatRoomId) {
+        ensureRoomAccess(findUser(userId), findRoom(chatRoomId));
+        chatMessageRepository.markMessagesRead(chatRoomId, userId);
     }
 
     @Override

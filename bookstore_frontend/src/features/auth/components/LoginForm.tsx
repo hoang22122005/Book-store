@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../hooks/useAuth';
 import { useLogin } from '../hooks/useLoginMutation';
-import { isValidEmail, isNonEmpty, getErrorMessage, isAdminOrStaffRole } from '../../../utils';
+import { isValidEmail, isNonEmpty, getErrorMessage } from '../../../utils';
+import { getDefaultAdminPath } from '../../../utils/adminAccess';
 import type { UserRole } from '../../../types';
 
 export const LoginForm: React.FC = () => {
@@ -10,11 +11,13 @@ export const LoginForm: React.FC = () => {
   const showDemoLogin = import.meta.env.DEV;
   const loginMutation = useLogin();
   const navigate = useNavigate();
+  const location = useLocation();
+  const registeredState = location.state as { email?: string; password?: string; registered?: boolean } | undefined;
   const [searchParams] = useSearchParams();
   const redirect = searchParams.get('redirect') || '/';
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState(() => registeredState?.email || '');
+  const [password, setPassword] = useState(() => registeredState?.password || '');
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
@@ -46,8 +49,9 @@ export const LoginForm: React.FC = () => {
       { email, password, rememberMe },
       {
         onSuccess: (loggedUser) => {
-          if (isAdminOrStaffRole(loggedUser.role)) {
-            navigate('/admin');
+          const adminPath = getDefaultAdminPath(loggedUser.role);
+          if (adminPath) {
+            navigate(adminPath);
           } else {
             navigate(redirect);
           }
@@ -63,8 +67,9 @@ export const LoginForm: React.FC = () => {
 
   const handleQuickDemo = (role: UserRole) => {
     demoLogin(role);
-    if (isAdminOrStaffRole(role)) {
-      navigate('/admin');
+    const adminPath = getDefaultAdminPath(role);
+    if (adminPath) {
+      navigate(adminPath);
     } else {
       navigate(redirect);
     }
@@ -87,6 +92,19 @@ export const LoginForm: React.FC = () => {
 
       {/* Login Card */}
       <div className="glass-panel rounded-xl shadow-[0_4px_6px_-1px_rgba(26,54,93,0.05),0_2px_4px_-1px_rgba(26,54,93,0.03)] p-8 w-full">
+        {registeredState?.registered && (
+          <div className="mb-6 bg-emerald-50 border border-emerald-300 rounded-lg p-3.5 flex items-start gap-3 text-left" role="alert">
+            <span aria-hidden="true" className="material-symbols-outlined text-emerald-600 text-xl mt-0.5 shrink-0">
+              check_circle
+            </span>
+            <div className="flex-1">
+              <h3 className="font-bold text-sm text-emerald-900">Đăng ký tài khoản thành công!</h3>
+              <p className="text-xs text-emerald-800 mt-0.5">
+                Thông tin tài khoản và mật khẩu của bạn đã được nhập sẵn. Bấm <strong className="font-bold">Đăng nhập</strong> bên dưới để bắt đầu sử dụng.
+              </p>
+            </div>
+          </div>
+        )}
         <form onSubmit={handleSubmit} noValidate>
           {/* Email Field */}
           <div className="mb-4 relative text-left">

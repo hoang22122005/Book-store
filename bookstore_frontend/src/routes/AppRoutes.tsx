@@ -8,6 +8,8 @@ import { HomePage } from '../pages/public/HomePage';
 import { LoginPage } from '../pages/public/LoginPage';
 import { RegisterPage } from '../pages/public/RegisterPage';
 import { ProtectedRoute } from './ProtectedRoute';
+import { ChatPage } from '../pages/admin/ChatPage';
+import { adminRouteAccess } from '../utils/adminAccess';
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -35,31 +37,34 @@ export const AppRoutes: React.FC = () => {
         <Route
           path="/admin"
           element={
-            <div className="space-y-6">
-              <h1 className="text-2xl font-bold text-white">Bảng Điều Hành Admin</h1>
-              <p className="text-slate-400">Chào mừng bạn đến với trang quản trị hệ thống.</p>
-            </div>
+            <ProtectedRoute allowedRoles={[...adminRouteAccess['/admin']]}> 
+              <div className="space-y-6">
+                <h1 className="text-2xl font-bold text-white">Bảng Điều Hành Admin</h1>
+                <p className="text-slate-400">Chào mừng bạn đến với trang quản trị hệ thống.</p>
+              </div>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/admin/books"
-          element={<div className="text-white">Quản Lý Danh Sách Sách</div>}
+          element={<ProtectedRoute allowedRoles={[...adminRouteAccess['/admin/books']]}><div className="text-white">Quản Lý Danh Sách Sách</div></ProtectedRoute>}
         />
         <Route
           path="/admin/vouchers"
-          element={<div className="text-white">Quản Lý Voucher & Khuyến Mãi</div>}
+          element={<ProtectedRoute allowedRoles={[...adminRouteAccess['/admin/vouchers']]}><div className="text-white">Quản Lý Voucher & Khuyến Mãi</div></ProtectedRoute>}
         />
         <Route
           path="/admin/orders"
-          element={<div className="text-white">Quản Lý Đơn Hàng</div>}
+          element={<ProtectedRoute allowedRoles={[...adminRouteAccess['/admin/orders']]}><div className="text-white">Quản Lý Đơn Hàng</div></ProtectedRoute>}
         />
+        <Route path="/admin/chat" element={<ProtectedRoute allowedRoles={[...adminRouteAccess['/admin/chat']]}><ChatPage /></ProtectedRoute>} />
         <Route
           path="/admin/warehouse"
-          element={<div className="text-white">Quản Lý Nhập Kho</div>}
+          element={<ProtectedRoute allowedRoles={[...adminRouteAccess['/admin/warehouse']]}><div className="text-white">Quản Lý Nhập Kho</div></ProtectedRoute>}
         />
         <Route
           path="/admin/finance"
-          element={<div className="text-white">Báo Cáo Kế Toán & Doanh Thu</div>}
+          element={<ProtectedRoute allowedRoles={[...adminRouteAccess['/admin/finance']]}><div className="text-white">Báo Cáo Kế Toán & Doanh Thu</div></ProtectedRoute>}
         />
       </Route>
 

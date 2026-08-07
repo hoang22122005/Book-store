@@ -10,11 +10,9 @@ import org.springframework.transaction.annotation.Transactional;
 import com.bookstore.dto.auth.AuthResponse;
 import com.bookstore.dto.auth.LoginRequest;
 import com.bookstore.dto.auth.RegisterRequest;
-import com.bookstore.exception.AccountNotVerifiedException;
 import com.bookstore.exception.BadRequestException;
 import com.bookstore.exception.ConflictException;
 import com.bookstore.exception.UnauthorizedException;
-import com.bookstore.dto.user.UserResponse;
 import com.bookstore.mapper.UserMapper;
 import com.bookstore.models.RefreshToken;
 import com.bookstore.models.User;
@@ -52,7 +50,7 @@ public class AuthServiceImpl implements AuthService {
                 .name(req.getName())
                 .email(req.getEmail())
                 .role(Role.USER)
-                .status(AccountStatus.PENDING)
+                .status(AccountStatus.ACTIVE)
                 .address(req.getAddress())
                 .dob(req.getDob())
                 .phone(req.getPhone())
@@ -65,6 +63,12 @@ public class AuthServiceImpl implements AuthService {
                 .vipExpiration(null).build();
 
         userRepository.save(user);
+    }
+
+    @Override
+    public void sendVerificationEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new BadRequestException("Email không tồn tại trong hệ thống"));
 
         String token = UUID.randomUUID().toString();
         VerificationToken vt = VerificationToken.builder()
@@ -74,7 +78,12 @@ public class AuthServiceImpl implements AuthService {
                 .build();
         verificationTokenRepository.save(vt);
 
-        emailService.sendVerificationEmail(user.getEmail(), token);
+        try {
+            emailService.sendVerificationEmail(user.getEmail(), token);
+        } catch (Exception e) {
+            System.err.println("Gửi email xác minh thất bại: " + e.getMessage());
+            throw new BadRequestException("Không thể gửi email xác minh: " + e.getMessage());
+        }
     }
 
     @Override
@@ -86,10 +95,6 @@ public class AuthServiceImpl implements AuthService {
         boolean isValidPass = passwordEncoder.matches(req.getPassword(), user.getPassword());
         if (!isValidPass) {
             throw new UnauthorizedException("Invalid email or password");
-        }
-
-        if (user.getStatus() == AccountStatus.PENDING) {
-            throw new AccountNotVerifiedException("Tai khoan chua xac minh email, vui long kiem tra email");
         }
 
         String accessToken = jwtService.generateToken(user);

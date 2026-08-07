@@ -4,7 +4,8 @@ import com.bookstore.common.response.ApiResponse;
 import com.bookstore.dto.auth.AuthResponse;
 import com.bookstore.dto.auth.ForgotPasswordRequest;
 import com.bookstore.dto.auth.LoginRequest;
-import com.bookstore.dto.auth.RefreshTokenRequest;import com.bookstore.dto.auth.RegisterRequest;
+import com.bookstore.dto.auth.RefreshTokenRequest;
+import com.bookstore.dto.auth.RegisterRequest;
 import com.bookstore.dto.auth.ResetPasswordRequest;
 import com.bookstore.services.AuthService;
 import com.bookstore.services.PasswordResetService;
@@ -32,17 +33,20 @@ public class AuthController {
     public ResponseEntity<ApiResponse<AuthResponse>> register(
             @Valid @RequestBody RegisterRequest req){
         authService.register(req);
-        ApiResponse<AuthResponse> res = ApiResponse.success("Dang ky thanh cong. Vui long kiem tra email de xac minh tai khoan.", null);
-
+        ApiResponse<AuthResponse> res = ApiResponse.success("Đăng ký tài khoản thành công!", null);
         return ResponseEntity.status(HttpStatus.CREATED).body(res);
+    }
 
-
+    @PostMapping("/send-verification-email")
+    public ResponseEntity<ApiResponse<Void>> sendVerificationEmail(@RequestParam String email) {
+        authService.sendVerificationEmail(email);
+        return ResponseEntity.ok(ApiResponse.success("Email xác minh đã được gửi, vui lòng kiểm tra hộp thư.", null));
     }
 
     @GetMapping("/verify-email")
     public ResponseEntity<ApiResponse<Void>> verifyEmail(@RequestParam String token) {
         authService.verifyEmail(token);
-        return ResponseEntity.ok(ApiResponse.success("Xac minh email thanh cong", null));
+        return ResponseEntity.ok(ApiResponse.success("Xác minh email thành công", null));
     }
 
     @PostMapping("/login")
@@ -74,12 +78,4 @@ public class AuthController {
         passwordResetService.resetPassword(request.getToken(), request.getNewPassword());
         return ResponseEntity.ok(ApiResponse.success("Đặt lại mật khẩu thành công.", null));
     }
-
-
-
-
-
-
-
-
 }

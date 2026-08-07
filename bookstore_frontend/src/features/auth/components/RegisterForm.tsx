@@ -56,8 +56,8 @@ export const RegisterForm: React.FC = () => {
         onSuccess: () => {
           setSuccessMsg('Đăng ký tài khoản thành công! Đang chuyển hướng sang Đăng nhập...');
           setTimeout(() => {
-            navigate('/login');
-          }, 1500);
+            navigate('/login', { state: { email, password, registered: true } });
+          }, 1200);
         },
         onError: (err: unknown) => {
           setErrorMsg(

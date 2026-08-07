@@ -2,6 +2,7 @@ package com.bookstore.controller;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -18,10 +19,12 @@ import com.bookstore.common.response.ApiResponse;
 import com.bookstore.dto.cart.CartDetailRequest;
 import com.bookstore.dto.cart.CartDetailResponse;
 import com.bookstore.dto.cart.CartResponse;
+import com.bookstore.dto.discount.ActiveBookDiscount;
 import com.bookstore.models.Cart;
 import com.bookstore.models.CartDetail;
 import com.bookstore.models.CartDetailId;
 import com.bookstore.services.impl.CartServiceImpl;
+import com.bookstore.services.DiscountPricingService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -30,6 +33,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class CartController {
     private final CartServiceImpl cartService;
+    private final DiscountPricingService discountPricingService;
 
     @GetMapping
     public ResponseEntity<ApiResponse<CartResponse>> getCart(Authentication authentication) {
@@ -47,10 +51,16 @@ public class CartController {
     public ResponseEntity<ApiResponse<List<CartDetailResponse>>> getCartDetails(Authentication authentication) {
         Cart cart = cartService.getCart((Integer) authentication.getDetails());
         List<CartDetail> cartDetails = cartService.getCartDetails(cart.getCartId());
+        Map<Integer, ActiveBookDiscount> discounts = discountPricingService.getActiveDiscounts(
+                cartDetails.stream().map(detail -> detail.getBook().getBookId()).toList());
 
         List<CartDetailResponse> result = new ArrayList<CartDetailResponse>();
         for (CartDetail cartDetail : cartDetails) {
-            result.add(CartDetailResponse.toCartDetail(cartDetail));
+            ActiveBookDiscount discount = discounts.get(cartDetail.getBook().getBookId());
+            result.add(CartDetailResponse.toCartDetail(
+                    cartDetail,
+                    discount,
+                    discountPricingService.calculateFinalPrice(cartDetail.getBook().getPrice(), discount)));
         }
 
         return ResponseEntity.ok(ApiResponse.success("Get cart details successfully", result));

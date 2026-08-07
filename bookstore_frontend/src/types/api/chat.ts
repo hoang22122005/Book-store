@@ -2,10 +2,14 @@ import type { DateTime } from './common'
 
 export interface ChatMessageRequest {
   chatRoomId: number
-  content: string
+  type: ChatEventType
+  content?: string
 }
 
+export type ChatEventType = 'MESSAGE' | 'TYPING' | 'STOP_TYPING'
+
 export interface ChatMessageResponse {
+  type?: ChatEventType
   messageId: number
   chatRoomId: number
   senderId: number

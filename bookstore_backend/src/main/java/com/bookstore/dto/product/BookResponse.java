@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.bookstore.dto.discount.ActiveBookDiscount;
 import com.bookstore.models.Book;
 
 import lombok.AccessLevel;
@@ -27,6 +28,10 @@ public class BookResponse {
     String publisher;
     Integer publishYear;
     BigDecimal price;
+    BigDecimal salePrice;
+    BigDecimal discountPercent;
+    Long activeCampaignId;
+    String activeCampaignName;
     LocalDateTime createdAt;
     String urlImg;
     float avgRating;
@@ -42,6 +47,14 @@ public class BookResponse {
     }
 
     public static BookResponse toBookResponse(Book book, List<String> genres) {
+        return toBookResponse(book, genres, null, book.getPrice());
+    }
+
+    public static BookResponse toBookResponse(
+            Book book,
+            List<String> genres,
+            ActiveBookDiscount discount,
+            BigDecimal salePrice) {
         return BookResponse.builder()
                 .bookId(book.getBookId())
                 .name(book.getName())
@@ -51,6 +64,10 @@ public class BookResponse {
                 .publisher(book.getPublisher())
                 .publishYear(book.getPublishYear())
                 .price(book.getPrice())
+                .salePrice(salePrice)
+                .discountPercent(discount == null ? BigDecimal.ZERO : discount.discountPercent())
+                .activeCampaignId(discount == null ? null : discount.campaignId())
+                .activeCampaignName(discount == null ? null : discount.campaignName())
                 .createdAt(book.getCreatedAt())
                 .urlImg(book.getUrlImg())
                 .avgRating(book.getAvgRating())
