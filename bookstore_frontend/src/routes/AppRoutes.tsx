@@ -7,6 +7,8 @@ import { AdminLayout } from '../layouts/AdminLayout';
 import { HomePage } from '../pages/public/HomePage';
 import { LoginPage } from '../pages/public/LoginPage';
 import { RegisterPage } from '../pages/public/RegisterPage';
+import { BookCatalogPage } from '../pages/customer/BookCatalogPage';
+import { BookDetailPage } from '../pages/customer/BookDetailPage';
 import { ProtectedRoute } from './ProtectedRoute';
 import { ChatPage } from '../pages/admin/ChatPage';
 import { adminRouteAccess } from '../utils/adminAccess';
@@ -17,7 +19,8 @@ export const AppRoutes: React.FC = () => {
       {/* Public Customer Routes with CustomerLayout */}
       <Route element={<CustomerLayout />}>
         <Route path="/" element={<HomePage />} />
-        <Route path="/books" element={<HomePage />} />
+        <Route path="/books" element={<BookCatalogPage />} />
+        <Route path="/books/:bookId" element={<BookDetailPage />} />
       </Route>
 
       {/* Auth Routes with AuthLayout */}

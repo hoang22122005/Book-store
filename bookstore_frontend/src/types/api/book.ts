@@ -13,6 +13,10 @@ export interface BookResponse {
   publisher: string | null
   publishYear: number | null
   price: Decimal
+  salePrice: Decimal | null
+  discountPercent: Decimal | null
+  activeCampaignId: number | null
+  activeCampaignName: string | null
   createdAt: DateTime
   urlImg: string | null
   avgRating: number
@@ -105,6 +109,7 @@ export interface BookListQuery extends PageQuery {
   categoryId?: number
   minPrice?: Decimal
   maxPrice?: Decimal
+  inStock?: boolean
 }
 
 export interface RecommendationQuery {
