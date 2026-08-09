@@ -24,7 +24,6 @@ public class UserMapper {
                 .career(user.getCareer())
                 .urlAvt(user.getUrlAvt())
                 .build();
-
     }
 
     public void updateProfile(UpdateUserRequest req, User user) {

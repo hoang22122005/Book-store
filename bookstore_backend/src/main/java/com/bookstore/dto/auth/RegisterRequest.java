@@ -1,5 +1,6 @@
 package com.bookstore.dto.auth;
 
+import com.bookstore.models.enums.Gender;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -32,7 +33,7 @@ public class RegisterRequest {
 
     private String phone;
 
-    private String gender;
+    private Gender gender;
 
     private String career;
     
