@@ -32,12 +32,14 @@ public interface BookRepo extends JpaRepository<Book, Integer> {
                      +
                      "(:minPrice IS NULL OR b.price >= :minPrice) AND " +
                      "(:maxPrice IS NULL OR b.price <= :maxPrice) AND " +
+                     "(:inStock IS NULL OR :inStock = false OR b.quantityInStock > 0) AND " +
                      "b.isDeleted = false")
        Page<Book> searchBooks(@Param("keyword") String keyword,
                      @Param("author") String author,
                      @Param("categoryId") Integer categoryId,
                      @Param("minPrice") BigDecimal minPrice,
                      @Param("maxPrice") BigDecimal maxPrice,
+                     @Param("inStock") Boolean inStock,
                      Pageable pageable);
 
        @Modifying

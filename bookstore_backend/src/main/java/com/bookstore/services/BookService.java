@@ -18,7 +18,7 @@ public interface BookService {
     List<Book> getAllBooks();
     Book getBookById(int bookId);
     PageResponse<BookResponse> getBooks(String keyword, String author, Integer categoryId,
-                                        BigDecimal minPrice, BigDecimal maxPrice, Pageable pageable);
+                                        BigDecimal minPrice, BigDecimal maxPrice, Boolean inStock, Pageable pageable);
     BookResponse getBookDetail(int bookId);
     List<GenreResponse> getAllGenres();
     void deleteBook(int bookId);
