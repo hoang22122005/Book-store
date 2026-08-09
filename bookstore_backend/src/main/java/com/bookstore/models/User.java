@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import com.bookstore.models.enums.AccountStatus;
+import com.bookstore.models.enums.Gender;
 import com.bookstore.models.enums.Role;
 import com.bookstore.models.enums.RoleConverter;
 import jakarta.persistence.*;
@@ -38,7 +39,11 @@ public class User {
     private String address;
     private LocalDate dob;
     private String phone;
-    private String gender;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 10)
+    private Gender gender;
+
     private String career;
 
     @Column(name = "created_at")

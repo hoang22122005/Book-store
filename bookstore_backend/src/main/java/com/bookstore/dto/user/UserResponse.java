@@ -1,5 +1,6 @@
 package com.bookstore.dto.user;
 
+import com.bookstore.models.enums.Gender;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,9 +17,7 @@ public class UserResponse {
     private String role;
     private String phoneNumber;
     private String address;
-    private String gender;
+    private Gender gender;
     private String career;
     private String urlAvt;
-
-
 }

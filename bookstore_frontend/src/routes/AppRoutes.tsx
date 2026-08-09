@@ -9,6 +9,7 @@ import { LoginPage } from '../pages/public/LoginPage';
 import { RegisterPage } from '../pages/public/RegisterPage';
 import { BookCatalogPage } from '../pages/customer/BookCatalogPage';
 import { BookDetailPage } from '../pages/customer/BookDetailPage';
+import { ProfilePage } from '../pages/customer/ProfilePage';
 import { ProtectedRoute } from './ProtectedRoute';
 import { ChatPage } from '../pages/admin/ChatPage';
 import { adminRouteAccess } from '../utils/adminAccess';
@@ -21,6 +22,7 @@ export const AppRoutes: React.FC = () => {
         <Route path="/" element={<HomePage />} />
         <Route path="/books" element={<BookCatalogPage />} />
         <Route path="/books/:bookId" element={<BookDetailPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
       </Route>
 
       {/* Auth Routes with AuthLayout */}
