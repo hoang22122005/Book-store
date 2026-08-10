@@ -40,6 +40,7 @@ public class BookResponse {
     String isbn;
     Integer pageCount;
     boolean isVip;
+    boolean isDeleted;
     List<String> genres;
 
     public static BookResponse toBookResponse(Book book) {
@@ -76,6 +77,7 @@ public class BookResponse {
                 .isbn(book.getIsbn())
                 .pageCount(book.getPageCount())
                 .isVip(book.isVip())
+                .isDeleted(book.isDeleted())
                 .genres(genres)
                 .build();
     }
