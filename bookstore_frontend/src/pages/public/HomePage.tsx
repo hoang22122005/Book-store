@@ -6,6 +6,9 @@ import { CategoryGrid } from '../../features/catalog/components/CategoryGrid';
 import { DiscountBanner } from '../../features/catalog/components/DiscountBanner';
 import { CustomerReviewsSection } from '../../features/catalog/components/CustomerReviewsSection';
 import { BenefitsSection } from '../../features/catalog/components/BenefitsSection';
+import { BookListSection } from '../../features/book/components/BookListSection';
+import { useBestsellerBooks, useHotBooks, useNewArrivalBooks } from '../../features/book/hooks';
+import { useSectionPagination } from '../../hooks/useSectionPagination';
 import { useAuth } from '../../hooks/useAuth';
 import { useAddToCartMutation } from '../../features/cart';
 
@@ -14,6 +17,14 @@ export const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const addToCartMutation = useAddToCartMutation();
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const { page: bestsellerPage, goToPage: goToBestsellerPage } = useSectionPagination();
+  const { page: hotPage, goToPage: goToHotPage } = useSectionPagination();
+  const { page: newArrivalPage, goToPage: goToNewArrivalPage } = useSectionPagination();
+
+  const { data: bestsellerData, isLoading: bestsellerLoading, isError: bestsellerError, isFetching: bestsellerFetching, refetch: refetchBestseller } = useBestsellerBooks(bestsellerPage, 4);
+  const { data: hotData, isLoading: hotLoading, isError: hotError, isFetching: hotFetching, refetch: refetchHot } = useHotBooks(hotPage, 3);
+  const { data: newArrivalData, isLoading: newArrivalLoading, isError: newArrivalError, isFetching: newArrivalFetching, refetch: refetchNewArrival } = useNewArrivalBooks(newArrivalPage, 4);
 
   const handleAddToCart = (id: string | number, qty: number = 1) => {
     if (!isAuthenticated) {
@@ -35,7 +46,6 @@ export const HomePage: React.FC = () => {
 
   return (
     <div className="space-y-stack-lg pb-stack-lg relative">
-      {/* Toast feedback */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 bg-secondary text-on-secondary px-4 py-3 rounded-xl shadow-lg font-medium text-sm flex items-center gap-2 animate-bounce">
           <span className="material-symbols-outlined text-[20px]">check_circle</span>
@@ -43,16 +53,10 @@ export const HomePage: React.FC = () => {
         </div>
       )}
 
-      {/* 1. Hero Section */}
       <HeroBanner />
-
-      {/* 2. Personalized Recommendations Section */}
       <PersonalizedSection />
-
-      {/* 3. Featured Categories Section */}
       <CategoryGrid />
 
-      {/* 4. Best-selling Books Component (REST API hook) */}
       <BookListSection
         title="Sách bán chạy"
         data={bestsellerData}
@@ -68,7 +72,6 @@ export const HomePage: React.FC = () => {
         externalPage={bestsellerPage}
       />
 
-      {/* 5. Hot Books of the Week Section */}
       <BookListSection
         title="Sách Hot tuần này"
         data={hotData}
@@ -83,10 +86,8 @@ export const HomePage: React.FC = () => {
         externalPage={hotPage}
       />
 
-      {/* 6. Special Discount Banner Section */}
       <DiscountBanner />
 
-      {/* 7. New Arrival Books Component (REST API hook) */}
       <BookListSection
         title="Sách mới phát hành"
         data={newArrivalData}
@@ -102,12 +103,8 @@ export const HomePage: React.FC = () => {
         externalPage={newArrivalPage}
       />
 
-      {/* 8. Customer Reviews Section */}
       <CustomerReviewsSection />
-
-      {/* 9. Customer Benefits Section */}
       <BenefitsSection />
-
     </div>
   );
 };

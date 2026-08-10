@@ -13,7 +13,6 @@ import { CheckoutPage } from '../pages/customer/CheckoutPage';
 import { OrderSuccessPage } from '../pages/customer/OrderSuccessPage';
 import { MyOrdersPage } from '../pages/customer/MyOrdersPage';
 import { BookCatalogPage } from '../pages/customer/BookCatalogPage';
-import { BookDetailPage } from '../pages/customer/BookDetailPage';
 import { ProfilePage } from '../pages/customer/ProfilePage';
 import { ProtectedRoute } from './ProtectedRoute';
 import { ChatPage } from '../pages/admin/ChatPage';
@@ -27,8 +26,9 @@ export const AppRoutes: React.FC = () => {
       {/* Public Customer Routes with CustomerLayout */}
       <Route element={<CustomerLayout />}>
         <Route path="/" element={<HomePage />} />
-        <Route path="/books" element={<HomePage />} />
+        <Route path="/books" element={<BookCatalogPage />} />
         <Route path="/books/:bookId" element={<BookDetailPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
         <Route
           path="/cart"
           element={
