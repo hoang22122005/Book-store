@@ -33,4 +33,3 @@ dist-ssr
 # Local agent and Stitch workspace guidance
 .agents/
 STITCH_PAGE_PROMPT_GUIDE.md
-code_review.md
