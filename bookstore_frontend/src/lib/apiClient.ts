@@ -23,6 +23,11 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
+    const backendMessage = (error.response?.data as { message?: unknown } | undefined)?.message;
+    if (backendMessage && typeof backendMessage === 'string') {
+      error.message = backendMessage;
+    }
+
     const originalRequest = error.config as (InternalAxiosRequestConfig & { _retry?: boolean }) | undefined;
 
     // Handle 401 - Token expired

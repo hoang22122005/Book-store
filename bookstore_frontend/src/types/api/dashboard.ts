@@ -30,3 +30,32 @@ export interface RevenueQuery {
 export interface TopBooksQuery {
   limit?: number
 }
+
+export interface FinancialOverviewResponse {
+  from: string;
+  to: string;
+  revenue: number;
+  totalOrders: number;
+  completedOrders: number;
+  cancelledOrders: number;
+  completionRatePercent: number;
+  itemsSold: number;
+  averageOrderValue: number;
+  subtotalBeforeVoucher: number;
+  voucherDiscount: number;
+}
+
+export interface TopCustomerResponse {
+  userId: number;
+  name: string;
+  email: string;
+  completedOrders: number;
+  totalSpent: number;
+  averageOrderValue: number;
+}
+
+export interface PaymentMethodStatsResponse {
+  paymentMethod: string;
+  orderCount: number;
+  revenue: number;
+}

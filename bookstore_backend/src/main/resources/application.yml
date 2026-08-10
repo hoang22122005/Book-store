@@ -58,11 +58,15 @@ jwt:
   access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:604800000} # 7 ngay
 
 vnpay:
-  tmn-code: ${VNPAY_TMN_CODE:}
-  hash-secret: ${VNPAY_HASH_SECRET:}
-  payment-url: ${VNPAY_PAYMENT_URL:https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}
-  return-url: ${VNPAY_RETURN_URL:http://localhost:8080/api/payments/vnpay/return}
+  tmn-code: ${VNP_TMN_CODE:${VNPAY_TMN_CODE:}}
+  hash-secret: ${VNP_HASH_SECRET:${VNPAY_HASH_SECRET:}}
+  payment-url: ${VNP_URL:${VNPAY_PAYMENT_URL:https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}}
+  return-url: ${VNP_RETURN_URL:${VNPAY_RETURN_URL:https://aethercinema.site/api/payments/vnpay/return}}
   expire-minutes: ${VNPAY_EXPIRE_MINUTES:15}
+
+app:
+  cors:
+    allowed-origin-patterns: ${CORS_ALLOWED_ORIGIN_PATTERNS:http://localhost:5173,http://127.0.0.1:5173,https://aethercinema.site}
 
 payment:
   expiry-check-delay-ms: ${PAYMENT_EXPIRY_CHECK_DELAY_MS:60000}

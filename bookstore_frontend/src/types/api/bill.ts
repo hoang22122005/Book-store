@@ -5,6 +5,7 @@ export interface BillDetailResponse {
   billDetailId: number
   bookId: number
   bookName: string
+  urlImg?: string
   quantity: number
   priceAtPurchase: Decimal
   subTotal: Decimal

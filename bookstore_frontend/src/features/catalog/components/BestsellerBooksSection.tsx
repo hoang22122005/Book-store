@@ -6,13 +6,15 @@ import { useSectionPagination } from '../../../hooks/useSectionPagination';
 
 interface BestsellerBooksSectionProps {
   onAddToCart?: (id: string | number) => void;
+  onSelectBook?: (id: string | number) => void;
 }
 
 export const BestsellerBooksSection: React.FC<BestsellerBooksSectionProps> = ({
   onAddToCart,
+  onSelectBook,
 }) => {
   const { page, goToPage } = useSectionPagination();
-  const { data, isLoading, isError, isFetching, refetch } = useBestsellerBooks(page, 4);
+  const { data, isLoading, isError, error, isFetching, refetch } = useBestsellerBooks(page, 4);
 
   const books = data?.content || [];
 
@@ -50,7 +52,9 @@ export const BestsellerBooksSection: React.FC<BestsellerBooksSectionProps> = ({
         <div className="bg-error-container text-on-error-container p-4 rounded-xl flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-error">error</span>
-            <p className="text-sm font-medium">Không thể tải danh sách sách bán chạy từ hệ thống.</p>
+            <p className="text-sm font-medium">
+              {(error as Error)?.message || 'Không thể tải danh sách sách bán chạy từ hệ thống.'}
+            </p>
           </div>
           <button
             onClick={() => refetch()}
@@ -82,9 +86,11 @@ export const BestsellerBooksSection: React.FC<BestsellerBooksSectionProps> = ({
               originalPrice={book.originalPrice}
               discountPercent={book.discountPercent}
               coverUrl={book.coverUrl}
+              stockQuantity={book.quantityInStock}
               badgeText={book.badgeText}
               badgeType={book.badgeType}
               onAddToCart={onAddToCart}
+              onSelectBook={onSelectBook}
             />
           ))}
         </div>

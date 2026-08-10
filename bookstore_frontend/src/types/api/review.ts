@@ -1,6 +1,7 @@
 import type { DateTime, PageQuery } from './common'
 
 export interface CommentRequest {
+  bookId: number
   content: string
 }
 

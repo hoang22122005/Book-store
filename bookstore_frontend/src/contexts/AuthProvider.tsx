@@ -1,11 +1,12 @@
 import { useEffect, useState, type PropsWithChildren } from 'react';
-import { authService } from '../features/auth/services/authService';
-import { formatUserData, tokenStorage } from '../utils';
+import { useAuthSessionApi } from '../features/auth/hooks';
+import { tokenStorage } from '../utils';
 import { AuthContext } from './AuthContext';
 import type { User } from '../types';
 import type { UserRole } from '../types';
 
 export function AuthProvider({ children }: PropsWithChildren) {
+  const { getProfile, notifyLogout } = useAuthSessionApi();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -20,11 +21,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
       }
 
       try {
-        const response = await authService.getProfile();
-        if (!response.data.success || !response.data.data) {
-          throw new Error(response.data.message || 'Unable to load profile');
-        }
-        if (isMounted) setUser(formatUserData(response.data.data));
+        const profile = await getProfile();
+        if (isMounted) setUser(profile);
       } catch {
         // A token is not proof of authentication; only a successful profile response is.
         tokenStorage.clearTokens();
@@ -44,13 +42,13 @@ export function AuthProvider({ children }: PropsWithChildren) {
       isMounted = false;
       window.removeEventListener('auth:unauthorized', handleUnauthorized);
     };
-  }, []);
+  }, [getProfile]);
 
   const logout = async () => {
     setIsLoading(true);
     try {
       const refreshToken = tokenStorage.getRefreshToken();
-      if (refreshToken) await authService.logout(refreshToken);
+      if (refreshToken) await notifyLogout(refreshToken);
     } catch (error) {
       console.warn('Logout API notification failed', error);
     } finally {

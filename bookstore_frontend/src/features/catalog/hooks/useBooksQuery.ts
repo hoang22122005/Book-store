@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { bookService, type GetBooksQueryParams, type Book, type PageResponseDTO } from '../services/bookService';
+import { bookService } from '../services/bookService';
+import { getBookPageData, type GetBooksQueryParams, type Book, type PageResponseDTO } from './bookQueryData';
 
 export const catalogQueryKeys = {
   all: ['books'] as const,
@@ -18,7 +19,7 @@ export const catalogQueryKeys = {
 export const useBooksQuery = (params: GetBooksQueryParams = {}) => {
   return useQuery<PageResponseDTO<Book>, Error>({
     queryKey: catalogQueryKeys.list(params),
-    queryFn: () => bookService.getPublicBooks(params),
+    queryFn: async () => getBookPageData(await bookService.getPublicBooks(params), 'Phản hồi danh sách sách không hợp lệ'),
     staleTime: 1000 * 60 * 5, // 5 minutes cache
   });
 };

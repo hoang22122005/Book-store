@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { LoaderCircle, MessageCircle, SendHorizontal, X } from 'lucide-react';
-import { chatService } from '../../features/chat/services/chatService';
+import { useChatApi } from '../../features/chat';
 import { tokenStorage } from '../../utils';
 import type { ChatMessageResponse, ChatRoomResponse } from '../../types/api';
 
@@ -18,6 +18,7 @@ function TypingDots() {
 }
 
 export function ChatWidget() {
+  const { getOrCreateMyRoom, getMessages, markRoomRead } = useChatApi();
   const [isOpen, setIsOpen] = useState(false);
   const [room, setRoom] = useState<ChatRoomResponse | null>(null);
   const [messages, setMessages] = useState<ChatMessageResponse[]>([]);
@@ -66,11 +67,9 @@ export function ChatWidget() {
     setIsLoading(true);
     setError(null);
     try {
-      const roomRes = await chatService.getOrCreateMyRoom();
-      const currentRoom = roomRes.data.data;
+      const currentRoom = await getOrCreateMyRoom();
       if (!currentRoom) throw new Error('Không thể tạo cuộc trò chuyện');
-      const res = await chatService.getMessages(currentRoom.chatRoomId, 0, 20);
-      const msgData = res.data.data;
+      const msgData = await getMessages(currentRoom.chatRoomId, 0, 20);
       setRoom(currentRoom);
       //tạo bản copy reverse dữ liệu từ mới đến cũ để hiển thị lên UI
       const chronologized = (msgData?.content ?? []).slice().reverse();
@@ -78,13 +77,13 @@ export function ChatWidget() {
       setPage(0);
       setHasMore(!msgData?.last);
       isInitialLoadRef.current = true;
-      void chatService.markRoomRead(currentRoom.chatRoomId).catch(() => undefined);
+      void markRoomRead(currentRoom.chatRoomId).catch(() => undefined);
     } catch {
       setError('Không thể mở cuộc trò chuyện. Vui lòng thử lại.');
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [getMessages, getOrCreateMyRoom, markRoomRead]);
 
   useEffect(() => {
     if (!isOpen || room || isLoading) return;
@@ -139,14 +138,14 @@ export function ChatWidget() {
           }
           return [...current, message];
         });
-        if (isOpenRef.current) void chatService.markRoomRead(message.chatRoomId).catch(() => undefined);
+        if (isOpenRef.current) void markRoomRead(message.chatRoomId).catch(() => undefined);
         scheduleScrollToBottom();
       } catch {
         // Ignore invalid server payloads.
       }
     };
     return () => socket.close();
-  }, [room?.chatRoomId, scheduleScrollToBottom]);
+  }, [markRoomRead, room?.chatRoomId, scheduleScrollToBottom]);
 
   useEffect(() => {
     if (isOpen && isInitialLoadRef.current && messages.length > 0) {
@@ -175,8 +174,7 @@ export function ChatWidget() {
       const prevScrollTop = container.scrollTop;
       const nextPage = page + 1;
       try {
-        const res = await chatService.getMessages(room.chatRoomId, nextPage, 20);
-        const msgData = res.data.data;
+        const msgData = await getMessages(room.chatRoomId, nextPage, 20);
         const olderMessages = (msgData?.content ?? []).slice().reverse();
         setMessages((current) => {
           const existingIds = new Set(current.map((item) => item.messageId));

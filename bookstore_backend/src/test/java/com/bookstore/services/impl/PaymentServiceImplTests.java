@@ -18,12 +18,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.bookstore.dto.payment.VnPayIpnResponse;
 import com.bookstore.models.Bill;
 import com.bookstore.models.Payment;
+import com.bookstore.models.User;
 import com.bookstore.models.enums.BillStatus;
 import com.bookstore.models.enums.InventoryStatus;
 import com.bookstore.models.enums.PaymentMethod;
 import com.bookstore.models.enums.PaymentStatus;
 import com.bookstore.repository.BillDetailRepository;
 import com.bookstore.repository.BillRepository;
+import com.bookstore.repository.CartDetailRepo;
+import com.bookstore.repository.CartRepo;
 import com.bookstore.repository.PaymentRepository;
 import com.bookstore.repository.UserVoucherRepository;
 import com.bookstore.services.InventoryService;
@@ -43,6 +46,10 @@ class PaymentServiceImplTests {
     private InventoryService inventoryService;
     @Mock
     private VnPayService vnPayService;
+    @Mock
+    private CartRepo cartRepo;
+    @Mock
+    private CartDetailRepo cartDetailRepo;
 
     @InjectMocks
     private PaymentServiceImpl paymentService;
@@ -53,6 +60,9 @@ class PaymentServiceImplTests {
         bill.setBillId(10);
         bill.setStatus(BillStatus.PENDING);
         bill.setInventoryStatus(InventoryStatus.RESERVED);
+        User user = new User();
+        user.setUserId(1);
+        bill.setUser(user);
 
         Payment payment = new Payment();
         payment.setBill(bill);
@@ -74,6 +84,7 @@ class PaymentServiceImplTests {
         when(billRepository.findByIdForUpdate(10)).thenReturn(Optional.of(bill));
         when(paymentRepository.findByTxnRefForUpdate("VNPAY-10")).thenReturn(Optional.of(payment));
         when(billDetailRepository.findByBillBillId(10)).thenReturn(List.of());
+        when(cartRepo.findByUser_UserId(1)).thenReturn(Optional.empty());
 
         VnPayIpnResponse response = paymentService.handleVnPayIpn(parameters);
 
@@ -83,4 +94,5 @@ class PaymentServiceImplTests {
         assertThat(bill.getStatus()).isEqualTo(BillStatus.CONFIRMED);
         verify(inventoryService).deductReservations(List.of());
     }
+
 }

@@ -22,6 +22,11 @@ export interface CartDetailResponse {
   bookId: number
   bookName: string
   author: string
+  urlImg?: string | null
   price: Decimal
+  salePrice?: Decimal
+  discountPercent?: Decimal | number
+  activeCampaignId?: number | null
+  activeCampaignName?: string | null
   quantity: number
 }

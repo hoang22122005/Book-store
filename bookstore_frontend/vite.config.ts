@@ -9,11 +9,15 @@ export default defineConfig({
     tailwindcss()
   ],
   server: {
+    allowedHosts: ['aethercinema.site'],
     proxy: {
       '/api': {
         target: 'http://localhost:8080',
         changeOrigin: true,
       },
     },
+  },
+  preview: {
+    allowedHosts: ['aethercinema.site'],
   },
 })

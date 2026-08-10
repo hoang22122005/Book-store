@@ -21,6 +21,7 @@ public class CartDetailResponse {
     int bookId;
     String bookName;
     String author;
+    String urlImg;
     BigDecimal price;
     BigDecimal salePrice;
     BigDecimal discountPercent;
@@ -43,6 +44,7 @@ public class CartDetailResponse {
                 .bookId(cartDetail.getBook().getBookId())
                 .bookName(cartDetail.getBook().getName())
                 .author(cartDetail.getBook().getAuthor())
+                .urlImg(cartDetail.getBook().getUrlImg())
                 .price(cartDetail.getBook().getPrice())
                 .salePrice(salePrice)
                 .discountPercent(discount == null ? BigDecimal.ZERO : discount.discountPercent())
