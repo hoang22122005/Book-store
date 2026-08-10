@@ -5,10 +5,17 @@ import { AuthLayout } from '../layouts/AuthLayout';
 import { AdminLayout } from '../layouts/AdminLayout';
 
 import { HomePage } from '../pages/public/HomePage';
+import { BookDetailPage } from '../pages/public/BookDetailPage';
 import { LoginPage } from '../pages/public/LoginPage';
 import { RegisterPage } from '../pages/public/RegisterPage';
+import { CartPage } from '../pages/customer/CartPage';
+import { CheckoutPage } from '../pages/customer/CheckoutPage';
+import { OrderSuccessPage } from '../pages/customer/OrderSuccessPage';
+import { MyOrdersPage } from '../pages/customer/MyOrdersPage';
 import { ProtectedRoute } from './ProtectedRoute';
 import { ChatPage } from '../pages/admin/ChatPage';
+import { AdminDashboardPage } from '../pages/admin/AdminDashboardPage';
+import { AdminFinancePage } from '../pages/admin/AdminFinancePage';
 import { adminRouteAccess } from '../utils/adminAccess';
 
 export const AppRoutes: React.FC = () => {
@@ -18,6 +25,39 @@ export const AppRoutes: React.FC = () => {
       <Route element={<CustomerLayout />}>
         <Route path="/" element={<HomePage />} />
         <Route path="/books" element={<HomePage />} />
+        <Route path="/books/:bookId" element={<BookDetailPage />} />
+        <Route
+          path="/cart"
+          element={
+            <ProtectedRoute allowedRoles={['USER', 'ADMIN', 'STAFF', 'ACCOUNTANT', 'WAREHOUSE_KEEPER']}>
+              <CartPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/checkout"
+          element={
+            <ProtectedRoute allowedRoles={['USER', 'ADMIN', 'STAFF', 'ACCOUNTANT', 'WAREHOUSE_KEEPER']}>
+              <CheckoutPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/order-success"
+          element={
+            <ProtectedRoute allowedRoles={['USER', 'ADMIN', 'STAFF', 'ACCOUNTANT', 'WAREHOUSE_KEEPER']}>
+              <OrderSuccessPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/my-orders"
+          element={
+            <ProtectedRoute allowedRoles={['USER', 'ADMIN', 'STAFF', 'ACCOUNTANT', 'WAREHOUSE_KEEPER']}>
+              <MyOrdersPage />
+            </ProtectedRoute>
+          }
+        />
       </Route>
 
       {/* Auth Routes with AuthLayout */}
@@ -38,10 +78,7 @@ export const AppRoutes: React.FC = () => {
           path="/admin"
           element={
             <ProtectedRoute allowedRoles={[...adminRouteAccess['/admin']]}> 
-              <div className="space-y-6">
-                <h1 className="text-2xl font-bold text-white">Bảng Điều Hành Admin</h1>
-                <p className="text-slate-400">Chào mừng bạn đến với trang quản trị hệ thống.</p>
-              </div>
+              <AdminDashboardPage />
             </ProtectedRoute>
           }
         />
@@ -64,7 +101,7 @@ export const AppRoutes: React.FC = () => {
         />
         <Route
           path="/admin/finance"
-          element={<ProtectedRoute allowedRoles={[...adminRouteAccess['/admin/finance']]}><div className="text-white">Báo Cáo Kế Toán & Doanh Thu</div></ProtectedRoute>}
+          element={<ProtectedRoute allowedRoles={[...adminRouteAccess['/admin/finance']]}><AdminFinancePage /></ProtectedRoute>}
         />
       </Route>
 

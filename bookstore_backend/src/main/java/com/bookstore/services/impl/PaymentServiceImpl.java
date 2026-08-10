@@ -30,6 +30,14 @@ import com.bookstore.services.VnPayService;
 
 import lombok.RequiredArgsConstructor;
 
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import com.bookstore.models.Cart;
+import com.bookstore.models.CartDetail;
+import com.bookstore.repository.CartDetailRepo;
+import com.bookstore.repository.CartRepo;
+
 @Service
 @RequiredArgsConstructor
 public class PaymentServiceImpl implements PaymentService {
@@ -39,6 +47,8 @@ public class PaymentServiceImpl implements PaymentService {
     private final UserVoucherRepository userVoucherRepository;
     private final InventoryService inventoryService;
     private final VnPayService vnPayService;
+    private final CartRepo cartRepo;
+    private final CartDetailRepo cartDetailRepo;
 
     @Override
     @Transactional
@@ -164,6 +174,26 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setStatus(PaymentStatus.SUCCEEDED);
         if (payment.getPaidAt() == null) {
             payment.setPaidAt(OffsetDateTime.now(ZoneOffset.UTC));
+        }
+
+        clearCartForBill(bill);
+    }
+
+    private void clearCartForBill(Bill bill) {
+        Optional<Cart> cartOpt = cartRepo.findByUser_UserId(bill.getUser().getUserId());
+        if (cartOpt.isPresent()) {
+            Cart cart = cartOpt.get();
+            List<BillDetail> details = findBillDetails(bill);
+            Set<Integer> bookIdsInBill = details.stream()
+                    .map(detail -> detail.getBook().getBookId())
+                    .collect(Collectors.toSet());
+            List<CartDetail> cartDetails = cartDetailRepo.findAllCartDetails(cart.getCartId());
+            List<CartDetail> itemsToRemove = cartDetails.stream()
+                    .filter(detail -> bookIdsInBill.contains(detail.getBook().getBookId()))
+                    .toList();
+            if (!itemsToRemove.isEmpty()) {
+                cartDetailRepo.deleteAll(itemsToRemove);
+            }
         }
     }
 

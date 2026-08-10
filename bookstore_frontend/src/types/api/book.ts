@@ -13,6 +13,10 @@ export interface BookResponse {
   publisher: string | null
   publishYear: number | null
   price: Decimal
+  salePrice: Decimal
+  discountPercent: Decimal
+  activeCampaignId: number | null
+  activeCampaignName: string | null
   createdAt: DateTime
   urlImg: string | null
   avgRating: number
@@ -22,6 +26,11 @@ export interface BookResponse {
   pageCount: number | null
   isVip: boolean
   genres: string[]
+}
+
+export interface GenreResponse {
+  genreId: number
+  name: string
 }
 
 export interface BookRequest {

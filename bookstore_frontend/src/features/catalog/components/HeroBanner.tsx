@@ -5,7 +5,7 @@ export const HeroBanner: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <section className="relative w-full max-w-container-max mx-auto px-4 md:px-margin-desktop py-stack-lg">
+    <section className="relative w-full mt-8 max-w-container-max mx-auto px-4 md:px-margin-desktop py-stack-lg">
       <div className="relative w-full h-[450px] md:h-[550px] rounded-xl overflow-hidden shadow-[0_4px_6px_-1px_rgba(26,54,93,0.05),0_2px_4px_-1px_rgba(26,54,93,0.03)] flex items-center">
         {/* Background Image */}
         <div

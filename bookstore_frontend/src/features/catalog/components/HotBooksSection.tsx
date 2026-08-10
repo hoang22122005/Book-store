@@ -4,11 +4,22 @@ import { useHotBooks } from '../hooks/useHotBooks';
 import { SectionPager } from '../../../components/common/SectionPager';
 import { useSectionPagination } from '../../../hooks/useSectionPagination';
 
-export const HotBooksSection: React.FC = () => {
+interface HotBooksSectionProps {
+  onSelectBook?: (id: string | number) => void;
+}
+
+export const HotBooksSection: React.FC<HotBooksSectionProps> = ({ onSelectBook }) => {
   const { page, goToPage } = useSectionPagination();
-  const { data, isLoading, isError, isFetching, refetch } = useHotBooks(page, 3);
+  const { data, isLoading, isError, error, isFetching, refetch } = useHotBooks(page, 3);
 
   const books = data?.content || [];
+
+  const handleBookClick = (id: number, e: React.MouseEvent) => {
+    if (onSelectBook) {
+      e.preventDefault();
+      onSelectBook(id);
+    }
+  };
 
   return (
     <section className="w-full max-w-container-max mx-auto px-4 md:px-margin-desktop py-stack-lg">
@@ -46,7 +57,9 @@ export const HotBooksSection: React.FC = () => {
         <div className="bg-error-container text-on-error-container p-4 rounded-xl flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-error">error</span>
-            <p className="text-sm font-medium">Không thể tải danh sách sách hot từ hệ thống.</p>
+            <p className="text-sm font-medium">
+              {(error as Error)?.message || 'Không thể tải danh sách sách hot từ hệ thống.'}
+            </p>
           </div>
           <button
             onClick={() => refetch()}
@@ -71,6 +84,7 @@ export const HotBooksSection: React.FC = () => {
             <Link
               key={book.id}
               to={`/books/${book.id}`}
+              onClick={(e) => handleBookClick(book.id, e)}
               className="flex gap-stack-md p-stack-md bg-surface-container-lowest rounded-xl border border-outline-variant hover:border-secondary transition-colors cursor-pointer group"
             >
               <div className="w-24 h-32 bg-surface-variant rounded flex-shrink-0 overflow-hidden relative">
@@ -78,11 +92,20 @@ export const HotBooksSection: React.FC = () => {
                   <img
                     src={book.coverUrl}
                     alt={book.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${
+                      book.quantityInStock <= 0 ? 'grayscale-[40%] opacity-75' : ''
+                    }`}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
                     <span className="material-symbols-outlined text-outline">book</span>
+                  </div>
+                )}
+                {book.quantityInStock <= 0 && (
+                  <div className="absolute inset-0 bg-black/45 backdrop-blur-[1px] z-10 flex items-center justify-center">
+                    <span className="px-1.5 py-0.5 bg-error text-white font-bold text-[10px] uppercase tracking-wider rounded border border-white/20">
+                      Hết hàng
+                    </span>
                   </div>
                 )}
               </div>

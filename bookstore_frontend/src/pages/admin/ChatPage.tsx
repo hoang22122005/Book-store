@@ -13,7 +13,7 @@ import {
   UserRound,
   WifiOff,
 } from 'lucide-react';
-import { chatService } from '../../features/chat/services/chatService';
+import { useChatApi } from '../../features/chat';
 import { tokenStorage } from '../../utils';
 import type { ChatMessageResponse, ChatRoomResponse } from '../../types/api';
 
@@ -60,6 +60,7 @@ function TypingDots() {
 }
 
 export function ChatPage() {
+  const { getRooms, getMessages, markRoomRead } = useChatApi();
   const [rooms, setRooms] = useState<RoomWithMessages[]>([]);
   const [selectedRoomId, setSelectedRoomId] = useState<number | null>(null);
   const [filter, setFilter] = useState<Filter>('all');
@@ -99,12 +100,10 @@ export function ChatPage() {
 
   const fetchRoomsSilently = useCallback(async () => {
     try {
-      const roomRes = await chatService.getRooms();
-      const roomData = roomRes.data.data ?? [];
+      const roomData = await getRooms();
       const data = await Promise.all(
         roomData.map(async (room) => {
-          const res = await chatService.getMessages(room.chatRoomId, 0, 20);
-          const msgData = res.data.data;
+          const msgData = await getMessages(room.chatRoomId, 0, 20);
           return {
             ...room,
             messages: (msgData?.content ?? []).slice().reverse(),
@@ -142,18 +141,16 @@ export function ChatPage() {
     } catch {
       // Ignore silent error
     }
-  }, []);
+  }, [getMessages, getRooms]);
 
   const loadRooms = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const roomRes = await chatService.getRooms();
-      const roomData = roomRes.data.data ?? [];
+      const roomData = await getRooms();
       const data = await Promise.all(
         roomData.map(async (room) => {
-          const res = await chatService.getMessages(room.chatRoomId, 0, 20);
-          const msgData = res.data.data;
+          const msgData = await getMessages(room.chatRoomId, 0, 20);
           return {
             ...room,
             messages: (msgData?.content ?? []).slice().reverse(),
@@ -176,13 +173,13 @@ export function ChatPage() {
           ? { ...room, messages: room.messages.map((message) => ({ ...message, read: true })) }
           : room,
       ));
-      if (initialSelectedId) void chatService.markRoomRead(initialSelectedId).catch(() => undefined);
+      if (initialSelectedId) void markRoomRead(initialSelectedId).catch(() => undefined);
     } catch {
       setError('Không thể tải cuộc trò chuyện. Vui lòng thử lại.');
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [getMessages, getRooms, markRoomRead]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => void loadRooms(), 0);
@@ -199,7 +196,7 @@ export function ChatPage() {
           ? { ...room, messages: room.messages.map((message) => ({ ...message, read: true })) }
           : room,
       ));
-      void chatService.markRoomRead(roomId).catch(() => undefined);
+      void markRoomRead(roomId).catch(() => undefined);
     }
   };
 
@@ -239,7 +236,7 @@ export function ChatPage() {
         if (message.chatRoomId === currentSelectedId) {
           setIsPartnerTyping(false);
           if (typingTimeoutRef.current) window.clearTimeout(typingTimeoutRef.current);
-          void chatService.markRoomRead(message.chatRoomId).catch(() => undefined);
+          void markRoomRead(message.chatRoomId).catch(() => undefined);
         }
 
         setRooms((current) => {
@@ -270,7 +267,7 @@ export function ChatPage() {
       }
     };
     return () => socket.close();
-  }, [fetchRoomsSilently, scheduleScrollToBottom]);
+  }, [fetchRoomsSilently, markRoomRead, scheduleScrollToBottom]);
 
   const selectedRoom = rooms.find((room) => room.chatRoomId === selectedRoomId) ?? null;
   const filteredRooms = useMemo(() => {
@@ -309,8 +306,7 @@ export function ChatPage() {
       const prevScrollTop = container.scrollTop;
       const nextPage = selectedRoom.page + 1;
       try {
-        const res = await chatService.getMessages(selectedRoom.chatRoomId, nextPage, 20);
-        const msgData = res.data.data;
+        const msgData = await getMessages(selectedRoom.chatRoomId, nextPage, 20);
         const olderMessages = (msgData?.content ?? []).slice().reverse();
         setRooms((current) =>
           current.map((room) => {

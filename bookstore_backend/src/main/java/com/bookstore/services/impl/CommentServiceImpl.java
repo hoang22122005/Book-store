@@ -14,6 +14,7 @@ import com.bookstore.exception.ForbiddenException;
 import com.bookstore.exception.NotFoundException;
 import com.bookstore.models.Comment;
 import com.bookstore.models.User;
+import com.bookstore.repository.BookRepo;
 import com.bookstore.repository.CommentRepository;
 import com.bookstore.repository.UserRepository;
 import com.bookstore.services.CommentService;
@@ -24,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class CommentServiceImpl implements CommentService {
     private final CommentRepository commentRepository;
+    private final BookRepo bookRepo;
     private final UserRepository userRepository;
 
     @Override
@@ -44,6 +46,8 @@ public class CommentServiceImpl implements CommentService {
     @Transactional
     public CommentResponse createComment(int userId, CommentRequest request) {
         Comment comment = new Comment();
+        comment.setBook(bookRepo.findByBookIdAndIsDeletedFalse(request.getBookId())
+                .orElseThrow(() -> new NotFoundException("Khong tim thay sach")));
         comment.setUser(findUser(userId));
         comment.setContent(request.getContent().trim());
         comment.setCreatedAt(LocalDateTime.now());

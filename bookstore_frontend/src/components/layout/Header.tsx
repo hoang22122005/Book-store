@@ -2,12 +2,18 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useLogout } from '../../features/auth/hooks';
+import { useCartDetailsQuery } from '../../features/cart';
 
 export const Header: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
+  const { data: cartDetails } = useCartDetailsQuery();
   const logoutMutation = useLogout();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
+
+  const cartItemCount = cartDetails
+    ? cartDetails.reduce((acc, item) => acc + (item.quantity || 0), 0)
+    : 0;
 
   const handleLogout = () => {
     logoutMutation.mutate(undefined, {
@@ -59,6 +65,12 @@ export const Header: React.FC = () => {
             >
               Khuyến mãi
             </Link>
+            <Link
+              to="/my-orders"
+              className="text-on-surface-variant hover:text-secondary transition-colors duration-200"
+            >
+              Đơn hàng của tôi
+            </Link>
           </nav>
         </div>
 
@@ -78,15 +90,27 @@ export const Header: React.FC = () => {
           {/* Cart Icon */}
           <Link
             to="/cart"
-            className="text-primary hover:text-secondary transition-colors duration-200 opacity-80 hover:scale-95 transition-all p-1"
+            className="relative text-primary hover:text-secondary transition-colors duration-200 opacity-80 hover:scale-95 transition-all p-1"
             title="Giỏ hàng"
           >
             <span className="material-symbols-outlined text-[24px]">shopping_cart</span>
+            {isAuthenticated && cartItemCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-error text-white font-bold text-[10px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-surface animate-bounce">
+                {cartItemCount > 99 ? '99+' : cartItemCount}
+              </span>
+            )}
           </Link>
 
           {/* User Account / Login */}
           {isAuthenticated && user ? (
             <div className="flex items-center gap-stack-sm border-l border-surface-variant pl-3">
+              <Link
+                to="/my-orders"
+                className="p-1 text-primary hover:text-secondary transition-colors"
+                title="Theo dõi đơn hàng"
+              >
+                <span className="material-symbols-outlined text-[22px]">local_shipping</span>
+              </Link>
               <Link
                 to="/profile"
                 className="flex items-center gap-2 text-primary hover:text-secondary transition-colors"

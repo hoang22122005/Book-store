@@ -156,13 +156,14 @@ public class BillServiceImpl implements BillService {
             userVoucherRepository.save(userVoucher);
         }
 
-        removeCheckedOutItems(cart, cartDetails, selectedCartDetails);
-
-        // check payment method if payment method is VNPAY, create payment url, else
-        // return null
         String paymentUrl = paymentMethod == PaymentMethod.VNPAY
                 ? vnPayService.createPaymentUrl(savedPayment, normalizeIp(clientIp))
                 : null;
+
+        // For DIRECT (COD), remove items immediately. For VNPAY, keep items in cart until payment succeeds
+        if (paymentMethod != PaymentMethod.VNPAY) {
+            removeCheckedOutItems(cart, cartDetails, selectedCartDetails);
+        }
         // create url checkout front end redirect to this url to pay
         return CheckoutResponse.builder()
                 .bill(BillResponse.from(savedBill, billDetails))
@@ -354,7 +355,7 @@ public class BillServiceImpl implements BillService {
     }
 
     private String normalizeIp(String clientIp) {
-        if (clientIp == null || clientIp.isBlank()) {
+        if (clientIp == null || clientIp.isBlank() || clientIp.contains(":") || clientIp.contains("localhost")) {
             return "127.0.0.1";
         }
         return clientIp.length() <= 45 ? clientIp : clientIp.substring(0, 45);

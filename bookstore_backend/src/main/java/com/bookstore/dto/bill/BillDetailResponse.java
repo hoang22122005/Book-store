@@ -16,6 +16,7 @@ public class BillDetailResponse {
     Integer billDetailId;
     Integer bookId;
     String bookName;
+    String urlImg;
     Integer quantity;
     BigDecimal priceAtPurchase;
     BigDecimal subTotal;
@@ -28,6 +29,7 @@ public class BillDetailResponse {
                 .billDetailId(billDetail.getBillDetailId())
                 .bookId(billDetail.getBook().getBookId())
                 .bookName(billDetail.getBook().getName())
+                .urlImg(billDetail.getBook() != null ? billDetail.getBook().getUrlImg() : null)
                 .quantity(quantity)
                 .priceAtPurchase(price)
                 .subTotal(price.multiply(BigDecimal.valueOf(quantity)))

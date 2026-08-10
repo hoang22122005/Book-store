@@ -43,14 +43,14 @@ public class VnPayService {
         Map<String, String> parameters = new TreeMap<>();
         parameters.put("vnp_Version", VERSION);
         parameters.put("vnp_Command", COMMAND);
-        parameters.put("vnp_TmnCode", properties.getTmnCode());
+        parameters.put("vnp_TmnCode", properties.getTmnCode().trim());
         parameters.put("vnp_Amount", toVnPayAmount(payment.getAmount()));
         parameters.put("vnp_CurrCode", CURRENCY);
         parameters.put("vnp_TxnRef", payment.getTxnRef());
         parameters.put("vnp_OrderInfo", payment.getOrderInfo());
         parameters.put("vnp_OrderType", BOOK_ORDER_TYPE);
         parameters.put("vnp_Locale", LOCALE);
-        parameters.put("vnp_ReturnUrl", properties.getReturnUrl());
+        parameters.put("vnp_ReturnUrl", properties.getReturnUrl().trim());
         parameters.put("vnp_IpAddr", clientIp);
         parameters.put("vnp_CreateDate", formatDate(payment.getVnpCreateDate()));
         parameters.put("vnp_ExpireDate", formatDate(payment.getExpiresAt()));
@@ -62,10 +62,8 @@ public class VnPayService {
         String query = buildQuery(parameters);
         // hash the query string using hmac-sha512 and secret key
         String secureHash = hmacSha512(query);
-        // khi gửi đi thì gửi cả 2 là query và secureHash vn pay dựa vào secureHash để
-        // xác nhận đúng backend của mình gửi chưa
 
-        return properties.getPaymentUrl() + "?" + query + "&vnp_SecureHash=" + secureHash;
+        return properties.getPaymentUrl().trim() + "?" + query + "&vnp_SecureHash=" + secureHash;
     }
 
     // validate the signature by mean of hmacSha512 algorithm f
@@ -135,14 +133,14 @@ public class VnPayService {
     }
 
     private String encode(String value) {
-        return URLEncoder.encode(value, StandardCharsets.UTF_8);
+        return URLEncoder.encode(value, StandardCharsets.US_ASCII);
     }
 
     private String hmacSha512(String data) {
         try {
             Mac hmac = Mac.getInstance("HmacSHA512");
             hmac.init(new SecretKeySpec(
-                    properties.getHashSecret().getBytes(StandardCharsets.UTF_8),
+                    properties.getHashSecret().trim().getBytes(StandardCharsets.UTF_8),
                     "HmacSHA512"));
             return java.util.HexFormat.of().formatHex(
                     hmac.doFinal(data.getBytes(StandardCharsets.UTF_8)));
