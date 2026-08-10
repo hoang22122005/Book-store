@@ -65,12 +65,6 @@ export const Header: React.FC = () => {
             >
               Khuyến mãi
             </Link>
-            <Link
-              to="/my-orders"
-              className="text-on-surface-variant hover:text-secondary transition-colors duration-200"
-            >
-              Đơn hàng của tôi
-            </Link>
           </nav>
         </div>
 
