@@ -69,7 +69,7 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public PageResponse<BookResponse> getBooks(String keyword, String author, Integer categoryId,
-            BigDecimal minPrice, BigDecimal maxPrice, Pageable pageable) {
+            BigDecimal minPrice, BigDecimal maxPrice, Boolean inStock, Pageable pageable) {
         validatePriceRange(minPrice, maxPrice);
 
         String normalizedKeyword = normalize(keyword);
@@ -82,6 +82,7 @@ public class BookServiceImpl implements BookService {
                 categoryId,
                 minPrice,
                 maxPrice,
+                inStock,
                 safePageable);
         Map<Integer, List<String>> genresByBookId = getGenresByBookId(bookPage.getContent());
         Map<Integer, ActiveBookDiscount> discounts = discountPricingService.getActiveDiscounts(

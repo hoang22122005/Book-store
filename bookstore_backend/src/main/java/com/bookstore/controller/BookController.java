@@ -45,10 +45,11 @@ public class BookController {
             @RequestParam(required = false) Integer categoryId,
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(required = false) Boolean inStock,
             @PageableDefault(size = 12, sort = "bookId", direction = Sort.Direction.ASC) Pageable pageable) {
 
         PageResponse<BookResponse> books = bookService.getBooks(keyword, author, categoryId, minPrice, maxPrice,
-                pageable);
+                inStock, pageable);
         return ResponseEntity.ok(ApiResponse.success("Books fetched successfully", books));
     }
 

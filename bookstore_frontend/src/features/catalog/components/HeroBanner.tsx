@@ -33,12 +33,12 @@ export const HeroBanner: React.FC = () => {
             >
               Mua sách ngay
             </Link>
-            <button
-              onClick={() => navigate('/books?filter=new')}
-              className="border-[1.5px] border-white text-white bg-transparent font-label-md text-label-md px-6 py-3 rounded-DEFAULT hover:bg-white/10 transition-colors cursor-pointer"
+            <Link
+              to="/books?filter=new"
+              className="border-[1.5px] border-white text-white bg-transparent font-label-md text-label-md px-6 py-3 rounded-DEFAULT hover:bg-white/10 transition-colors"
             >
               Xem sách mới
-            </button>
+            </Link>
           </div>
         </div>
       </div>

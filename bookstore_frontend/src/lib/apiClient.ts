@@ -29,6 +29,8 @@ apiClient.interceptors.response.use(
     }
 
     const originalRequest = error.config as (InternalAxiosRequestConfig & { _retry?: boolean }) | undefined;
+
+    // Handle 401 - Token expired
     if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
       originalRequest._retry = true;
       const refreshToken = tokenStorage.getRefreshToken();
@@ -50,7 +52,22 @@ apiClient.interceptors.response.use(
 
       tokenStorage.clearTokens();
       window.dispatchEvent(new Event('auth:unauthorized'));
+      return Promise.reject(error);
     }
+
+    // Convert technical errors to user-friendly messages
+    if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+      error.message = 'Yêu cầu quá chậm. Vui lòng kiểm tra kết nối mạng và thử lại.';
+    } else if (error.response?.status === 413) {
+      error.message = 'File quá lớn. Vui lòng chọn file nhỏ hơn.';
+    } else if (error.response?.status === 500) {
+      error.message = 'Lỗi hệ thống. Vui lòng thử lại sau.';
+    } else if (error.response?.status === 503) {
+      error.message = 'Dịch vụ tạm thời không khả dụng. Vui lòng thử lại sau.';
+    } else if (!error.response) {
+      error.message = 'Không thể kết nối server. Vui lòng kiểm tra mạng.';
+    }
+
     return Promise.reject(error);
   },
 );

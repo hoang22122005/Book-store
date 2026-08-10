@@ -8,6 +8,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import com.bookstore.common.response.ApiResponse;
 import com.bookstore.exception.InvalidTokenException;
@@ -76,6 +77,11 @@ public class GlobalExceptionHandler {
         }    
 
          return error(HttpStatus.BAD_REQUEST, errorMessage.toString());
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMaxUploadSize(MaxUploadSizeExceededException ex) {
+        return error(HttpStatus.BAD_REQUEST, "Kích thước ảnh vượt quá giới hạn 5MB. Vui lòng chọn ảnh nhỏ hơn.");
     }
 
     @ExceptionHandler(Throwable.class)

@@ -114,6 +114,7 @@ export interface BookListQuery extends PageQuery {
   categoryId?: number
   minPrice?: Decimal
   maxPrice?: Decimal
+  inStock?: boolean
 }
 
 export interface RecommendationQuery {
