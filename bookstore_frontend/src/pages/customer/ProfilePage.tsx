@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { User, Package, Heart, LogOut, Save, KeyRound } from 'lucide-react';
-import { useUserProfile, useUpdateProfile, useChangePassword } from '../../features/user/hooks';
+import { useUserProfile, useUpdateProfile, useChangePassword, useUploadAvatar } from '../../features/user/hooks';
 import { useLogout } from '../../features/auth/hooks';
 
 export const ProfilePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'profile' | 'password'>('profile');
+  const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const { data: user, isLoading } = useUserProfile();
   const logoutMutation = useLogout();
 
@@ -25,13 +26,18 @@ export const ProfilePage: React.FC = () => {
           <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-6 sticky top-24">
             {/* User Info */}
             <div className="text-center mb-6">
-              <div className="w-20 h-20 mx-auto mb-3 rounded-full bg-primary flex items-center justify-center overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setIsAvatarModalOpen(true)}
+                className="w-20 h-20 mx-auto mb-3 rounded-full bg-primary flex items-center justify-center overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all"
+                title="Thay đổi ảnh đại diện"
+              >
                 {user?.avatarUrl ? (
                   <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
                 ) : (
                   <span className="text-white text-2xl font-bold">{user?.name?.charAt(0).toUpperCase() || 'U'}</span>
                 )}
-              </div>
+              </button>
               <h2 className="font-headline-sm text-headline-sm text-on-surface font-bold">{user?.name || 'Người dùng'}</h2>
               <p className="text-caption text-on-surface-variant">Khách hàng thân thiết</p>
             </div>
@@ -92,6 +98,13 @@ export const ProfilePage: React.FC = () => {
           {activeTab === 'password' && <ChangePasswordForm />}
         </div>
       </div>
+
+      <AvatarEditModal
+        isOpen={isAvatarModalOpen}
+        onClose={() => setIsAvatarModalOpen(false)}
+        currentAvatarUrl={user?.avatarUrl}
+        userName={user?.name}
+      />
     </div>
   );
 };
@@ -112,6 +125,7 @@ interface ProfileFormProps {
 
 const ProfileForm: React.FC<ProfileFormProps> = ({ user, isLoading }) => {
   const updateProfileMutation = useUpdateProfile();
+
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -239,6 +253,129 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, isLoading }) => {
           <div className="p-3 bg-red-50 text-red-700 rounded-lg text-sm">{updateProfileMutation.error.message}</div>
         )}
       </form>
+    </div>
+  );
+};
+
+interface AvatarEditModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  currentAvatarUrl?: string;
+  userName?: string;
+}
+
+const AvatarEditModal: React.FC<AvatarEditModalProps> = ({ isOpen, onClose, currentAvatarUrl, userName }) => {
+  const uploadAvatarMutation = useUploadAvatar();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [preview, setPreview] = useState<string | undefined>(undefined);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [error, setError] = useState<string>('');
+
+  if (!isOpen) return null;
+
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setError('');
+
+    if (file.size > MAX_FILE_SIZE) {
+      setError('Kích thước ảnh vượt quá 5MB. Vui lòng chọn ảnh nhỏ hơn.');
+      return;
+    }
+
+    setSelectedFile(file);
+    const previewUrl = URL.createObjectURL(file);
+    setPreview(previewUrl);
+  };
+
+  const handleUpload = () => {
+    if (!selectedFile) return;
+    uploadAvatarMutation.mutate(selectedFile, {
+      onSuccess: () => {
+        setPreview(undefined);
+        setSelectedFile(null);
+        setError('');
+        onClose();
+      },
+    });
+  };
+
+  const handleClose = () => {
+    setPreview(undefined);
+    setSelectedFile(null);
+    setError('');
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/50" onClick={handleClose} />
+      <div className="relative bg-surface-container-lowest rounded-2xl p-6 w-full max-w-sm mx-4 shadow-xl">
+        <h3 className="text-lg font-bold text-on-surface mb-4">Thay đổi ảnh đại diện</h3>
+
+        <div className="flex justify-center mb-6">
+          <div className="w-32 h-32 rounded-full bg-primary flex items-center justify-center overflow-hidden ring-4 ring-outline-variant">
+            {preview || currentAvatarUrl ? (
+              <img src={preview ?? currentAvatarUrl} alt={userName} className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-white text-4xl font-bold">{userName?.charAt(0).toUpperCase() || 'U'}</span>
+            )}
+          </div>
+        </div>
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleFileChange}
+        />
+
+        <div className="flex flex-col gap-3">
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="w-full py-3 border-2 border-outline-variant text-on-surface font-medium rounded-lg hover:bg-surface-container-low transition-colors cursor-pointer"
+          >
+            Chọn ảnh mới
+          </button>
+
+          <button
+            type="button"
+            onClick={handleUpload}
+            disabled={!selectedFile || uploadAvatarMutation.isPending}
+            className="w-full py-3 bg-primary text-white font-medium rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-wait flex items-center justify-center gap-2"
+          >
+            {uploadAvatarMutation.isPending ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Đang tải lên...
+              </>
+            ) : (
+              'Lưu ảnh'
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleClose}
+            className="w-full py-3 text-on-surface-variant font-medium rounded-lg hover:bg-surface-container-low transition-colors cursor-pointer"
+          >
+            Hủy
+          </button>
+        </div>
+
+        {error && (
+          <p className="text-sm text-red-600 mt-3 text-center">{error}</p>
+        )}
+
+        {uploadAvatarMutation.isError && (
+          <p className="text-sm text-red-600 mt-3 text-center">{uploadAvatarMutation.error.message}</p>
+        )}
+      </div>
     </div>
   );
 };
