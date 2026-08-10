@@ -18,6 +18,10 @@ import { ProtectedRoute } from './ProtectedRoute';
 import { ChatPage } from '../pages/admin/ChatPage';
 import { AdminDashboardPage } from '../pages/admin/AdminDashboardPage';
 import { AdminFinancePage } from '../pages/admin/AdminFinancePage';
+import { BookManagementPage } from '../pages/admin/BookManagementPage';
+import { AddBookPage } from '../pages/admin/AddBookPage';
+import { EditBookPage } from '../pages/admin/EditBookPage';
+import { WarehouseStockImportPage } from '../pages/admin/WarehouseStockImportPage';
 import { adminRouteAccess } from '../utils/adminAccess';
 
 export const AppRoutes: React.FC = () => {
@@ -87,7 +91,15 @@ export const AppRoutes: React.FC = () => {
         />
         <Route
           path="/admin/books"
-          element={<ProtectedRoute allowedRoles={[...adminRouteAccess['/admin/books']]}><div className="text-white">Quản Lý Danh Sách Sách</div></ProtectedRoute>}
+          element={<ProtectedRoute allowedRoles={[...adminRouteAccess['/admin/books']]}><BookManagementPage /></ProtectedRoute>}
+        />
+        <Route
+          path="/admin/books/add"
+          element={<ProtectedRoute allowedRoles={[...adminRouteAccess['/admin/books']]}><AddBookPage /></ProtectedRoute>}
+        />
+        <Route
+          path="/admin/books/:bookId/edit"
+          element={<ProtectedRoute allowedRoles={[...adminRouteAccess['/admin/books']]}><EditBookPage /></ProtectedRoute>}
         />
         <Route
           path="/admin/vouchers"
@@ -100,7 +112,7 @@ export const AppRoutes: React.FC = () => {
         <Route path="/admin/chat" element={<ProtectedRoute allowedRoles={[...adminRouteAccess['/admin/chat']]}><ChatPage /></ProtectedRoute>} />
         <Route
           path="/admin/warehouse"
-          element={<ProtectedRoute allowedRoles={[...adminRouteAccess['/admin/warehouse']]}><div className="text-white">Quản Lý Nhập Kho</div></ProtectedRoute>}
+          element={<ProtectedRoute allowedRoles={[...adminRouteAccess['/admin/warehouse']]}><WarehouseStockImportPage /></ProtectedRoute>}
         />
         <Route
           path="/admin/finance"

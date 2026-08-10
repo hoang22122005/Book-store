@@ -25,6 +25,7 @@ export interface BookResponse {
   isbn: string | null
   pageCount: number | null
   isVip: boolean
+  isDeleted: boolean
   genres: string[]
 }
 

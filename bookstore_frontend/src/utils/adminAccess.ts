@@ -6,7 +6,7 @@ export const adminRouteAccess = {
   '/admin/vouchers': ['ADMIN'],
   '/admin/chat': ['ADMIN', 'STAFF'],
   '/admin/orders': ['ADMIN', 'STAFF'],
-  '/admin/warehouse': ['ADMIN', 'WAREHOUSE_KEEPER'],
+  '/admin/warehouse': ['WAREHOUSE_KEEPER'],
   '/admin/finance': ['ADMIN', 'ACCOUNTANT'],
 } as const satisfies Record<string, readonly UserRole[]>;
 
