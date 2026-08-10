@@ -51,4 +51,17 @@ export const userService = {
       throw new Error(response.data.message || 'Không thể đổi mật khẩu');
     }
   },
+
+  uploadAvatar: async (file: File): Promise<User> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await apiClient.patch<ApiResponse<UserResponse>>('/api/user/me/avatar', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 60000,
+    });
+    if (!response.data.data) {
+      throw new Error('Không thể cập nhật ảnh đại diện');
+    }
+    return transformUserResponse(response.data.data);
+  },
 };

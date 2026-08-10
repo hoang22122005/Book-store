@@ -3,6 +3,7 @@ package com.bookstore.services.impl;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.bookstore.dto.user.ChangePasswordRequest;
 import com.bookstore.dto.user.UpdateUserRequest;
@@ -22,6 +23,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
+    private final CloudinaryService cloudinaryService;
 
     private User findCurrentUser() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -65,5 +67,22 @@ public class UserServiceImpl implements UserService {
         user.setPassword(hashPassword);
 
         userRepository.save(user);
+    }
+
+    @Override
+    public UserResponse uploadAvatar(MultipartFile file) {
+        User user = findCurrentUser();
+
+        // Xóa ảnh cũ trên Cloudinary nếu tồn tại
+        if (user.getUrlAvt() != null && !user.getUrlAvt().isBlank()) {
+            cloudinaryService.deleteImage(user.getUrlAvt());
+        }
+
+        // Upload ảnh mới và lưu URL vào DB
+        String newAvatarUrl = cloudinaryService.uploadAvatar(file);
+        user.setUrlAvt(newAvatarUrl);
+
+        User savedUser = userRepository.save(user);
+        return userMapper.toResponse(savedUser);
     }
 }

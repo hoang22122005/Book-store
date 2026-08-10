@@ -1,5 +1,6 @@
 package com.bookstore.controller;
 
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -7,7 +8,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.bookstore.common.response.ApiResponse;
 import com.bookstore.dto.auth.RefreshTokenRequest;
@@ -57,6 +60,17 @@ public class UserController {
     ){
         userService.changePassword(request);
         ApiResponse<Void> res = ApiResponse.success("Change password successfully", null);
+        return ResponseEntity.ok(res);
+    }
+
+    @PatchMapping(value = "/me/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<UserResponse>> uploadAvatar(
+            @RequestParam("file") MultipartFile file
+    ){
+        ApiResponse<UserResponse> res = ApiResponse.success(
+                "Avatar updated successfully",
+                userService.uploadAvatar(file)
+        );
         return ResponseEntity.ok(res);
     }
 
