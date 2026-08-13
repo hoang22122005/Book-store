@@ -30,6 +30,14 @@ public class StaffDashboardController {
         return ResponseEntity.ok(ApiResponse.success("Orders fetched successfully", billService.getAllBills(pageable)));
     }
 
+    @GetMapping("/orders/direct")
+    public ResponseEntity<ApiResponse<PageResponse<BillResponse>>> getDirectOrders(
+            @PageableDefault(size = 20, sort = "billId", direction = Sort.Direction.DESC) Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.success(
+                "Direct payment orders fetched successfully",
+                billService.getDirectBillsForStaff(pageable)));
+    }
+
     @GetMapping("/orders/{billId}")
     public ResponseEntity<ApiResponse<BillResponse>> getOrder(@PathVariable int billId) {
         return ResponseEntity.ok(ApiResponse.success("Order fetched successfully", billService.getBillByIdForAdmin(billId)));

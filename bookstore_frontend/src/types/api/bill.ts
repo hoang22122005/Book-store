@@ -3,7 +3,7 @@ import type { PaymentResponse } from './payment'
 
 export interface BillDetailResponse {
   billDetailId: number
-  bookId: number
+  bookId: number | null
   bookName: string
   urlImg?: string
   quantity: number

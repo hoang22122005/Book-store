@@ -1,5 +1,6 @@
 package com.bookstore.dto.voucher;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -25,6 +26,12 @@ public class CreateVoucherRequest {
     @DecimalMin(value = "0.01", message = "Discount percent must be greater than 0")
     @DecimalMax(value = "100.0", message = "Discount percent must not be greater than 100")
     Float discount;
+
+    @Positive(message = "Usage limit must be greater than 0")
+    Integer usageLimit;
+
+    @DecimalMin(value = "0.01", message = "Maximum discount amount must be greater than 0")
+    BigDecimal maxDiscountAmount;
 
     @NotNull(message = "Expired time is required")
     @Future(message = "Expired time must be in the future")

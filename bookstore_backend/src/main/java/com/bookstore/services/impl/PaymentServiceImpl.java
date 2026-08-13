@@ -24,6 +24,7 @@ import com.bookstore.repository.BillDetailRepository;
 import com.bookstore.repository.BillRepository;
 import com.bookstore.repository.PaymentRepository;
 import com.bookstore.repository.UserVoucherRepository;
+import com.bookstore.repository.VoucherRepository;
 import com.bookstore.services.InventoryService;
 import com.bookstore.services.PaymentService;
 import com.bookstore.services.VnPayService;
@@ -45,6 +46,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final BillRepository billRepository;
     private final BillDetailRepository billDetailRepository;
     private final UserVoucherRepository userVoucherRepository;
+    private final VoucherRepository voucherRepository;
     private final InventoryService inventoryService;
     private final VnPayService vnPayService;
     private final CartRepo cartRepo;
@@ -248,9 +250,13 @@ public class PaymentServiceImpl implements PaymentService {
                         bill.getUser().getUserId(),
                         bill.getVoucher().getVoucherId());
         userVoucher.ifPresent(value -> {
+            if (!value.isUsed()) {
+                return;
+            }
             value.setUsed(false);
             value.setUsedAt(null);
             userVoucherRepository.save(value);
+            voucherRepository.decrementGlobalUsageCount(bill.getVoucher().getVoucherId());
         });
     }
 }

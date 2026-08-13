@@ -3,6 +3,7 @@ package com.bookstore.dto.bill;
 import java.math.BigDecimal;
 
 import com.bookstore.models.BillDetail;
+import com.bookstore.models.Book;
 
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -22,14 +23,17 @@ public class BillDetailResponse {
     BigDecimal subTotal;
 
     public static BillDetailResponse from(BillDetail billDetail) {
-        BigDecimal price = billDetail.getPriceAtPurchase();
+        BigDecimal price = billDetail.getPriceAtPurchase() == null
+                ? BigDecimal.ZERO
+                : billDetail.getPriceAtPurchase();
         int quantity = billDetail.getQuantity();
+        Book book = billDetail.getBook();
 
         return BillDetailResponse.builder()
                 .billDetailId(billDetail.getBillDetailId())
-                .bookId(billDetail.getBook().getBookId())
-                .bookName(billDetail.getBook().getName())
-                .urlImg(billDetail.getBook() != null ? billDetail.getBook().getUrlImg() : null)
+                .bookId(book == null ? null : book.getBookId())
+                .bookName(book == null ? "Sản phẩm không còn liên kết" : book.getName())
+                .urlImg(book == null ? null : book.getUrlImg())
                 .quantity(quantity)
                 .priceAtPurchase(price)
                 .subTotal(price.multiply(BigDecimal.valueOf(quantity)))
