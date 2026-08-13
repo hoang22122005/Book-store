@@ -1,5 +1,6 @@
 package com.bookstore.dto.voucher;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -21,6 +22,9 @@ public class VoucherResponse {
     String code;
     String scope;
     Float discountPercent;
+    Integer usageLimit;
+    Integer usageCount;
+    BigDecimal maxDiscountAmount;
     LocalDateTime expiredAt;
 
     List<Integer> assignedUserIds;
@@ -42,6 +46,9 @@ public class VoucherResponse {
                 .code(voucher.getCode())
                 .scope(voucher.getScope())
                 .discountPercent(voucher.getDiscount())
+                .usageLimit(voucher.getUsageLimit())
+                .usageCount(voucher.getUsageCount())
+                .maxDiscountAmount(voucher.getMaxDiscountAmount())
                 .expiredAt(voucher.getExpiredAt())
                 .assignedUserIds(assignedUserIds)
                 .assignedCount(assignedUserIds == null ? null : assignedUserIds.size())
@@ -54,6 +61,9 @@ public class VoucherResponse {
                 .code(voucher.getCode())
                 .scope(voucher.getScope())
                 .discountPercent(voucher.getDiscount())
+                .usageLimit(voucher.getUsageLimit())
+                .usageCount(voucher.getUsageCount())
+                .maxDiscountAmount(voucher.getMaxDiscountAmount())
                 .expiredAt(voucher.getExpiredAt())
                 .claimed(false)
                 .used(false)
@@ -67,6 +77,9 @@ public class VoucherResponse {
                 .code(voucher.getCode())
                 .scope(voucher.getScope())
                 .discountPercent(voucher.getDiscount())
+                .usageLimit(voucher.getUsageLimit())
+                .usageCount(voucher.getUsageCount())
+                .maxDiscountAmount(voucher.getMaxDiscountAmount())
                 .expiredAt(voucher.getExpiredAt())
                 .userId(userVoucher.getUser().getUserId())
                 .userEmail(userVoucher.getUser().getEmail())

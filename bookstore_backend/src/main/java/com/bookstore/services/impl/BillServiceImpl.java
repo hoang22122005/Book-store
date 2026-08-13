@@ -78,6 +78,14 @@ public class BillServiceImpl implements BillService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public PageResponse<BillResponse> getDirectBillsForStaff(Pageable pageable) {
+        return PageResponse.toPageResponse(
+                billRepository.findByLatestPaymentMethod(PaymentMethod.DIRECT, pageable)
+                        .map(this::toBillResponse));
+    }
+
+    @Override
     public PageResponse<BillResponse> getMyBills(int userId, Pageable pageable) {
         return PageResponse.toPageResponse(
                 billRepository.findByUserUserId(userId, pageable).map(this::toBillResponse));
@@ -128,7 +136,8 @@ public class BillServiceImpl implements BillService {
         BigDecimal subTotal = calculateSubTotal(selectedCartDetails, activeDiscounts);
         BigDecimal totalAmount = applyDiscount(
                 subTotal,
-                voucher == null ? 0 : voucher.getDiscount());
+                voucher == null ? 0 : voucher.getDiscount(),
+                voucher == null ? null : voucher.getMaxDiscountAmount());
 
         Bill bill = new Bill();
         bill.setUser(user);
@@ -232,6 +241,11 @@ public class BillServiceImpl implements BillService {
                 throw new ConflictException("Don VNPAY chua thanh toan thanh cong");
             }
             return;
+        }
+
+        if (details.isEmpty() || details.stream().anyMatch(detail -> detail.getBook() == null)) {
+            throw new ConflictException(
+                    "Don hang thieu thong tin san pham, khong the duyet va tru kho");
         }
 
         if (payment.getStatus() != PaymentStatus.PENDING
@@ -436,30 +450,43 @@ public class BillServiceImpl implements BillService {
         }
 
         String code = voucherCode.trim().toUpperCase();
-        UserVoucher userVoucher = userVoucherRepository
-                .findByUserUserIdAndVoucherCode(userId, code)
+        Voucher globalVoucher = voucherRepository.findByCodeAndScopeIgnoreCaseForUpdate(code, SCOPE_GLOBAL)
                 .orElse(null);
+        UserVoucher userVoucher;
 
-        if (userVoucher == null) {
-            Voucher globalVoucher = voucherRepository.findByCodeAndScopeIgnoreCase(code, SCOPE_GLOBAL)
+        if (globalVoucher != null) {
+            userVoucher = userVoucherRepository
+                    .findByUserUserIdAndVoucherCode(userId, code)
+                    .orElse(null);
+            if (userVoucher == null) {
+                userVoucher = new UserVoucher();
+                userVoucher.setUser(findUser(userId));
+                userVoucher.setVoucher(globalVoucher);
+                userVoucher.setUsed(false);
+                userVoucher.setUsedAt(null);
+            }
+        } else {
+            userVoucher = userVoucherRepository
+                    .findByUserUserIdAndVoucherCode(userId, code)
                     .orElseThrow(() -> new NotFoundException(
                             "Khong tim thay voucher cua nguoi dung hien tai"));
-            userVoucher = new UserVoucher();
-            userVoucher.setUser(findUser(userId));
-            userVoucher.setVoucher(globalVoucher);
-            userVoucher.setUsed(false);
-            userVoucher.setUsedAt(null);
         }
 
+        Voucher voucher = userVoucher.getVoucher();
+        if (SCOPE_GLOBAL.equalsIgnoreCase(voucher.getScope())
+                && voucher.getUsageLimit() != null
+                && voucher.getUsageCount() >= voucher.getUsageLimit()) {
+            throw new ConflictException("Voucher da dat gioi han su dung");
+        }
         if (userVoucher.isUsed()) {
             throw new ConflictException("Voucher da duoc su dung");
         }
-
-        if (userVoucher.getVoucher().getExpiredAt() != null
-                && userVoucher.getVoucher().getExpiredAt().isBefore(LocalDateTime.now())) {
+        if (voucher.getExpiredAt() != null && voucher.getExpiredAt().isBefore(LocalDateTime.now())) {
             throw new BadRequestException("Voucher da het han");
         }
-
+        if (SCOPE_GLOBAL.equalsIgnoreCase(voucher.getScope())) {
+            voucher.setUsageCount(voucher.getUsageCount() + 1);
+        }
         return userVoucher;
     }
 
@@ -472,9 +499,13 @@ public class BillServiceImpl implements BillService {
                         bill.getUser().getUserId(),
                         bill.getVoucher().getVoucherId());
         userVoucher.ifPresent(value -> {
+            if (!value.isUsed()) {
+                return;
+            }
             value.setUsed(false);
             value.setUsedAt(null);
             userVoucherRepository.save(value);
+            voucherRepository.decrementGlobalUsageCount(bill.getVoucher().getVoucherId());
         });
     }
 
@@ -489,10 +520,17 @@ public class BillServiceImpl implements BillService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    private BigDecimal applyDiscount(BigDecimal subTotal, float discountPercent) {
+    private BigDecimal applyDiscount(
+            BigDecimal subTotal,
+            float discountPercent,
+            BigDecimal maxDiscountAmount) {
         BigDecimal discountRate = BigDecimal.valueOf(discountPercent)
                 .divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
-        return subTotal.subtract(subTotal.multiply(discountRate)).max(BigDecimal.ZERO);
+        BigDecimal discountAmount = subTotal.multiply(discountRate);
+        if (maxDiscountAmount != null) {
+            discountAmount = discountAmount.min(maxDiscountAmount);
+        }
+        return subTotal.subtract(discountAmount).max(BigDecimal.ZERO);
     }
 
     private BillDetail toBillDetail(

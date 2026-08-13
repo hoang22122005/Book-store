@@ -1,5 +1,6 @@
 package com.bookstore.models;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
@@ -32,4 +33,13 @@ public class Voucher {
 
     @Column(name = "scope")
     private String scope;
+
+    @Column(name = "usage_limit")
+    private Integer usageLimit;
+
+    @Column(name = "usage_count", nullable = false)
+    private int usageCount;
+
+    @Column(name = "max_discount_amount", precision = 19, scale = 2)
+    private BigDecimal maxDiscountAmount;
 }

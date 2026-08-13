@@ -22,7 +22,9 @@ import { BookManagementPage } from '../pages/admin/BookManagementPage';
 import { AddBookPage } from '../pages/admin/AddBookPage';
 import { EditBookPage } from '../pages/admin/EditBookPage';
 import { WarehouseStockImportPage } from '../pages/admin/WarehouseStockImportPage';
-import { adminRouteAccess } from '../utils/adminAccess';
+import { StaffOrderManagementPage } from '../pages/admin/StaffOrderManagementPage';
+import { VoucherManagementPage } from '../pages/admin/VoucherManagementPage';
+import { adminRouteAccess, backofficeRoles } from '../utils/adminAccess';
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -76,7 +78,7 @@ export const AppRoutes: React.FC = () => {
       {/* Admin / Backoffice Routes */}
       <Route
         element={
-          <ProtectedRoute allowedRoles={['ADMIN', 'STAFF', 'ACCOUNTANT', 'WAREHOUSE_KEEPER']}>
+          <ProtectedRoute allowedRoles={[...backofficeRoles]}>
             <AdminLayout />
           </ProtectedRoute>
         }
@@ -103,11 +105,11 @@ export const AppRoutes: React.FC = () => {
         />
         <Route
           path="/admin/vouchers"
-          element={<ProtectedRoute allowedRoles={[...adminRouteAccess['/admin/vouchers']]}><div className="text-white">Quản Lý Voucher & Khuyến Mãi</div></ProtectedRoute>}
+          element={<ProtectedRoute allowedRoles={[...adminRouteAccess['/admin/vouchers']]}><VoucherManagementPage /></ProtectedRoute>}
         />
         <Route
           path="/admin/orders"
-          element={<ProtectedRoute allowedRoles={[...adminRouteAccess['/admin/orders']]}><div className="text-white">Quản Lý Đơn Hàng</div></ProtectedRoute>}
+          element={<ProtectedRoute allowedRoles={[...adminRouteAccess['/admin/orders']]}><StaffOrderManagementPage /></ProtectedRoute>}
         />
         <Route path="/admin/chat" element={<ProtectedRoute allowedRoles={[...adminRouteAccess['/admin/chat']]}><ChatPage /></ProtectedRoute>} />
         <Route

@@ -11,6 +11,7 @@ spring:
     import:
       - optional:file:.env[.properties]
       - optional:file:bookstore_backend/.env[.properties]
+      - optional:file:bookstore_backend/.env.local[.properties]
 
   datasource:
     url: ${DB_URL}
@@ -41,6 +42,7 @@ spring:
     baseline-on-migrate: true
     baseline-version: 0
     locations: classpath:db/migration
+    ignore-migration-patterns: "*:missing"
   
   mail:
     host: smtp.gmail.com

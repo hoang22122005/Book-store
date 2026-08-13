@@ -81,6 +81,20 @@ public class VoucherServiceImpl implements VoucherService {
         voucher.setScope(scope);
         voucher.setDiscount(request.getDiscount());
         voucher.setExpiredAt(request.getExpiredAt());
+        voucher.setMaxDiscountAmount(request.getMaxDiscountAmount());
+        if (SCOPE_GLOBAL.equals(scope)) {
+            int usageCount = voucher.getUsageCount();
+            if (request.getUsageLimit() != null && usageCount > request.getUsageLimit()) {
+                throw new ConflictException("Usage limit cannot be lower than the current usage count");
+            }
+            voucher.setUsageLimit(request.getUsageLimit());
+        } else {
+            if (request.getUsageLimit() != null) {
+                throw new ConflictException("Usage limit is only supported for global vouchers");
+            }
+            voucher.setUsageLimit(null);
+            voucher.setUsageCount(0);
+        }
         voucher = voucherRepository.save(voucher);
 
         if (targetUserIds.isEmpty()) {

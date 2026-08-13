@@ -65,10 +65,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/dashboard/**")
                         .hasAnyRole("ADMIN", "STAFF", "ACCOUNTANT", "WAREHOUSE_KEEPER")
                         .requestMatchers("/api/stock/**").hasRole("WAREHOUSE_KEEPER")
-                        .requestMatchers("/api/stock/**", "/api/stock-imports**").hasRole( "WAREHOUSE_KEEPER")
+                        .requestMatchers("/api/stock/**", "/api/stock-imports**").hasRole("WAREHOUSE_KEEPER")
                         .requestMatchers("/ws/**").permitAll()
-                        .anyRequest().authenticated()
-                )
+                        .anyRequest().authenticated())
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint((request, response, authException) -> {
                             writeErrorResponse(

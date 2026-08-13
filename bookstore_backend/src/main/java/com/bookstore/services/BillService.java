@@ -10,6 +10,8 @@ import com.bookstore.dto.payment.CheckoutResponse;
 public interface BillService {
     PageResponse<BillResponse> getAllBills(Pageable pageable);
 
+    PageResponse<BillResponse> getDirectBillsForStaff(Pageable pageable);
+
     PageResponse<BillResponse> getMyBills(int userId, Pageable pageable);
 
     BillResponse getBillByIdForAdmin(int billId);
