@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,7 +29,10 @@ public class PasswordResetServicImpl implements PasswordResetService {
     private final PasswordResetTokenRepository tokenRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
-    private final EmailService emailService; 
+    private final EmailService emailService;
+
+    @Value("${app.frontend.url}")
+    private String frontendUrl;
 
     private static final long EXPIRATION_MINUTES = 15;
 
@@ -55,7 +59,7 @@ public class PasswordResetServicImpl implements PasswordResetService {
         tokenRepository.save(resetToken);
 
         //gửi email chưa link reset, link này dẫn tới giao diện frontend, frontend lấy token từ url xuống
-        String resetLink = "http://localhost:3000/reset-password?token=" + rawToken;
+        String resetLink = frontendUrl + "/reset-password?token=" + rawToken;
         emailService.sendResetPasswordEmail(user.getEmail(), resetLink);
     }
 
