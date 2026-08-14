@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useRegister } from '../hooks/useRegisterMutation';
 import { isValidEmail, isValidPassword, isNonEmpty, doPasswordsMatch, getErrorMessage } from '../../../utils';
 
 export const RegisterForm: React.FC = () => {
-  const navigate = useNavigate();
   const registerMutation = useRegister();
 
   const [fullname, setFullname] = useState('');
@@ -54,10 +53,7 @@ export const RegisterForm: React.FC = () => {
       { name: fullname, email, password, phone, address: '' },
       {
         onSuccess: () => {
-          setSuccessMsg('Đăng ký tài khoản thành công! Đang chuyển hướng sang Đăng nhập...');
-          setTimeout(() => {
-            navigate('/login', { state: { email, password, registered: true } });
-          }, 1200);
+          setSuccessMsg('Đăng ký thành công! Vui lòng kiểm tra email để xác minh tài khoản.');
         },
         onError: (err: unknown) => {
           setErrorMsg(

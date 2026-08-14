@@ -8,6 +8,9 @@ import { HomePage } from '../pages/public/HomePage';
 import { BookDetailPage } from '../pages/public/BookDetailPage';
 import { LoginPage } from '../pages/public/LoginPage';
 import { RegisterPage } from '../pages/public/RegisterPage';
+import { ActivationPage } from '../pages/public/ActivationPage';
+import { ForgotPasswordPage } from '../pages/public/ForgotPasswordPage';
+import { ResetPasswordPage } from '../pages/public/ResetPasswordPage';
 import { CartPage } from '../pages/customer/CartPage';
 import { CheckoutPage } from '../pages/customer/CheckoutPage';
 import { OrderSuccessPage } from '../pages/customer/OrderSuccessPage';
@@ -73,6 +76,9 @@ export const AppRoutes: React.FC = () => {
       <Route element={<AuthLayout />}>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/activation" element={<ActivationPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
       </Route>
 
       {/* Admin / Backoffice Routes */}
