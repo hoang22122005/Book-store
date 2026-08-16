@@ -1,5 +1,7 @@
 package com.bookstore.dto.stock;
 
+import java.math.BigDecimal;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,4 +17,6 @@ public class StockImportDetailResponse {
     private int bookId;
     private String bookName;
     private int quantity;
+    private BigDecimal importPrice;
+    private BigDecimal sellingPriceAtImport;
 }

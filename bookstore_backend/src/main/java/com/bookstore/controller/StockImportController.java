@@ -3,9 +3,11 @@ package com.bookstore.controller;
 import java.util.List;
 
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -43,6 +45,15 @@ public class StockImportController {
         return ApiResponse.success(stockImportService.addDetail(id, req));
     }
 
+    @PutMapping("/{id}/details/{detailId}")
+    @PreAuthorize("hasRole('WAREHOUSE_KEEPER')")
+    public ApiResponse<StockImportResponse> updateDetail(
+            @PathVariable Long id,
+            @PathVariable Long detailId,
+            @Valid @RequestBody AddStockImportDetailRequest req) {
+        return ApiResponse.success(stockImportService.updateDetail(id, detailId, req));
+    }
+
     @PostMapping("/{id}/post")
     @PreAuthorize("hasRole('WAREHOUSE_KEEPER')")
     public ApiResponse<StockImportResponse> post(@PathVariable Long id) {
@@ -53,6 +64,13 @@ public class StockImportController {
     @PreAuthorize("hasRole('WAREHOUSE_KEEPER')")
     public ApiResponse<StockImportResponse> cancel(@PathVariable Long id) {
         return ApiResponse.success(stockImportService.cancelImport(id));
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('WAREHOUSE_KEEPER')")
+    public ApiResponse<Void> delete(@PathVariable Long id) {
+        stockImportService.deleteImport(id);
+        return ApiResponse.success(null);
     }
 
     @GetMapping

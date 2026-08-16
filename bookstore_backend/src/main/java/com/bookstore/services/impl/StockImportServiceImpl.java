@@ -1,5 +1,6 @@
 package com.bookstore.services.impl;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -43,6 +44,7 @@ public class StockImportServiceImpl implements StockImportService {
         stockImport.setCreatedBy(user);
         stockImport.setStatus(StockImportStatus.DRAFT);
         stockImport.setNote(req.getNote());
+        stockImport.setSupplierName(req.getSupplierName());
         stockImport.setCreatedAt(LocalDateTime.now());
 
         if (req.getDetails() != null) {
@@ -50,10 +52,21 @@ public class StockImportServiceImpl implements StockImportService {
                 Book book = bookRepo.findById(detailReq.getBookId())
                         .orElseThrow(() -> new NotFoundException("Khong tim thay sach " + detailReq.getBookId()));
 
+                if (book.isDeleted()) {
+                    throw new BadRequestException("Khong the nhap sach da bi xoa: " + book.getName());
+                }
+
+                boolean isDuplicate = stockImport.getDetails().stream()
+                        .anyMatch(d -> d.getBook().getBookId() == book.getBookId());
+                if (isDuplicate) {
+                    throw new BadRequestException("Sach da ton tai trong phieu nhap: " + book.getName());
+                }
+
                 StockImportDetail detail = new StockImportDetail();
                 detail.setStockImport(stockImport);
                 detail.setBook(book);
                 detail.setQuantity(detailReq.getQuantity());
+                detail.setImportPrice(detailReq.getImportPrice());
                 stockImport.getDetails().add(detail);
             }
         }
@@ -74,17 +87,52 @@ public class StockImportServiceImpl implements StockImportService {
         Book book = bookRepo.findById(req.getBookId())
                 .orElseThrow(() -> new NotFoundException("Khong tim thay sach"));
 
+        if (book.isDeleted()) {
+            throw new BadRequestException("Khong the nhap sach da bi xoa: " + book.getName());
+        }
+
+        boolean isDuplicate = stockImport.getDetails().stream()
+                .anyMatch(d -> d.getBook().getBookId() == book.getBookId());
+        if (isDuplicate) {
+            throw new BadRequestException("Sach da ton tai trong phieu nhap: " + book.getName());
+        }
+
         StockImportDetail detail = new StockImportDetail();
         detail.setStockImport(stockImport);
         detail.setBook(book);
         detail.setQuantity(req.getQuantity());
+        detail.setImportPrice(req.getImportPrice());
         stockImport.getDetails().add(detail);
         stockImportRepo.save(stockImport);
 
         return toResponse(stockImport);
     }
 
-    // post xong xác nhận số lượng trong kho mới đc cộng 
+    @Override
+    public StockImportResponse updateDetail(Long importId, Long detailId, AddStockImportDetailRequest req) {
+        StockImport stockImport = stockImportRepo.findById(importId)
+                .orElseThrow(() -> new NotFoundException("Khong tim thay phieu nhap"));
+
+        if (stockImport.getStatus() != StockImportStatus.DRAFT) {
+            throw new BadRequestException("Phieu da duoc xac nhan hoac da huy, khong the sua");
+        }
+
+        StockImportDetail detail = stockImport.getDetails().stream()
+                .filter(d -> d.getImportDetailId().equals(detailId))
+                .findFirst()
+                .orElseThrow(() -> new NotFoundException("Khong tim thay chi tiet phieu nhap"));
+
+        if (detail.getBook().getBookId() != req.getBookId()) {
+            throw new BadRequestException("Khong the thay doi sach trong chi tiet phieu nhap");
+        }
+
+        detail.setQuantity(req.getQuantity());
+        detail.setImportPrice(req.getImportPrice());
+        stockImportRepo.save(stockImport);
+
+        return toResponse(stockImport);
+    }
+
     @Override
     @Transactional
     public StockImportResponse postImport(Long importId) {
@@ -98,14 +146,24 @@ public class StockImportServiceImpl implements StockImportService {
             throw new BadRequestException("Phieu chua co sach nao, khong the xac nhan");
         }
 
+        BigDecimal totalCost = BigDecimal.ZERO;
+
         for (StockImportDetail detail : stockImport.getDetails()) {
             int bookId = detail.getBook().getBookId();
             int quantity = detail.getQuantity();
 
+            Book book = bookRepo.findById(bookId)
+                    .orElseThrow(() -> new NotFoundException("Khong tim thay sach " + bookId));
+
+            detail.setSellingPriceAtImport(book.getPrice());
+
             inventoryRepo.increaseStock(bookId, quantity);
             bookRepo.increaseStock(bookId, quantity);
+
+            totalCost = totalCost.add(detail.getImportPrice().multiply(BigDecimal.valueOf(quantity)));
         }
 
+        stockImport.setTotalCost(totalCost);
         stockImport.setStatus(StockImportStatus.POSTED);
         stockImport.setPostedAt(LocalDateTime.now());
         stockImportRepo.save(stockImport);
@@ -129,6 +187,18 @@ public class StockImportServiceImpl implements StockImportService {
     }
 
     @Override
+    public void deleteImport(Long importId) {
+        StockImport stockImport = stockImportRepo.findById(importId)
+                .orElseThrow(() -> new NotFoundException("Khong tim thay phieu nhap"));
+
+        if (stockImport.getStatus() != StockImportStatus.CANCELLED) {
+            throw new BadRequestException("Chi co the xoa phieu da huy");
+        }
+
+        stockImportRepo.delete(stockImport);
+    }
+
+    @Override
     public List<StockImportResponse> getAll() {
         return stockImportRepo.findAll().stream()
                 .map(this::toResponse)
@@ -149,6 +219,8 @@ public class StockImportServiceImpl implements StockImportService {
                         .bookId(d.getBook().getBookId())
                         .bookName(d.getBook().getName())
                         .quantity(d.getQuantity())
+                        .importPrice(d.getImportPrice())
+                        .sellingPriceAtImport(d.getSellingPriceAtImport())
                         .build())
                 .toList();
 
@@ -156,6 +228,8 @@ public class StockImportServiceImpl implements StockImportService {
                 .importId(stockImport.getImportId())
                 .status(stockImport.getStatus().name())
                 .note(stockImport.getNote())
+                .supplierName(stockImport.getSupplierName())
+                .totalCost(stockImport.getTotalCost())
                 .createdByName(stockImport.getCreatedBy().getName())
                 .createdAt(stockImport.getCreatedAt())
                 .postedAt(stockImport.getPostedAt())

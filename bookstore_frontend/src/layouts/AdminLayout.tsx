@@ -17,7 +17,12 @@ export const AdminLayout: React.FC = () => {
     { label: 'Nhập Kho', path: '/admin/warehouse', icon: Package },
     { label: 'Doanh Thu', path: '/admin/finance', icon: DollarSign },
   ];
-  const visibleNavItems = navItems.filter((item) => canAccessAdminRoute(user?.role, item.path));
+  const visibleNavItems = navItems.filter((item) => {
+    if (user?.role === 'WAREHOUSE_KEEPER' && item.path === '/admin/books') {
+      return false;
+    }
+    return canAccessAdminRoute(user?.role, item.path);
+  });
 
   return (
     <div className="min-h-screen flex bg-slate-900 text-slate-100 font-sans">

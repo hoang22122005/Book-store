@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { warehouseStockImportService } from '../services/warehouseStockImportService';
 import { stockImportQueryKeys } from './useWarehouseStockImportQueries';
-import type { CreateStockImportRequest, AddStockImportDetailRequest } from '../../../types/api/stockImport';
+import type { CreateStockImportRequest, AddStockImportDetailRequest, StockImportResponse } from '../../../types/api/stockImport';
 
 const getApiData = <T>(response: { data: { success: boolean; message?: string; data?: T } }, fallbackMessage: string): T => {
   if (!response.data.success || response.data.data === undefined || response.data.data === null) {
@@ -39,6 +39,21 @@ export const useAddDetailMutation = () => {
   });
 };
 
+export const useUpdateDetailMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ importId, detailId, req }: { importId: number; detailId: number; req: AddStockImportDetailRequest }) => {
+      const response = await warehouseStockImportService.updateDetail(importId, detailId, req);
+      return getApiData(response, 'Không thể cập nhật chi tiết phiếu nhập');
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: stockImportQueryKeys.all });
+      queryClient.invalidateQueries({ queryKey: stockImportQueryKeys.detail(variables.importId) });
+    },
+  });
+};
+
 export const usePostImportMutation = () => {
   const queryClient = useQueryClient();
 
@@ -62,6 +77,24 @@ export const useCancelImportMutation = () => {
       return getApiData(response, 'Không thể hủy phiếu nhập');
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: stockImportQueryKeys.all });
+    },
+  });
+};
+
+export const useDeleteImportMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (importId: number) => {
+      const response = await warehouseStockImportService.deleteImport(importId);
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Không thể xóa phiếu nhập');
+      }
+      return response.data;
+    },
+    onSuccess: (_, importId) => {
+      queryClient.removeQueries({ queryKey: stockImportQueryKeys.detail(importId) });
       queryClient.invalidateQueries({ queryKey: stockImportQueryKeys.all });
     },
   });

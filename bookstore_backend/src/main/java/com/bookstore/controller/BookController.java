@@ -20,13 +20,13 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.bookstore.dto.product.BookResponse;
-import com.bookstore.dto.product.GenreResponse;
+import com.bookstore.common.response.ApiResponse;
 import com.bookstore.common.response.PageResponse;
 import com.bookstore.dto.book.BookAddRequest;
 import com.bookstore.dto.book.BookUpdateRequest;
+import com.bookstore.dto.product.BookResponse;
+import com.bookstore.dto.product.GenreResponse;
 import com.bookstore.models.Book;
-import com.bookstore.common.response.ApiResponse;
 import com.bookstore.services.impl.BookServiceImpl;
 
 import jakarta.validation.Valid;
@@ -66,7 +66,7 @@ public class BookController {
     }
 
     @PostMapping("/admin/books")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'WAREHOUSE_KEEPER')")
     public ResponseEntity<ApiResponse<Book>> addBook(@Valid @RequestPart BookAddRequest bookAddRequest, @RequestPart MultipartFile imgFile)
             throws IOException {
         Book result = bookService.addBook(bookAddRequest, imgFile);

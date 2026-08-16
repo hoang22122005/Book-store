@@ -7,7 +7,7 @@ export const useHotBooks = (page = 0, size = 3) => {
   return useQuery<PageResponseDTO<Book>, Error>({
     queryKey: catalogQueryKeys.hot(page, size),
     queryFn: async () => getBookPageData(
-      await bookService.getPublicBooks({ page, size, sort: 'buyCount,desc' }),
+      await bookService.getPublicBooks({ page, size, sort: 'avgRating,desc' }),
       'Không thể tải sách nổi bật',
     ),
     staleTime: 1000 * 60 * 5,
