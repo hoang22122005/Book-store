@@ -7,11 +7,13 @@ import com.bookstore.dto.auth.LoginRequest;
 import com.bookstore.dto.auth.RefreshTokenRequest;
 import com.bookstore.dto.auth.RegisterRequest;
 import com.bookstore.dto.auth.ResetPasswordRequest;
+import com.bookstore.exception.BadRequestException;
 import com.bookstore.services.AuthService;
 import com.bookstore.services.PasswordResetService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,6 +23,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.net.URI;
+
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -28,6 +32,9 @@ public class AuthController {
     private final AuthService authService;
 
     private final PasswordResetService passwordResetService;
+
+    @Value("${app.frontend.url}")
+    private String frontendUrl;
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<AuthResponse>> register(

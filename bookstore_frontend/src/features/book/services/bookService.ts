@@ -93,6 +93,6 @@ export const bookService = {
   },
 
   getHotBooks: async (page = 0, size = 3): Promise<PageResponseDTO<Book>> => {
-    return bookService.getPublicBooks({ page, size, sort: 'buyCount,desc' });
+    return bookService.getPublicBooks({ page, size, sort: 'avgRating,desc' });
   },
 };

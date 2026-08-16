@@ -147,12 +147,12 @@ export const LoginForm: React.FC = () => {
               <label className="block font-semibold text-sm text-[#191c1e]" htmlFor="password">
                 Mật khẩu
               </label>
-              <a
+              <Link
                 className="font-semibold text-sm text-[#002045] hover:text-[#855300] transition-colors duration-200"
-                href="#"
+                to="/forgot-password"
               >
                 Quên mật khẩu?
-              </a>
+              </Link>
             </div>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#43474e]">

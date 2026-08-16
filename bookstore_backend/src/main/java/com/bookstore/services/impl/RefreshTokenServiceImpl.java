@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.bookstore.exception.UnauthorizedException;
@@ -19,8 +20,8 @@ import lombok.RequiredArgsConstructor;
 public class RefreshTokenServiceImpl implements RefreshTokenService {
     private final RefreshTokenRepository refreshTokenRepository;
 
-    //@Value("${refresh-token.expiration-days}")
-    private long expirationDays = 7;
+    @Value("${app.refresh-token.expiration-days}")
+    private long expirationDays;
 
     @Override
     public String createRefreshToken(User user) {

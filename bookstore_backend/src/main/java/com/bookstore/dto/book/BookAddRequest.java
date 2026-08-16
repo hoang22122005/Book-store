@@ -6,7 +6,6 @@ import java.time.LocalDateTime;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -27,10 +26,6 @@ public class BookAddRequest {
     @NotBlank(message = "Mô tả sách không được để trống")
     @Size(max = 5000, message = "Mô tả sách không được vượt quá 5000 ký tự")
     private String description;
-
-    @NotNull(message = "Số lượng trong kho không được để trống")
-    @PositiveOrZero(message = "Số lượng trong kho phải lớn hơn hoặc bằng 0")
-    private Integer quantityInStock;
 
     @NotBlank(message = "Tên nhà xuất bản không được để trống")
     @Size(max = 100, message = "Tên nhà xuất bản không được vượt quá 100 ký tự")

@@ -4,8 +4,8 @@ export const backofficeRoles = ['ADMIN', 'STAFF', 'ACCOUNTANT', 'WAREHOUSE_KEEPE
 
 export const adminRouteAccess = {
   '/admin': ['ADMIN', 'ACCOUNTANT'],
-  '/admin/books': ['ADMIN'],
   '/admin/users': ['ADMIN'],
+  '/admin/books': ['ADMIN', 'WAREHOUSE_KEEPER'],
   '/admin/vouchers': ['ADMIN'],
   '/admin/chat': ['ADMIN', 'STAFF'],
   '/admin/orders': ['ADMIN', 'STAFF'],

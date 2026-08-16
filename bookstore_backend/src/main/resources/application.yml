@@ -67,6 +67,10 @@ vnpay:
   expire-minutes: ${VNPAY_EXPIRE_MINUTES:15}
 
 app:
+  frontend:
+    url: ${FRONTEND_URL:http://localhost:5173}
+  refresh-token:
+    expiration-days: ${REFRESH_TOKEN_EXPIRATION_DAYS:7}
   cors:
     allowed-origin-patterns: ${CORS_ALLOWED_ORIGIN_PATTERNS:http://localhost:5173,http://127.0.0.1:5173,https://sachhay.click,https://frontend.sachhay.click,https://www.sachhay.click,https://*.sachhay.click}
 

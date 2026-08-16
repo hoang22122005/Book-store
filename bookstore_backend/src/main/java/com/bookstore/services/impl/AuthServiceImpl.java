@@ -1,6 +1,7 @@
 package com.bookstore.services.impl;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -10,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.bookstore.dto.auth.AuthResponse;
 import com.bookstore.dto.auth.LoginRequest;
 import com.bookstore.dto.auth.RegisterRequest;
+import com.bookstore.exception.AccountNotVerifiedException;
 import com.bookstore.exception.BadRequestException;
 import com.bookstore.exception.ConflictException;
 import com.bookstore.exception.UnauthorizedException;
@@ -50,7 +52,7 @@ public class AuthServiceImpl implements AuthService {
                 .name(req.getName())
                 .email(req.getEmail())
                 .role(Role.USER)
-                .status(AccountStatus.ACTIVE)
+                .status(AccountStatus.PENDING)
                 .address(req.getAddress())
                 .dob(req.getDob())
                 .phone(req.getPhone())
@@ -63,12 +65,19 @@ public class AuthServiceImpl implements AuthService {
                 .vipExpiration(null).build();
 
         userRepository.save(user);
+
+        // Tự động gửi email xác minh sau khi đăng ký
+        sendVerificationEmail(user.getEmail());
     }
 
     @Override
     public void sendVerificationEmail(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new BadRequestException("Email không tồn tại trong hệ thống"));
+
+        // Xóa token cũ nếu có
+        verificationTokenRepository.deleteByUser(user);
+        verificationTokenRepository.flush();
 
         String token = UUID.randomUUID().toString();
         VerificationToken vt = VerificationToken.builder()
@@ -77,6 +86,13 @@ public class AuthServiceImpl implements AuthService {
                 .expiresAt(LocalDateTime.now().plusMinutes(30))
                 .build();
         verificationTokenRepository.save(vt);
+        verificationTokenRepository.flush();
+
+        System.out.println("=== DEBUG TOKEN ===");
+        System.out.println("Email: " + email);
+        System.out.println("Token: " + token);
+        System.out.println("Expires at: " + vt.getExpiresAt());
+        System.out.println("===================");
 
         try {
             emailService.sendVerificationEmail(user.getEmail(), token);
@@ -97,6 +113,11 @@ public class AuthServiceImpl implements AuthService {
             throw new UnauthorizedException("Invalid email or password");
         }
 
+        // Kiểm tra tài khoản đã xác minh email chưa
+        if (user.getStatus() == AccountStatus.PENDING) {
+            throw new AccountNotVerifiedException("Tài khoản chưa được xác minh email. Vui lòng kiểm tra hộp thư.");
+        }
+
         String accessToken = jwtService.generateToken(user);
         String refreshToken = refreshTokenService.createRefreshToken(user);
 
@@ -110,18 +131,29 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void verifyEmail(String token) {
-        VerificationToken vt = verificationTokenRepository.findByToken(token)
-                .orElseThrow(() -> new BadRequestException("Token khong hop le"));
+    
+
+        Optional<VerificationToken> vtOpt = verificationTokenRepository.findByToken(token);
+        
+        if (vtOpt.isEmpty()) {
+          
+            return;
+        }
+
+        VerificationToken vt = vtOpt.get();
+       
 
         if (vt.getExpiresAt().isBefore(LocalDateTime.now())) {
+        
             verificationTokenRepository.delete(vt);
-            throw new BadRequestException("Token da het han, vui long dang ky lai");
+            throw new BadRequestException("Token đã hết hạn, vui lòng đăng ký lại");
         }
 
         User user = vt.getUser();
         user.setStatus(AccountStatus.ACTIVE);
         userRepository.save(user);
         verificationTokenRepository.delete(vt);
+    
     }
 
     @Override

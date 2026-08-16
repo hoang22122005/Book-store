@@ -3,16 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Pencil, Trash2, ChevronLeft, ChevronRight, BookOpen, ImageOff } from 'lucide-react';
 import { useAdminBookList, useAdminDeleteBookMutation } from '../../features/admin';
 import { useCategories } from '../../features/catalog/hooks/useCategories';
+import { useAuth } from '../../hooks/useAuth';
 import { formatCurrency } from '../../utils';
 
-const STATUS_OPTIONS = [
-  { label: 'Tất cả trạng thái', value: '' },
-  { label: 'Đang kinh doanh', value: 'active' },
-  { label: 'Ngừng kinh doanh', value: 'inactive' },
-];
+
 
 export const BookManagementPage: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMIN';
   const [keyword, setKeyword] = useState('');
   const [searchKeyword, setSearchKeyword] = useState('');
   const [categoryId, setCategoryId] = useState<number | undefined>(undefined);
@@ -171,13 +170,13 @@ export const BookManagementPage: React.FC = () => {
                     <th className="px-4 py-3 font-semibold text-slate-400 uppercase tracking-wider text-xs">Giá bán</th>
                     <th className="px-4 py-3 font-semibold text-slate-400 uppercase tracking-wider text-xs">Tồn kho</th>
                     <th className="px-4 py-3 font-semibold text-slate-400 uppercase tracking-wider text-xs">Trạng thái</th>
-                    <th className="px-4 py-3 font-semibold text-slate-400 uppercase tracking-wider text-xs text-right">Thao tác</th>
+                    {isAdmin && <th className="px-4 py-3 font-semibold text-slate-400 uppercase tracking-wider text-xs text-right">Thao tác</th>}
                   </tr>
                 </thead>
                 <tbody>
                   {books.length === 0 && (
                     <tr>
-                      <td colSpan={8} className="px-4 py-16 text-center text-slate-500">
+                      <td colSpan={isAdmin ? 8 : 7} className="px-4 py-16 text-center text-slate-500">
                         <BookOpen className="mx-auto mb-3 text-slate-600" size={40} />
                         <p className="font-medium">Không tìm thấy sách nào</p>
                       </td>
@@ -232,25 +231,27 @@ export const BookManagementPage: React.FC = () => {
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center justify-end gap-1">
-                          <button
-                            onClick={() => navigate(`/admin/books/${book.bookId}/edit`)}
-                            className="rounded-lg p-2 text-slate-400 hover:text-amber-400 hover:bg-amber-400/10 transition-colors cursor-pointer"
-                            title="Chỉnh sửa"
-                          >
-                            <Pencil size={15} />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(book.bookId, book.name)}
-                            disabled={deleteMutation.isPending}
-                            className="rounded-lg p-2 text-slate-400 hover:text-red-400 hover:bg-red-400/10 transition-colors cursor-pointer disabled:opacity-50"
-                            title="Xóa"
-                          >
-                            <Trash2 size={15} />
-                          </button>
-                        </div>
-                      </td>
+                      {isAdmin && (
+                        <td className="px-4 py-3">
+                          <div className="flex items-center justify-end gap-1">
+                            <button
+                              onClick={() => navigate(`/admin/books/${book.bookId}/edit`)}
+                              className="rounded-lg p-2 text-slate-400 hover:text-amber-400 hover:bg-amber-400/10 transition-colors cursor-pointer"
+                              title="Chỉnh sửa"
+                            >
+                              <Pencil size={15} />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(book.bookId, book.name)}
+                              disabled={deleteMutation.isPending}
+                              className="rounded-lg p-2 text-slate-400 hover:text-red-400 hover:bg-red-400/10 transition-colors cursor-pointer disabled:opacity-50"
+                              title="Xóa"
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>

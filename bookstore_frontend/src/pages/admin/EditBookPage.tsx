@@ -255,9 +255,8 @@ export const EditBookPage: React.FC = () => {
                   <input
                     type="number"
                     value={form.quantityInStock}
-                    onChange={(e) => handleChange('quantityInStock', e.target.value)}
-                    min="0"
-                    className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-2.5 text-sm text-white focus:border-amber-500 focus:outline-none"
+                    disabled
+                    className="w-full rounded-xl border border-slate-800 bg-slate-900/50 px-4 py-2.5 text-sm text-slate-500 cursor-not-allowed focus:outline-none"
                   />
                 </div>
               </div>

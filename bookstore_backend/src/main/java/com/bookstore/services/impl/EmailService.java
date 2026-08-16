@@ -16,9 +16,10 @@ public class EmailService {
     @Value("${spring.mail.username}")
     private String fromEmail;
 
+    @Value("${app.frontend.url}")
+    private String frontendUrl;
 
     public void sendResetPasswordEmail(String toEmail, String resetLink) {
-
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(fromEmail);
         message.setTo(toEmail);
@@ -29,12 +30,11 @@ public class EmailService {
             resetLink + "\n\n" +
             "Nếu bạn không yêu cầu điều này, vui lòng bỏ qua email này."
         );
-
         mailSender.send(message);
     }
 
     public void sendVerificationEmail(String toEmail, String token) {
-        String link = "http://localhost:8080/api/auth/verify-email?token=" + token;
+        String verificationLink = frontendUrl + "/activation?token=" + token;
 
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(fromEmail);
@@ -43,11 +43,9 @@ public class EmailService {
         message.setText(
             "Xin chào,\n\n" +
             "Bạn vừa đăng ký tài khoản. Vui lòng click vào link dưới đây để xác minh email (hết hạn sau 30 phút):\n\n" +
-            link + "\n\n" +
+            verificationLink + "\n\n" +
             "Nếu bạn không yêu cầu điều này, vui lòng bỏ qua email này."
         );
-
         mailSender.send(message);
-        
     }
 }

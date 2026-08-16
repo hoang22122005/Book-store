@@ -1,5 +1,6 @@
 package com.bookstore.dto.stock;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -18,6 +19,8 @@ public class StockImportResponse {
     private Long importId;
     private String status;
     private String note;
+    private String supplierName;
+    private BigDecimal totalCost;
     private String createdByName;
     private LocalDateTime createdAt;
     private LocalDateTime postedAt;

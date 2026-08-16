@@ -137,9 +137,11 @@ public class BookServiceImpl implements BookService {
 
         prepareUpdateBook(bookUpdateRequest, oldBook);
 
-        if (imgFile != null && !imgFile.isEmpty()) {
+        if (imgFile != null && !imgFile.isEmpty() && !"empty".equals(imgFile.getOriginalFilename())) {
             String oldPublicId = oldBook.getPublicId();
-            cloudinary.uploader().destroy(oldPublicId, null);
+            if (oldPublicId != null && !oldPublicId.isEmpty()) {
+                cloudinary.uploader().destroy(oldPublicId, null);
+            }
 
             Map<?, ?> uploadResult = cloudinary.uploader().upload(imgFile.getBytes(), ObjectUtils.emptyMap());
             String secureUrl = uploadResult.get("secure_url").toString();
@@ -147,12 +149,11 @@ public class BookServiceImpl implements BookService {
 
             oldBook.setUrlImg(secureUrl);
             oldBook.setPublicId(publicId);
-        } else
-            throw new BadRequestException("Vui lòng tải lên ảnh của sách");
+        }
 
         return bookRepo.updateBook(oldBook.getName(), oldBook.getAuthor(), oldBook.getDescription(), oldBook.getPrice(),
                 oldBook.getQuantityInStock(), oldBook.isVip(), oldBook.isDeleted(), oldBook.getDeletedAt(),
-                oldBook.getPageCount(), oldBook.getBookId());
+                oldBook.getPageCount(), oldBook.getPublisher(), oldBook.getPublishYear(), oldBook.getBookId());
     }
 
     @Override
@@ -222,6 +223,8 @@ public class BookServiceImpl implements BookService {
         else
             oldBook.setDeletedAt(bookUpdateRequest.getDeletedAt());
         oldBook.setPageCount(bookUpdateRequest.getPageCount());
+        oldBook.setPublisher(bookUpdateRequest.getPublisher());
+        oldBook.setPublishYear(bookUpdateRequest.getPublishYear());
     }
 
     private Book prepareAddBook(BookAddRequest bookAddRequest) {
@@ -231,7 +234,7 @@ public class BookServiceImpl implements BookService {
         book.setDescription(bookAddRequest.getDescription());
         book.setName(bookAddRequest.getName());
         book.setPrice(bookAddRequest.getPrice());
-        book.setQuantityInStock(bookAddRequest.getQuantityInStock());
+        book.setQuantityInStock(0);
         book.setVip(bookAddRequest.isVip());
         book.setDeleted(false);
         book.setDeletedAt(null);
@@ -240,6 +243,8 @@ public class BookServiceImpl implements BookService {
         book.setCntRating(0);
         book.setAvgRating(0.0f);
         book.setBuyCount(0);
+        book.setPublisher(bookAddRequest.getPublisher());
+        book.setPublishYear(bookAddRequest.getPublishYear());
 
         return book;
     }
