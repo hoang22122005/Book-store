@@ -25,6 +25,7 @@ public class UserMapper {
                 .gender(user.getGender())
                 .career(user.getCareer())
                 .urlAvt(user.getUrlAvt())
+                .hasSelectedPreferences(user.isHasSelectedPreferences())
                 .build();
     }
 

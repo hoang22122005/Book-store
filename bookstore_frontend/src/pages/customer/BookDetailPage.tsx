@@ -162,24 +162,42 @@ export const BookDetailPage: React.FC = () => {
           </div>
 
           {/* Book Details */}
-          <div className="grid grid-cols-2 gap-4 mb-6 text-sm">
-            <div>
-              <span className="text-on-surface-variant">Nhà xuất bản:</span>
-              <span className="ml-2 text-on-surface font-medium">{book.publisher || 'Chưa cập nhật'}</span>
-            </div>
-            <div>
-              <span className="text-on-surface-variant">Năm xuất bản:</span>
-              <span className="ml-2 text-on-surface font-medium">{book.publishYear || 'Chưa cập nhật'}</span>
-            </div>
-            <div>
-              <span className="text-on-surface-variant">Số trang:</span>
-              <span className="ml-2 text-on-surface font-medium">Chưa cập nhật</span>
-            </div>
-            <div>
-              <span className="text-on-surface-variant">Thể loại:</span>
-              <span className="ml-2 text-on-surface font-medium">
-                {book.genres?.length > 0 ? book.genres.join(', ') : 'Chưa cập nhật'}
-              </span>
+          <div className="bg-surface-container-lowest border border-outline-variant/60 rounded-xl p-4 mb-6 shadow-sm">
+            <div className="grid grid-cols-2 gap-y-3.5 gap-x-4 text-sm">
+              <div>
+                <span className="text-on-surface-variant text-xs block">Nhà xuất bản</span>
+                <span className="text-on-surface font-medium">{book.publisher || 'Đang cập nhật'}</span>
+              </div>
+              <div>
+                <span className="text-on-surface-variant text-xs block">Năm xuất bản</span>
+                <span className="text-on-surface font-medium">{book.publishYear || 'Đang cập nhật'}</span>
+              </div>
+              <div>
+                <span className="text-on-surface-variant text-xs block">Số trang</span>
+                <span className="text-on-surface font-medium">{book.pageCount ? `${book.pageCount} trang` : 'Đang cập nhật'}</span>
+              </div>
+              <div>
+                <span className="text-on-surface-variant text-xs block">ISBN</span>
+                <span className="text-on-surface font-medium">{book.isbn || 'Đang cập nhật'}</span>
+              </div>
+              <div className="col-span-2 pt-2.5 border-t border-outline-variant/40">
+                <span className="text-on-surface-variant text-xs block mb-1.5 font-medium">Thể loại</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {book.genres && book.genres.length > 0 ? (
+                    book.genres.map((genre, idx) => (
+                      <Link
+                        key={idx}
+                        to={`/books?keyword=${encodeURIComponent(genre)}`}
+                        className="inline-flex items-center px-2.5 py-1 bg-primary/10 hover:bg-primary text-primary hover:text-white rounded-lg text-xs font-semibold transition-all shadow-sm"
+                      >
+                        {genre}
+                      </Link>
+                    ))
+                  ) : (
+                    <span className="text-on-surface font-medium">Đang cập nhật</span>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
 

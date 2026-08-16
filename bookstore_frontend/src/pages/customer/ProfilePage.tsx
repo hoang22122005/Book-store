@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { User, Package, Heart, LogOut, Save, KeyRound } from 'lucide-react';
-import { useUserProfile, useUpdateProfile, useChangePassword, useUploadAvatar } from '../../features/user/hooks';
+import { User, Package, Heart, LogOut, Save, KeyRound, Sparkles } from 'lucide-react';
+import { useUserProfile, useUpdateProfile, useChangePassword, useUploadAvatar, useGenrePreferences, useSaveGenrePreferences } from '../../features/user/hooks';
 import { useLogout } from '../../features/auth/hooks';
+import { useQuery } from '@tanstack/react-query';
+import { bookService } from '../../features/catalog/services/bookService';
 
 const getRoleLabel = (role?: string) => {
   if (!role) return 'Khách hàng thân thiết';
@@ -23,7 +25,7 @@ const getRoleLabel = (role?: string) => {
 };
 
 export const ProfilePage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'profile' | 'password'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'password' | 'preferences'>('profile');
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const { data: user, isLoading } = useUserProfile();
   const logoutMutation = useLogout();
@@ -73,6 +75,17 @@ export const ProfilePage: React.FC = () => {
                 <User size={20} />
                 Hồ sơ cá nhân
               </button>
+              <button
+                onClick={() => setActiveTab('preferences')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors cursor-pointer ${
+                  activeTab === 'preferences'
+                    ? 'bg-primary text-white'
+                    : 'text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface'
+                }`}
+              >
+                <Sparkles size={20} />
+                Gu sách yêu thích
+              </button>
               <Link
                 to="/orders"
                 className="flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors"
@@ -113,6 +126,7 @@ export const ProfilePage: React.FC = () => {
         {/* Main Content */}
         <div className="flex-1">
           {activeTab === 'profile' && <ProfileForm user={user} isLoading={isLoading} />}
+          {activeTab === 'preferences' && <GenrePreferencesForm user={user} />}
           {activeTab === 'password' && <ChangePasswordForm />}
         </div>
       </div>
@@ -164,7 +178,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, isLoading }) => {
     }
   }, [user]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -496,6 +510,159 @@ const ChangePasswordForm: React.FC = () => {
         {changePasswordMutation.isError && (
           <div className="p-3 bg-red-50 text-red-700 rounded-lg text-sm">{changePasswordMutation.error.message}</div>
         )}
+      </form>
+    </div>
+  );
+};
+
+interface GenrePreferencesFormProps {
+  user?: {
+    preferredGenreIds?: number[];
+  };
+}
+
+const GenrePreferencesForm: React.FC<GenrePreferencesFormProps> = ({ user }) => {
+  const { data: preferredGenreIdsFromApi, isLoading: isLoadingUserPrefs } = useGenrePreferences();
+  const savePreferencesMutation = useSaveGenrePreferences();
+
+  const { data: genresData, isLoading: isLoadingGenres } = useQuery({
+    queryKey: ['public', 'genres'],
+    queryFn: async () => {
+      const res = await bookService.getGenres();
+      return res.data.data || [];
+    },
+    staleTime: 1000 * 60 * 30,
+  });
+
+  const genres = genresData || [];
+  const [selectedGenreIds, setSelectedGenreIds] = useState<number[]>([]);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    const initialPrefs = preferredGenreIdsFromApi || user?.preferredGenreIds || [];
+    setSelectedGenreIds(initialPrefs);
+  }, [preferredGenreIdsFromApi, user?.preferredGenreIds]);
+
+  const handleToggleGenre = (genreId: number) => {
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    if (selectedGenreIds.includes(genreId)) {
+      setSelectedGenreIds((prev) => prev.filter((id) => id !== genreId));
+    } else {
+      if (selectedGenreIds.length >= 5) {
+        setErrorMessage('Bạn có thể chọn tối đa 5 thể loại');
+        return;
+      }
+      setSelectedGenreIds((prev) => [...prev, genreId]);
+    }
+  };
+
+  const handleSave = (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMessage(null);
+    setSuccessMessage(null);
+
+    if (selectedGenreIds.length === 0) {
+      setErrorMessage('Vui lòng chọn ít nhất 1 thể loại yêu thích (khuyên dùng 3 thể loại)');
+      return;
+    }
+
+    savePreferencesMutation.mutate(selectedGenreIds, {
+      onSuccess: () => {
+        setSuccessMessage('Đã lưu sở thích thể loại thành công! Các gợi ý sách sẽ được cập nhật ngay lập tức.');
+      },
+      onError: (err: any) => {
+        setErrorMessage(err?.response?.data?.message || err?.message || 'Có lỗi xảy ra khi lưu sở thích');
+      },
+    });
+  };
+
+  const isLoading = isLoadingGenres || isLoadingUserPrefs;
+
+  return (
+    <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-6">
+      <div className="flex items-center justify-between mb-2">
+        <h1 className="font-headline-xl text-headline-xl text-on-surface font-bold">Gu sách yêu thích</h1>
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-surface-container-high rounded-full text-xs font-semibold text-on-surface-variant">
+          <span>Đã chọn:</span>
+          <span
+            className={`font-bold ${
+              selectedGenreIds.length >= 3 ? 'text-primary' : 'text-amber-600 dark:text-amber-400'
+            }`}
+          >
+            {selectedGenreIds.length} / 3
+          </span>
+        </div>
+      </div>
+      <p className="text-on-surface-variant mb-6">
+        Hệ thống sẽ ưu tiên đề xuất các cuốn sách phù hợp nhất dựa trên thể loại bạn chọn tại đây.
+      </p>
+
+      {errorMessage && (
+        <div className="mb-4 p-3 bg-error/10 border border-error/20 rounded-xl text-error text-xs flex items-center gap-2">
+          <span className="material-symbols-outlined text-[18px]">error</span>
+          <span>{errorMessage}</span>
+        </div>
+      )}
+
+      {successMessage && (
+        <div className="mb-4 p-3 bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800 rounded-xl text-green-700 dark:text-green-300 text-xs flex items-center gap-2">
+          <span className="material-symbols-outlined text-[18px]">check_circle</span>
+          <span>{successMessage}</span>
+        </div>
+      )}
+
+      <form onSubmit={handleSave} className="space-y-6">
+        {isLoading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {[...Array(9)].map((_, i) => (
+              <div key={i} className="h-12 bg-surface-container-high animate-pulse rounded-xl" />
+            ))}
+          </div>
+        ) : genres.length === 0 ? (
+          <p className="text-center text-sm text-on-surface-variant py-8">
+            Không có dữ liệu thể loại sách.
+          </p>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {genres.map((genre) => {
+              const isSelected = selectedGenreIds.includes(genre.genreId);
+              return (
+                <button
+                  key={genre.genreId}
+                  type="button"
+                  onClick={() => handleToggleGenre(genre.genreId)}
+                  className={`flex items-center justify-between p-3.5 rounded-xl border text-left text-sm font-medium transition-all duration-200 cursor-pointer select-none ${
+                    isSelected
+                      ? 'bg-primary text-white border-primary shadow-md shadow-primary/25 scale-[1.02]'
+                      : 'bg-surface-container-low hover:bg-surface-container border-outline-variant/60 text-on-surface hover:border-primary/50'
+                  }`}
+                >
+                  <span className="line-clamp-1 flex-1 pr-1">{genre.name}</span>
+                  <span
+                    className={`material-symbols-outlined text-[18px] transition-transform ${
+                      isSelected ? 'opacity-100 scale-110 text-white' : 'opacity-30'
+                    }`}
+                  >
+                    {isSelected ? 'check_circle' : 'add_circle'}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        <div className="flex items-center gap-3 pt-2">
+          <button
+            type="submit"
+            disabled={selectedGenreIds.length === 0 || savePreferencesMutation.isPending}
+            className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary-hover text-white font-medium rounded-lg transition-colors disabled:opacity-50 cursor-pointer shadow-sm"
+          >
+            <Save size={18} />
+            {savePreferencesMutation.isPending ? 'Đang lưu...' : 'Lưu thay đổi sở thích'}
+          </button>
+        </div>
       </form>
     </div>
   );

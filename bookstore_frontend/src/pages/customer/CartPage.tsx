@@ -197,7 +197,7 @@ export const CartPage: React.FC = () => {
                       <div className="flex items-center border border-surface-variant rounded-lg overflow-hidden bg-surface">
                         <button
                           onClick={() => decreaseMutation.mutate(item.bookId)}
-                          disabled={item.quantity <= 1 || decreaseMutation.isPending}
+                          disabled={item.quantity <= 1}
                           className="w-8 h-8 flex items-center justify-center hover:bg-surface-variant text-on-surface disabled:opacity-40 transition-colors cursor-pointer"
                           title="Giảm số lượng"
                         >
@@ -208,7 +208,6 @@ export const CartPage: React.FC = () => {
                         </span>
                         <button
                           onClick={() => increaseMutation.mutate(item.bookId)}
-                          disabled={increaseMutation.isPending}
                           className="w-8 h-8 flex items-center justify-center hover:bg-surface-variant text-on-surface disabled:opacity-40 transition-colors cursor-pointer"
                           title="Tăng số lượng"
                         >

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useLogout } from '../../features/auth/hooks';
 import { useCartDetailsQuery } from '../../features/cart';
+import { isBackofficeRole, getDefaultAdminPath } from '../../utils/adminAccess';
 
 export const Header: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
@@ -80,6 +81,18 @@ export const Header: React.FC = () => {
               className="pl-10 pr-4 py-2 bg-surface-container-lowest border-[1.5px] border-surface-variant rounded-full text-body-md placeholder:text-on-tertiary-container focus:outline-none focus:border-primary focus:ring-0 focus:shadow-[0_0_0_3px_rgba(173,199,247,0.5)] transition-all w-64"
             />
           </form>
+
+          {/* Admin shortcut button for quick mobile/tablet/desktop access */}
+          {isAuthenticated && user && isBackofficeRole(user.role) && (
+            <Link
+              to={getDefaultAdminPath(user.role) || '/admin'}
+              className="flex items-center gap-1 px-2.5 py-1.5 bg-primary/10 hover:bg-primary text-primary hover:text-white rounded-lg text-xs font-bold transition-all border border-primary/20 shadow-sm"
+              title="Vào Trang Quản Trị"
+            >
+              <span className="material-symbols-outlined text-[18px]">dashboard</span>
+              <span className="hidden sm:inline">Quản trị</span>
+            </Link>
+          )}
 
           {/* Cart Icon */}
           <Link

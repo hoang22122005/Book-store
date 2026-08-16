@@ -24,6 +24,10 @@ public interface BookRepo extends JpaRepository<Book, Integer> {
 
        Optional<Book> findByBookIdAndIsDeletedFalse(int bookId);
 
+       @Query("SELECT DISTINCT b FROM Book b JOIN BookGenre bg ON b.bookId = bg.book.bookId " +
+              "WHERE bg.genre.genreId IN :genreIds AND b.isDeleted = false")
+       Page<Book> findByGenreIds(@Param("genreIds") Collection<Integer> genreIds, Pageable pageable);
+
        @Query("SELECT b FROM Book b WHERE " +
                      "(:keyword IS NULL OR :keyword = '' OR LOWER(b.name) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND "
                      +

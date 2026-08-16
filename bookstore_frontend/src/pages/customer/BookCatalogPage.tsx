@@ -1,10 +1,17 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ChevronRight, ChevronLeft, SlidersHorizontal, X } from 'lucide-react';
 import { useBookCatalog } from '../../features/book/hooks';
-import { BookCard, BookGrid } from '../../features/book/components';
+import { BookGrid } from '../../features/book/components';
 import { PRICE_RANGES, SORT_OPTIONS, AUTHORS } from '../../features/book/constants/bookFilters';
+import { useAuth } from '../../hooks/useAuth';
+import { useAddToCartMutation } from '../../features/cart';
 
 export const BookCatalogPage: React.FC = () => {
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const addToCartMutation = useAddToCartMutation();
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const {
     books,
@@ -25,6 +32,24 @@ export const BookCatalogPage: React.FC = () => {
     clearFilters,
     hasActiveFilters,
   } = useBookCatalog();
+
+  const handleAddToCart = (id: number) => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+
+    addToCartMutation.mutate(Number(id), {
+      onSuccess: () => {
+        setToastMessage('Đã thêm sản phẩm vào giỏ hàng!');
+        setTimeout(() => setToastMessage(null), 3000);
+      },
+      onError: (error) => {
+        setToastMessage('Lỗi khi thêm vào giỏ hàng: ' + (error as Error).message);
+        setTimeout(() => setToastMessage(null), 3000);
+      },
+    });
+  };
 
   return (
     <div className="w-full max-w-container-max mx-auto px-4 md:px-margin-desktop py-stack-lg">
@@ -142,7 +167,7 @@ export const BookCatalogPage: React.FC = () => {
           {/* Book Grid */}
           {!isLoading && !isError && books.length > 0 && (
             <>
-              <BookGrid books={books} columns={4} />
+              <BookGrid books={books} onAddToCart={handleAddToCart} columns={4} />
 
               {/* Pagination */}
               {totalPages > 1 && (
@@ -152,6 +177,13 @@ export const BookCatalogPage: React.FC = () => {
           )}
         </div>
       </div>
+
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 z-50 bg-secondary text-on-secondary px-4 py-3 rounded-xl shadow-lg font-medium text-sm flex items-center gap-2 animate-bounce">
+          <span className="material-symbols-outlined text-[20px]">check_circle</span>
+          {toastMessage}
+        </div>
+      )}
     </div>
   );
 };

@@ -11,4 +11,6 @@ public interface UserService {
     UserResponse updateProfile(UpdateUserRequest request);
     void changePassword(ChangePasswordRequest request);
     UserResponse uploadAvatar(MultipartFile file);
+    UserResponse saveUserGenrePreferences(com.bookstore.dto.user.GenrePreferenceRequest request);
+    java.util.List<Integer> getUserGenrePreferences();
 }

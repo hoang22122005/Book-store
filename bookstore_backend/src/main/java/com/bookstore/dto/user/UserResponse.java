@@ -20,4 +20,6 @@ public class UserResponse {
     private Gender gender;
     private String career;
     private String urlAvt;
+    private boolean hasSelectedPreferences;
+    private java.util.List<Integer> preferredGenreIds;
 }

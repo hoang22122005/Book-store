@@ -14,6 +14,8 @@ export interface User {
   gender?: string;
   career?: string;
   isVip?: boolean;
+  hasSelectedPreferences?: boolean;
+  preferredGenreIds?: number[];
 }
 
 export interface AuthTokens {

@@ -64,4 +64,7 @@ public class User {
 
     @Column(name = "vip_expiration")
     private LocalDateTime vipExpiration;
+
+    @Column(name = "has_selected_preferences")
+    private boolean hasSelectedPreferences;
 }

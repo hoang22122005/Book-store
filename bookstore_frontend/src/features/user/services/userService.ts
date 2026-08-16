@@ -1,31 +1,13 @@
 import { apiClient } from '../../../lib/apiClient';
 import type { ApiResponse } from '../../../types/api/common';
 import type { UserResponse, UpdateUserRequest, ChangePasswordRequest } from '../../../types/api/user';
+import type { User } from '../../../types';
+import { formatUserData } from '../../../utils';
 
-export interface User {
-  id: number;
-  email: string;
-  name: string;
-  phone?: string;
-  address?: string;
-  gender?: string;
-  career?: string;
-  avatarUrl?: string;
-  role: string;
-}
+export type { User };
 
 export const transformUserResponse = (dto: UserResponse): User => {
-  return {
-    id: dto.id,
-    email: dto.email,
-    name: dto.fullName,
-    phone: dto.phoneNumber ?? undefined,
-    address: dto.address ?? undefined,
-    gender: dto.gender ?? undefined,
-    career: dto.career ?? undefined,
-    avatarUrl: dto.urlAvt ?? undefined,
-    role: dto.role,
-  };
+  return formatUserData(dto);
 };
 
 export const userService = {
@@ -43,6 +25,19 @@ export const userService = {
       throw new Error('Không thể cập nhật thông tin');
     }
     return transformUserResponse(response.data.data);
+  },
+
+  saveGenrePreferences: async (genreIds: number[]): Promise<User> => {
+    const response = await apiClient.post<ApiResponse<UserResponse>>('/api/user/preferences/genres', { genreIds });
+    if (!response.data.data) {
+      throw new Error(response.data.message || 'Không thể lưu sở thích thể loại');
+    }
+    return transformUserResponse(response.data.data);
+  },
+
+  getGenrePreferences: async (): Promise<number[]> => {
+    const response = await apiClient.get<ApiResponse<number[]>>('/api/user/preferences/genres');
+    return response.data.data ?? [];
   },
 
   changePassword: async (data: ChangePasswordRequest): Promise<void> => {

@@ -42,5 +42,7 @@ export const formatUserData = (raw: UserResponse): User => {
     phone: raw.phoneNumber ?? undefined,
     address: raw.address ?? undefined,
     avatarUrl: raw.urlAvt ?? undefined,
+    hasSelectedPreferences: raw.hasSelectedPreferences,
+    preferredGenreIds: raw.preferredGenreIds,
   };
 };

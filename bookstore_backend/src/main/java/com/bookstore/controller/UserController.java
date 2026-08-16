@@ -74,4 +74,17 @@ public class UserController {
         return ResponseEntity.ok(res);
     }
 
+    @PostMapping("/preferences/genres")
+    public ResponseEntity<ApiResponse<UserResponse>> saveGenrePreferences(
+            @RequestBody @Valid com.bookstore.dto.user.GenrePreferenceRequest request
+    ) {
+        ApiResponse<UserResponse> res = ApiResponse.success("Lưu sở thích thể loại thành công", userService.saveUserGenrePreferences(request));
+        return ResponseEntity.ok(res);
+    }
+
+    @GetMapping("/preferences/genres")
+    public ResponseEntity<ApiResponse<java.util.List<Integer>>> getGenrePreferences() {
+        ApiResponse<java.util.List<Integer>> res = ApiResponse.success("Lấy sở thích thể loại thành công", userService.getUserGenrePreferences());
+        return ResponseEntity.ok(res);
+    }
 }

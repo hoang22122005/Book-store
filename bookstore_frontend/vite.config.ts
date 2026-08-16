@@ -9,7 +9,8 @@ export default defineConfig({
     tailwindcss()
   ],
   server: {
-    allowedHosts: true,
+    host: true,
+    allowedHosts: ['frontend.sachhay.click', 'sachhay.click', '.sachhay.click'],
     proxy: {
       '/api': {
         target: 'http://localhost:8080',
@@ -18,6 +19,7 @@ export default defineConfig({
     },
   },
   preview: {
-    allowedHosts: true,
+    host: true,
+    allowedHosts: ['frontend.sachhay.click', 'sachhay.click', '.sachhay.click'],
   },
 })

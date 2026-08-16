@@ -43,7 +43,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public void register(RegisterRequest req) {
         if (userRepository.existsByEmail(req.getEmail())) {
-            throw new ConflictException("Email was existed");
+            throw new ConflictException("Email này đã được đăng ký trong hệ thống. Vui lòng đăng nhập hoặc sử dụng email khác.");
         }
 
         String password = passwordEncoder.encode(req.getPassword());
@@ -52,7 +52,7 @@ public class AuthServiceImpl implements AuthService {
                 .name(req.getName())
                 .email(req.getEmail())
                 .role(Role.USER)
-                .status(AccountStatus.PENDING)
+                .status(AccountStatus.ACTIVE)
                 .address(req.getAddress())
                 .dob(req.getDob())
                 .phone(req.getPhone())
@@ -62,12 +62,11 @@ public class AuthServiceImpl implements AuthService {
                 .password(password)
                 .urlAvt(null)
                 .isVip(false)
-                .vipExpiration(null).build();
+                .vipExpiration(null)
+                .hasSelectedPreferences(false)
+                .build();
 
         userRepository.save(user);
-
-        // Tự động gửi email xác minh sau khi đăng ký
-        sendVerificationEmail(user.getEmail());
     }
 
     @Override
@@ -88,17 +87,11 @@ public class AuthServiceImpl implements AuthService {
         verificationTokenRepository.save(vt);
         verificationTokenRepository.flush();
 
-        System.out.println("=== DEBUG TOKEN ===");
-        System.out.println("Email: " + email);
-        System.out.println("Token: " + token);
-        System.out.println("Expires at: " + vt.getExpiresAt());
-        System.out.println("===================");
-
+        // Gửi email bất đồng bộ (Background worker)
         try {
             emailService.sendVerificationEmail(user.getEmail(), token);
         } catch (Exception e) {
-            System.err.println("Gửi email xác minh thất bại: " + e.getMessage());
-            throw new BadRequestException("Không thể gửi email xác minh: " + e.getMessage());
+            // Không chặn luồng nếu gửi mail gặp sự cố
         }
     }
 
@@ -106,16 +99,21 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public AuthResponse login(LoginRequest req) {
         User user = userRepository.findByEmail(req.getEmail())
-                .orElseThrow(() -> new UnauthorizedException("Invalid email or password"));
+                .orElseThrow(() -> new UnauthorizedException("Email hoặc mật khẩu không chính xác"));
 
         boolean isValidPass = passwordEncoder.matches(req.getPassword(), user.getPassword());
         if (!isValidPass) {
-            throw new UnauthorizedException("Invalid email or password");
+            throw new UnauthorizedException("Email hoặc mật khẩu không chính xác");
         }
 
-        // Kiểm tra tài khoản đã xác minh email chưa
+        if (user.getStatus() == AccountStatus.LOCKED || user.isDeleted()) {
+            throw new UnauthorizedException("Tài khoản đã bị khóa hoặc không tồn tại.");
+        }
+
+        // Tự động kích hoạt nếu tài khoản cũ còn ở trạng thái PENDING
         if (user.getStatus() == AccountStatus.PENDING) {
-            throw new AccountNotVerifiedException("Tài khoản chưa được xác minh email. Vui lòng kiểm tra hộp thư.");
+            user.setStatus(AccountStatus.ACTIVE);
+            userRepository.save(user);
         }
 
         String accessToken = jwtService.generateToken(user);

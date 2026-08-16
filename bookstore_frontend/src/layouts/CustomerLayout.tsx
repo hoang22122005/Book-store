@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import { Header } from '../components/layout/Header';
 import { Footer } from '../components/layout/Footer';
 import { ChatWidget } from '../components/common/ChatWidget';
+import { GenreOnboardingModal } from '../components/common/GenreOnboardingModal';
 
 export const CustomerLayout: React.FC = () => {
   return (
@@ -13,6 +14,7 @@ export const CustomerLayout: React.FC = () => {
       </main>
       <Footer />
       <ChatWidget />
+      <GenreOnboardingModal />
     </div>
   );
 };

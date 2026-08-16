@@ -12,6 +12,8 @@ export interface UserResponse {
   career: string | null;
   urlAvt: string | null;
   role: UserRole;
+  hasSelectedPreferences?: boolean;
+  preferredGenreIds?: number[];
 }
 
 export interface AdminUserResponse {

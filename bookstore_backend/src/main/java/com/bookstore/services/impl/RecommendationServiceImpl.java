@@ -22,13 +22,15 @@ import com.bookstore.services.RecommendationService;
 public class RecommendationServiceImpl implements RecommendationService {
 
     private final BookRepo bookRepo;
+    private final com.bookstore.repository.UserGenrePreferenceRepo userGenrePreferenceRepo;
     private final RestTemplate restTemplate;
 
     @Value("${RECOMMENDATION_SERVICE_URL:http://localhost:8000}")
     private String recommendationServiceUrl;
 
-    public RecommendationServiceImpl(BookRepo bookRepo) {
+    public RecommendationServiceImpl(BookRepo bookRepo, com.bookstore.repository.UserGenrePreferenceRepo userGenrePreferenceRepo) {
         this.bookRepo = bookRepo;
+        this.userGenrePreferenceRepo = userGenrePreferenceRepo;
         this.restTemplate = new RestTemplate();
     }
 
@@ -42,14 +44,25 @@ public class RecommendationServiceImpl implements RecommendationService {
                     .toUriString();
 
             BookResponse[] response = restTemplate.getForObject(url, BookResponse[].class);
-            if (response != null) {
+            if (response != null && response.length > 0) {
                 return List.of(response);
             }
         } catch (Exception e) {
             System.err.println("Error calling recommendation service: " + e.getMessage());
         }
 
-        // Fallback: return popular books
+        // Fallback: Check if user has preferred genres
+        List<Integer> preferredGenreIds = userGenrePreferenceRepo.findGenreIdsByUserId(userId);
+        if (preferredGenreIds != null && !preferredGenreIds.isEmpty()) {
+            Pageable pageable = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "buyCount", "avgRating"));
+            List<BookResponse> preferredBooks = bookRepo.findByGenreIds(preferredGenreIds, pageable)
+                    .map(BookResponse::toBookResponse).getContent();
+            if (!preferredBooks.isEmpty()) {
+                return preferredBooks;
+            }
+        }
+
+        // Default Fallback: return popular books
         return getFallbackPopularBooks(limit);
     }
 
