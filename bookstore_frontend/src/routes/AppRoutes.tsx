@@ -22,6 +22,7 @@ import { ChatPage } from '../pages/admin/ChatPage';
 import { AdminDashboardPage } from '../pages/admin/AdminDashboardPage';
 import { AdminFinancePage } from '../pages/admin/AdminFinancePage';
 import { BookManagementPage } from '../pages/admin/BookManagementPage';
+import { UserManagementPage } from '../pages/admin/UserManagementPage';
 import { AddBookPage } from '../pages/admin/AddBookPage';
 import { EditBookPage } from '../pages/admin/EditBookPage';
 import { WarehouseStockImportPage } from '../pages/admin/WarehouseStockImportPage';
@@ -92,39 +93,82 @@ export const AppRoutes: React.FC = () => {
         <Route
           path="/admin"
           element={
-            <ProtectedRoute allowedRoles={[...adminRouteAccess['/admin']]}> 
+            <ProtectedRoute allowedRoles={[...adminRouteAccess['/admin']]}>
               <AdminDashboardPage />
             </ProtectedRoute>
           }
         />
         <Route
           path="/admin/books"
-          element={<ProtectedRoute allowedRoles={[...adminRouteAccess['/admin/books']]}><BookManagementPage /></ProtectedRoute>}
+          element={
+            <ProtectedRoute allowedRoles={[...adminRouteAccess['/admin/books']]}>
+              <BookManagementPage />
+            </ProtectedRoute>
+          }
         />
         <Route
           path="/admin/books/add"
-          element={<ProtectedRoute allowedRoles={[...adminRouteAccess['/admin/books']]}><AddBookPage /></ProtectedRoute>}
+          element={
+            <ProtectedRoute allowedRoles={[...adminRouteAccess['/admin/books']]}>
+              <AddBookPage />
+            </ProtectedRoute>
+          }
         />
         <Route
           path="/admin/books/:bookId/edit"
-          element={<ProtectedRoute allowedRoles={[...adminRouteAccess['/admin/books']]}><EditBookPage /></ProtectedRoute>}
+          element={
+            <ProtectedRoute allowedRoles={[...adminRouteAccess['/admin/books']]}>
+              <EditBookPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <ProtectedRoute allowedRoles={[...adminRouteAccess['/admin/users']]}>
+              <UserManagementPage />
+            </ProtectedRoute>
+          }
         />
         <Route
           path="/admin/vouchers"
-          element={<ProtectedRoute allowedRoles={[...adminRouteAccess['/admin/vouchers']]}><VoucherManagementPage /></ProtectedRoute>}
+          element={
+            <ProtectedRoute allowedRoles={[...adminRouteAccess['/admin/vouchers']]}>
+              <VoucherManagementPage />
+            </ProtectedRoute>
+          }
         />
         <Route
           path="/admin/orders"
-          element={<ProtectedRoute allowedRoles={[...adminRouteAccess['/admin/orders']]}><StaffOrderManagementPage /></ProtectedRoute>}
+          element={
+            <ProtectedRoute allowedRoles={[...adminRouteAccess['/admin/orders']]}>
+              <StaffOrderManagementPage />
+            </ProtectedRoute>
+          }
         />
-        <Route path="/admin/chat" element={<ProtectedRoute allowedRoles={[...adminRouteAccess['/admin/chat']]}><ChatPage /></ProtectedRoute>} />
+        <Route
+          path="/admin/chat"
+          element={
+            <ProtectedRoute allowedRoles={[...adminRouteAccess['/admin/chat']]}>
+              <ChatPage />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/admin/warehouse"
-          element={<ProtectedRoute allowedRoles={[...adminRouteAccess['/admin/warehouse']]}><WarehouseStockImportPage /></ProtectedRoute>}
+          element={
+            <ProtectedRoute allowedRoles={[...adminRouteAccess['/admin/warehouse']]}>
+              <WarehouseStockImportPage />
+            </ProtectedRoute>
+          }
         />
         <Route
           path="/admin/finance"
-          element={<ProtectedRoute allowedRoles={[...adminRouteAccess['/admin/finance']]}><AdminFinancePage /></ProtectedRoute>}
+          element={
+            <ProtectedRoute allowedRoles={[...adminRouteAccess['/admin/finance']]}>
+              <AdminFinancePage />
+            </ProtectedRoute>
+          }
         />
       </Route>
 

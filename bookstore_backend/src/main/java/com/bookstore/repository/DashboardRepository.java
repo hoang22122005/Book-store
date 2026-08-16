@@ -61,7 +61,7 @@ public interface DashboardRepository extends Repository<Bill, Integer> {
                    os.average_order_value, ds.items_sold, ds.subtotal_before_voucher
             from order_stats os cross join detail_stats ds
             """, nativeQuery = true)
-    Object[] getFinancialOverview(
+    List<Object[]> getFinancialOverview(
             @Param("fromDate") LocalDateTime fromDate,
             @Param("toDate") LocalDateTime toDate);
 
