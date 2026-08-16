@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, BookOpen, Tag, ShoppingBag, Package, DollarSign, ArrowLeft, LogOut, MessagesSquare } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Users, Tag, ShoppingBag, Package, DollarSign, ArrowLeft, LogOut, MessagesSquare } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { canAccessAdminRoute, type AdminRoute } from '../utils/adminAccess';
 
@@ -11,6 +11,7 @@ export const AdminLayout: React.FC = () => {
   const navItems: { label: string; path: AdminRoute; icon: typeof LayoutDashboard }[] = [
     { label: 'Tổng Quan', path: '/admin', icon: LayoutDashboard },
     { label: 'Quản Lý Sách', path: '/admin/books', icon: BookOpen },
+    { label: 'Người Dùng', path: '/admin/users', icon: Users },
     { label: 'Voucher', path: '/admin/vouchers', icon: Tag },
     { label: 'Trò chuyện', path: '/admin/chat', icon: MessagesSquare },
     { label: 'Đơn Hàng', path: '/admin/orders', icon: ShoppingBag },

@@ -80,9 +80,10 @@ public class DashboardServiceImpl implements DashboardService {
     @Override
     public FinancialOverviewResponse getFinancialOverview(LocalDate from, LocalDate to) {
         validateReportRange(from, to);
-        Object[] row = dashboardRepository.getFinancialOverview(
+        List<Object[]> rows = dashboardRepository.getFinancialOverview(
                 from.atStartOfDay(),
                 to.plusDays(1).atStartOfDay());
+        Object[] row = rows.isEmpty() ? new Object[7] : rows.get(0);
 
         BigDecimal revenue = toBigDecimal(row[0]);
         long totalOrders = toLong(row[1]);
