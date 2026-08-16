@@ -13,5 +13,6 @@ import lombok.NoArgsConstructor;
 
 public class CreateStockImportRequest {
     private String note;
+    private String supplierName;
     private List<AddStockImportDetailRequest> details;
 }

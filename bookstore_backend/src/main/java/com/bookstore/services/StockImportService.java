@@ -11,9 +11,13 @@ public interface StockImportService {
 
     StockImportResponse addDetail(Long importId, AddStockImportDetailRequest req);
 
+    StockImportResponse updateDetail(Long importId, Long detailId, AddStockImportDetailRequest req);
+
     StockImportResponse postImport(Long importId);
 
     StockImportResponse cancelImport(Long importId);
+
+    void deleteImport(Long importId);
 
     List<StockImportResponse> getAll();
 

@@ -32,7 +32,7 @@ public interface BookRepo extends JpaRepository<Book, Integer> {
                      +
                      "(:minPrice IS NULL OR b.price >= :minPrice) AND " +
                      "(:maxPrice IS NULL OR b.price <= :maxPrice) AND " +
-                      "(:inStock IS NULL OR (:inStock = true AND b.quantityInStock > 0) OR (:inStock = false AND b.quantityInStock = 0)) AND " +
+                      "((:inStock IS NULL OR :inStock = true) AND b.quantityInStock > 0 OR (:inStock = false AND b.quantityInStock = 0)) AND " +
                      "b.isDeleted = false")
        Page<Book> searchBooks(@Param("keyword") String keyword,
                      @Param("author") String author,
@@ -98,9 +98,9 @@ public interface BookRepo extends JpaRepository<Book, Integer> {
        @Query(value = """
                      UPDATE book SET name = ?1, author = ?2, description = ?3, price = ?4,
                      quantity_in_stock = ?5, is_vip = ?6, is_deleted = ?7,
-                     deleted_at = ?8, page_count = ?9 WHERE book_id = ?10
+                     deleted_at = ?8, page_count = ?9, publisher = ?10, publish_year = ?11 WHERE book_id = ?12
                      RETURNING *
                      """, nativeQuery = true)
        Book updateBook(String name, String author, String description, BigDecimal price, int quantityInStock,
-                     boolean isVip, boolean isDeleted, LocalDateTime deletedAt, int pageCount, int bookId);
+                     boolean isVip, boolean isDeleted, LocalDateTime deletedAt, int pageCount, String publisher, Integer publishYear, int bookId);
 }

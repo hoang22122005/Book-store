@@ -7,6 +7,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -61,6 +62,7 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/api-docs/**").permitAll()
                         .requestMatchers("/api/payments/vnpay/ipn").permitAll()
                         .requestMatchers("/api/payments/vnpay/return").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/admin/books").hasAnyRole("ADMIN", "WAREHOUSE_KEEPER")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/dashboard/**")
                         .hasAnyRole("ADMIN", "STAFF", "ACCOUNTANT", "WAREHOUSE_KEEPER")

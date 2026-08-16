@@ -1,5 +1,6 @@
 package com.bookstore.models;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,6 +43,12 @@ public class StockImport {
     private StockImportStatus status;
 
     private String note;
+
+    @Column(name = "supplier_name")
+    private String supplierName;
+
+    @Column(name = "total_cost", precision = 12, scale = 2)
+    private BigDecimal totalCost = BigDecimal.ZERO;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

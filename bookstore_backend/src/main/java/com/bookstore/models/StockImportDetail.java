@@ -1,5 +1,7 @@
 package com.bookstore.models;
 
+import java.math.BigDecimal;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -33,4 +35,10 @@ public class StockImportDetail {
 
     @Column(nullable = false)
     private int quantity;
+
+    @Column(name = "import_price", nullable = false, precision = 12, scale = 2)
+    private BigDecimal importPrice = BigDecimal.ZERO;
+
+    @Column(name = "selling_price_at_import", precision = 12, scale = 2)
+    private BigDecimal sellingPriceAtImport;
 }

@@ -19,9 +19,15 @@ export const warehouseStockImportService = {
   addDetail: (importId: number, req: AddStockImportDetailRequest) =>
     apiClient.post<ApiResponse<StockImportResponse>>(`/api/stock-imports/${importId}/details`, req),
 
+  updateDetail: (importId: number, detailId: number, req: AddStockImportDetailRequest) =>
+    apiClient.put<ApiResponse<StockImportResponse>>(`/api/stock-imports/${importId}/details/${detailId}`, req),
+
   postImport: (importId: number) =>
     apiClient.post<ApiResponse<StockImportResponse>>(`/api/stock-imports/${importId}/post`),
 
   cancelImport: (importId: number) =>
     apiClient.post<ApiResponse<StockImportResponse>>(`/api/stock-imports/${importId}/cancel`),
+
+  deleteImport: (importId: number) =>
+    apiClient.delete<ApiResponse<void>>(`/api/stock-imports/${importId}`),
 };

@@ -4,6 +4,24 @@ import { User, Package, Heart, LogOut, Save, KeyRound } from 'lucide-react';
 import { useUserProfile, useUpdateProfile, useChangePassword, useUploadAvatar } from '../../features/user/hooks';
 import { useLogout } from '../../features/auth/hooks';
 
+const getRoleLabel = (role?: string) => {
+  if (!role) return 'Khách hàng thân thiết';
+  const cleanRole = role.replace('ROLE_', '').toUpperCase();
+  switch (cleanRole) {
+    case 'ADMIN':
+      return 'Quản trị viên';
+    case 'STAFF':
+      return 'Nhân viên bán hàng';
+    case 'ACCOUNTANT':
+      return 'Kế toán';
+    case 'WAREHOUSE_KEEPER':
+      return 'Thủ kho';
+    case 'USER':
+    default:
+      return 'Khách hàng thân thiết';
+  }
+};
+
 export const ProfilePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'profile' | 'password'>('profile');
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
@@ -39,7 +57,7 @@ export const ProfilePage: React.FC = () => {
                 )}
               </button>
               <h2 className="font-headline-sm text-headline-sm text-on-surface font-bold">{user?.name || 'Người dùng'}</h2>
-              <p className="text-caption text-on-surface-variant">Khách hàng thân thiết</p>
+              <p className="text-caption text-on-surface-variant">{getRoleLabel(user?.role)}</p>
             </div>
 
             {/* Navigation */}
