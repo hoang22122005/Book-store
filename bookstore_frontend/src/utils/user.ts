@@ -41,6 +41,8 @@ export const formatUserData = (raw: UserResponse): User => {
     role: formattedRole,
     phone: raw.phoneNumber ?? undefined,
     address: raw.address ?? undefined,
+    gender: raw.gender ?? undefined,
+    career: raw.career ?? undefined,
     avatarUrl: raw.urlAvt ?? undefined,
     hasSelectedPreferences: raw.hasSelectedPreferences,
     preferredGenreIds: raw.preferredGenreIds,
