@@ -201,14 +201,7 @@ export const BookDetailPage: React.FC = () => {
             <div><span className="block text-on-surface-variant">ISBN</span><strong>{book.isbn || 'Đang cập nhật'}</strong></div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-4">
-            <span className="font-bold">Số lượng</span>
-            <div className="inline-flex items-center rounded-xl border border-surface-variant overflow-hidden">
-              <button onClick={() => setQuantity((current) => Math.max(1, current - 1))} disabled={quantity === 1} className="w-11 h-11 hover:bg-surface-container disabled:opacity-40 cursor-pointer"><span className="material-symbols-outlined">remove</span></button>
-              <strong className="w-12 text-center">{quantity}</strong>
-              <button onClick={() => setQuantity((current) => Math.min(book.quantityInStock, current + 1))} disabled={quantity >= book.quantityInStock} className="w-11 h-11 hover:bg-surface-container disabled:opacity-40 cursor-pointer"><span className="material-symbols-outlined">add</span></button>
-            </div>
-          </div>
+
 
           <div className="grid sm:grid-cols-2 gap-3">
             <button onClick={() => addBookToCart(book.id, quantity)} disabled={book.quantityInStock <= 0 || addToCart.isPending} className="min-h-12 rounded-xl bg-primary-fixed text-primary font-bold hover:bg-primary hover:text-white disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"><span className="material-symbols-outlined">add_shopping_cart</span>Thêm vào giỏ hàng</button>

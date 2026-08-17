@@ -59,14 +59,14 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public List<CartDetail> getCartDetails(int cartId) {
-        return cartDetailRepo.findAllCartDetails(cartId);
+        return cartDetailRepo.findAllCartDetails(cartId).stream()
+                .filter(detail -> !detail.getBook().isDeleted())
+                .toList();
     }
 
     @Override
     @Transactional
     public void deleteCartDetail(CartDetailId cartDetailId) {
-        Book book = bookRepo.findByBookIdAndIsDeletedFalse(cartDetailId.getBookId())
-                .orElseThrow(() -> new NotFoundException("Không tìm thấy sản phẩm"));
         CartDetail cartDetail = cartDetailRepo.findById(cartDetailId)
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy sản phẩm trong giỏ hàng"));
 
@@ -138,7 +138,9 @@ public class CartServiceImpl implements CartService {
     }
 
     private void recalculateCartTotal(Cart cart) {
-        List<CartDetail> details = cartDetailRepo.findAllCartDetails(cart.getCartId());
+        List<CartDetail> details = cartDetailRepo.findAllCartDetails(cart.getCartId()).stream()
+                .filter(detail -> !detail.getBook().isDeleted())
+                .toList();
         Map<Integer, ActiveBookDiscount> discounts = discountPricingService.getActiveDiscounts(
                 details.stream().map(detail -> detail.getBook().getBookId()).toList());
         BigDecimal total = details.stream()
