@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronRight, ChevronLeft, SlidersHorizontal, X } from 'lucide-react';
-import { useBookCatalog } from '../../features/book/hooks';
+import { useBookCatalog, useAuthors } from '../../features/book/hooks';
 import { BookGrid } from '../../features/book/components';
-import { PRICE_RANGES, SORT_OPTIONS, AUTHORS } from '../../features/book/constants/bookFilters';
+import { PRICE_RANGES, SORT_OPTIONS } from '../../features/book/constants/bookFilters';
 import { useAuth } from '../../hooks/useAuth';
 import { useAddToCartMutation } from '../../features/cart';
 
@@ -13,6 +13,7 @@ export const BookCatalogPage: React.FC = () => {
   const addToCartMutation = useAddToCartMutation();
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const { data: authors = [] } = useAuthors();
   const {
     books,
     genres,
@@ -90,12 +91,12 @@ export const BookCatalogPage: React.FC = () => {
               </div>
               <FilterSidebar
                 genres={genres}
+                authors={authors}
                 filters={filters}
                 hasActiveFilters={hasActiveFilters}
                 toggleCategory={toggleCategory}
                 toggleAuthor={toggleAuthor}
                 togglePriceRange={togglePriceRange}
-                toggleInStock={toggleInStock}
                 clearFilters={clearFilters}
               />
             </div>
@@ -106,12 +107,12 @@ export const BookCatalogPage: React.FC = () => {
         <div className="hidden lg:block w-72 flex-shrink-0">
           <FilterSidebar
             genres={genres}
+            authors={authors}
             filters={filters}
             hasActiveFilters={hasActiveFilters}
             toggleCategory={toggleCategory}
             toggleAuthor={toggleAuthor}
             togglePriceRange={togglePriceRange}
-            toggleInStock={toggleInStock}
             clearFilters={clearFilters}
           />
         </div>
@@ -190,6 +191,7 @@ export const BookCatalogPage: React.FC = () => {
 
 interface FilterSidebarProps {
   genres: { genreId: number; name: string }[];
+  authors: string[];
   filters: {
     categories: number[];
     authors: string[];
@@ -200,18 +202,17 @@ interface FilterSidebarProps {
   toggleCategory: (id: number) => void;
   toggleAuthor: (author: string) => void;
   togglePriceRange: (range: { min?: number; max?: number } | null) => void;
-  toggleInStock: (checked: boolean) => void;
   clearFilters: () => void;
 }
 
 const FilterSidebar: React.FC<FilterSidebarProps> = ({
   genres,
+  authors,
   filters,
   hasActiveFilters,
   toggleCategory,
   toggleAuthor,
   togglePriceRange,
-  toggleInStock,
   clearFilters,
 }) => (
   <div className="space-y-6">
@@ -227,7 +228,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
       )}
     </div>
 
-    <FilterSection title="Danh mục">
+    <FilterSection title="Danh mục" scrollable>
       {genres.map((genre) => (
         <CheckboxItem
           key={genre.genreId}
@@ -238,8 +239,8 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
       ))}
     </FilterSection>
 
-    <FilterSection title="Tác giả">
-      {AUTHORS.map((author) => (
+    <FilterSection title="Tác giả" scrollable>
+      {authors.map((author) => (
         <CheckboxItem
           key={author}
           label={author}
@@ -259,21 +260,13 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
         />
       ))}
     </FilterSection>
-
-    <FilterSection title="Tình trạng">
-      <CheckboxItem
-        label="Còn hàng"
-        checked={filters.inStockOnly}
-        onChange={(e) => toggleInStock(e.target.checked)}
-      />
-    </FilterSection>
   </div>
 );
 
-const FilterSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
+const FilterSection: React.FC<{ title: string; children: React.ReactNode; scrollable?: boolean }> = ({ title, children, scrollable }) => (
   <div className="bg-surface-container-lowest rounded-lg p-4 border border-outline-variant">
     <h4 className="font-label-lg font-semibold text-on-surface mb-3">{title}</h4>
-    <div className="space-y-2 max-h-48 overflow-y-auto">{children}</div>
+    <div className={`space-y-2 ${scrollable ? 'max-h-48 overflow-y-auto' : ''}`}>{children}</div>
   </div>
 );
 

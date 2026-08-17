@@ -3,7 +3,6 @@ import { useAuthSessionApi } from '../features/auth/hooks';
 import { tokenStorage } from '../utils';
 import { AuthContext } from './AuthContext';
 import type { User } from '../types';
-import type { UserRole } from '../types';
 
 export function AuthProvider({ children }: PropsWithChildren) {
   const { getProfile, notifyLogout } = useAuthSessionApi();
@@ -24,7 +23,6 @@ export function AuthProvider({ children }: PropsWithChildren) {
         const profile = await getProfile();
         if (isMounted) setUser(profile);
       } catch {
-        // A token is not proof of authentication; only a successful profile response is.
         tokenStorage.clearTokens();
         if (isMounted) setUser(null);
       } finally {
@@ -58,13 +56,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
     }
   };
 
-  const demoLogin = (role: UserRole) => {
-    if (!import.meta.env.DEV) return;
-    setUser({ id: `demo-${role}`, email: `demo-${role.toLowerCase()}@example.test`, name: `Demo ${role}`, role });
-  };
-
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: Boolean(user), isLoading, role: user?.role ?? null, setUser, demoLogin, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated: Boolean(user), isLoading, role: user?.role ?? null, setUser, logout }}>
       {children}
     </AuthContext.Provider>
   );

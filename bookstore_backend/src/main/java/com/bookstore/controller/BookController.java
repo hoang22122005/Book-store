@@ -65,6 +65,12 @@ public class BookController {
         return ResponseEntity.ok(ApiResponse.success("Genres fetched successfully", genres));
     }
 
+    @GetMapping("/public/authors")
+    public ResponseEntity<ApiResponse<List<String>>> getAuthors() {
+        List<String> authors = bookService.getDistinctAuthors();
+        return ResponseEntity.ok(ApiResponse.success("Authors fetched successfully", authors));
+    }
+
     @PostMapping("/admin/books")
     @PreAuthorize("hasAnyRole('ADMIN', 'WAREHOUSE_KEEPER')")
     public ResponseEntity<ApiResponse<Book>> addBook(@Valid @RequestPart BookAddRequest bookAddRequest, @RequestPart MultipartFile imgFile)

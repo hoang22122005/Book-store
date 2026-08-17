@@ -21,6 +21,7 @@ public interface BookService {
                                         BigDecimal minPrice, BigDecimal maxPrice, Boolean inStock, Pageable pageable);
     BookResponse getBookDetail(int bookId);
     List<GenreResponse> getAllGenres();
+    List<String> getDistinctAuthors();
     void deleteBook(int bookId);
     Book updateBook(int bookId, BookUpdateRequest book, MultipartFile imgFile) throws IOException;
     Book addBook(BookAddRequest book, MultipartFile imgFile) throws IOException;

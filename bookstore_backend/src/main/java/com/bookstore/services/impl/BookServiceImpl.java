@@ -122,6 +122,11 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
+    public List<String> getDistinctAuthors() {
+        return bookRepo.findDistinctAuthors();
+    }
+
+    @Override
     @Transactional
     public void deleteBook(int bookId) {
         Book book = bookRepo.findByBookIdAndIsDeletedFalse(bookId)

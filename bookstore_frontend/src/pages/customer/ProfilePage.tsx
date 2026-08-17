@@ -75,19 +75,8 @@ export const ProfilePage: React.FC = () => {
                 <User size={20} />
                 Hồ sơ cá nhân
               </button>
-              <button
-                onClick={() => setActiveTab('preferences')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors cursor-pointer ${
-                  activeTab === 'preferences'
-                    ? 'bg-primary text-white'
-                    : 'text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface'
-                }`}
-              >
-                <Sparkles size={20} />
-                Gu sách yêu thích
-              </button>
               <Link
-                to="/orders"
+                to="/my-orders"
                 className="flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors"
               >
                 <Package size={20} />
@@ -100,6 +89,17 @@ export const ProfilePage: React.FC = () => {
                 <Heart size={20} />
                 Sách yêu thích
               </Link>
+              <button
+                onClick={() => setActiveTab('preferences')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors cursor-pointer ${
+                  activeTab === 'preferences'
+                    ? 'bg-primary text-white'
+                    : 'text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface'
+                }`}
+              >
+                <Sparkles size={20} />
+                Gu sách yêu thích
+              </button>
               <button
                 onClick={() => setActiveTab('password')}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors cursor-pointer ${

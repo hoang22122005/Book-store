@@ -95,4 +95,9 @@ export const bookService = {
   getHotBooks: async (page = 0, size = 3): Promise<PageResponseDTO<Book>> => {
     return bookService.getPublicBooks({ page, size, sort: 'avgRating,desc' });
   },
+
+  getAuthors: async (): Promise<string[]> => {
+    const response = await apiClient.get<ApiResponseDTO<string[]>>('/api/public/authors');
+    return response.data.data || [];
+  },
 };

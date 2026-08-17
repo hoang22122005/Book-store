@@ -1,14 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
-import { useAuth } from '../../../hooks/useAuth';
 import { useLogin } from '../hooks/useLoginMutation';
 import { isValidEmail, isNonEmpty, getErrorMessage } from '../../../utils';
 import { getDefaultAdminPath } from '../../../utils/adminAccess';
-import type { UserRole } from '../../../types';
 
 export const LoginForm: React.FC = () => {
-  const { demoLogin } = useAuth();
-  const showDemoLogin = import.meta.env.DEV;
   const loginMutation = useLogin();
   const navigate = useNavigate();
   const location = useLocation();
@@ -64,17 +60,6 @@ export const LoginForm: React.FC = () => {
       }
     );
   };
-
-  const handleQuickDemo = (role: UserRole) => {
-    demoLogin(role);
-    const adminPath = getDefaultAdminPath(role);
-    if (adminPath) {
-      navigate(adminPath);
-    } else {
-      navigate(redirect);
-    }
-  };
-
 
   return (
     <div className="w-full max-w-md mx-auto">
@@ -244,50 +229,6 @@ export const LoginForm: React.FC = () => {
           </Link>
         </div>
 
-        {showDemoLogin && (
-          <div className="mt-6 pt-4 border-t border-slate-100 text-left">
-          <p className="text-[11px] font-bold text-[#002045] uppercase tracking-wider mb-2">
-            Đăng nhập nhanh (Test Role):
-          </p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-            <button
-              type="button"
-              onClick={() => handleQuickDemo('USER')}
-              className="py-1.5 px-2 bg-slate-50 hover:bg-[#d6e3ff]/60 border border-[#c4c6cf] text-[#002045] rounded-md text-xs font-medium transition-colors cursor-pointer"
-            >
-              Khách Hàng
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickDemo('ADMIN')}
-              className="py-1.5 px-2 bg-slate-50 hover:bg-[#d6e3ff]/60 border border-[#c4c6cf] text-amber-800 rounded-md text-xs font-semibold transition-colors cursor-pointer"
-            >
-              Admin
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickDemo('STAFF')}
-              className="py-1.5 px-2 bg-slate-50 hover:bg-[#d6e3ff]/60 border border-[#c4c6cf] text-blue-800 rounded-md text-xs font-semibold transition-colors cursor-pointer"
-            >
-              Nhân Viên
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickDemo('ACCOUNTANT')}
-              className="py-1.5 px-2 bg-slate-50 hover:bg-[#d6e3ff]/60 border border-[#c4c6cf] text-purple-800 rounded-md text-xs font-semibold transition-colors cursor-pointer"
-            >
-              Kế Toán
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickDemo('WAREHOUSE_KEEPER')}
-              className="py-1.5 px-2 bg-slate-50 hover:bg-[#d6e3ff]/60 border border-[#c4c6cf] text-orange-800 rounded-md text-xs font-semibold transition-colors cursor-pointer"
-            >
-              Thủ Kho
-            </button>
-          </div>
-          </div>
-        )}
       </div>
     </div>
   );

@@ -3,3 +3,4 @@ export { useBookList, useBestsellerBooks, useNewArrivalBooks, useHotBooks } from
 export { useBookDetail } from './useBookDetail';
 export { useBookComments, useBookRatings, reviewQueryKeys } from './useBookReviews';
 export { useBookCatalog } from './useBookCatalog';
+export { useAuthors } from './useAuthors';

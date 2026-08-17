@@ -7,7 +7,6 @@ export interface AuthContextValue {
   isLoading: boolean;
   role: UserRole | null;
   setUser: (user: User | null) => void;
-  demoLogin: (role: UserRole) => void;
   logout: () => Promise<void>;
 }
 
