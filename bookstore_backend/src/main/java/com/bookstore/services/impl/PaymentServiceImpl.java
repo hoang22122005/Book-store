@@ -106,7 +106,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public VnPayReturnResponse handleVnPayReturn(Map<String, String> parameters) {
         boolean validSignature = vnPayService.isValidSignature(parameters);
         String txnRef = parameters.get("vnp_TxnRef");
@@ -115,6 +115,27 @@ public class PaymentServiceImpl implements PaymentService {
         boolean successful = validSignature
                 && "00".equals(responseCode)
                 && "00".equals(transactionStatus);
+
+        if (validSignature && txnRef != null) {
+            Optional<Payment> paymentSnapshot = paymentRepository.findByTxnRef(txnRef);
+            if (paymentSnapshot.isPresent()) {
+                Payment payment = paymentRepository.findByTxnRefForUpdate(txnRef).orElse(null);
+                Bill bill = payment != null
+                        ? billRepository.findByIdForUpdate(payment.getBill().getBillId()).orElse(null)
+                        : null;
+
+                if (payment != null && bill != null && payment.getStatus() == PaymentStatus.PENDING) {
+                    applyVnPayResult(payment, parameters);
+                    if (successful) {
+                        completeOnlinePayment(bill, payment);
+                    } else {
+                        failOnlinePayment(bill, payment);
+                    }
+                    paymentRepository.save(payment);
+                    billRepository.save(bill);
+                }
+            }
+        }
 
         return VnPayReturnResponse.builder()
                 .validSignature(validSignature)

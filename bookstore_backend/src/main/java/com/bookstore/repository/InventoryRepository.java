@@ -7,9 +7,15 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Optional;
+import java.util.Collection;
 import com.bookstore.models.Inventory;
 
 public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
+
+    Optional<Inventory> findByBookId(int bookId);
+
+    List<Inventory> findByBookIdIn(Collection<Integer> bookIds);
 
     @Query("""
             select i.quantityInStock - i.reservedQuantity

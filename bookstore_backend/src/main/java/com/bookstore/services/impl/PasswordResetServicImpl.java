@@ -59,7 +59,8 @@ public class PasswordResetServicImpl implements PasswordResetService {
         tokenRepository.save(resetToken);
 
         //gửi email chưa link reset, link này dẫn tới giao diện frontend, frontend lấy token từ url xuống
-        String resetLink = frontendUrl + "/reset-password?token=" + rawToken;
+        String baseUrl = (frontendUrl != null ? frontendUrl : "http://localhost:5173").replaceAll("/+$", "");
+        String resetLink = baseUrl + "/reset-password?token=" + rawToken;
         emailService.sendResetPasswordEmail(user.getEmail(), resetLink);
     }
 

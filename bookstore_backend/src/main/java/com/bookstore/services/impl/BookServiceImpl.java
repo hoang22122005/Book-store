@@ -36,6 +36,7 @@ import com.bookstore.repository.BookRepo;
 import com.bookstore.repository.GenreRepo;
 import com.bookstore.repository.InventoryRepository;
 import com.bookstore.services.BookService;
+import com.bookstore.services.CartService;
 import com.bookstore.services.DiscountPricingService;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
@@ -55,6 +56,7 @@ public class BookServiceImpl implements BookService {
     private final InventoryRepository inventoryRepository;
     private final DiscountPricingService discountPricingService;
     private final Cloudinary cloudinary;
+    private final CartService cartService;
 
     @Override
     public List<Book> getAllBooks() {
@@ -84,16 +86,25 @@ public class BookServiceImpl implements BookService {
                 maxPrice,
                 inStock,
                 safePageable);
+        List<Integer> bookIds = bookPage.getContent().stream().map(Book::getBookId).toList();
         Map<Integer, List<String>> genresByBookId = getGenresByBookId(bookPage.getContent());
-        Map<Integer, ActiveBookDiscount> discounts = discountPricingService.getActiveDiscounts(
-                bookPage.getContent().stream().map(Book::getBookId).toList());
+        Map<Integer, ActiveBookDiscount> discounts = discountPricingService.getActiveDiscounts(bookIds);
+        Map<Integer, Integer> availableQuantities = inventoryRepository.findByBookIdIn(bookIds).stream()
+                .collect(Collectors.toMap(
+                        Inventory::getBookId,
+                        inv -> Math.max(0, (inv.getQuantityInStock() != null ? inv.getQuantityInStock() : 0)
+                                - (inv.getReservedQuantity() != null ? inv.getReservedQuantity() : 0)),
+                        (a, b) -> a));
+
         Page<BookResponse> responsePage = bookPage.map(book -> {
             ActiveBookDiscount discount = discounts.get(book.getBookId());
+            int available = availableQuantities.getOrDefault(book.getBookId(), book.getQuantityInStock());
             return BookResponse.toBookResponse(
                     book,
                     genresByBookId.getOrDefault(book.getBookId(), List.of()),
                     discount,
-                    discountPricingService.calculateFinalPrice(book.getPrice(), discount));
+                    discountPricingService.calculateFinalPrice(book.getPrice(), discount),
+                    available);
         });
 
         return PageResponse.toPageResponse(responsePage);
@@ -107,11 +118,17 @@ public class BookServiceImpl implements BookService {
         ActiveBookDiscount discount = discountPricingService
                 .getActiveDiscounts(List.of(bookId))
                 .get(bookId);
+        int available = inventoryRepository.findById(bookId)
+                .map(inv -> Math.max(0, (inv.getQuantityInStock() != null ? inv.getQuantityInStock() : 0)
+                        - (inv.getReservedQuantity() != null ? inv.getReservedQuantity() : 0)))
+                .orElse(book.getQuantityInStock());
+
         return BookResponse.toBookResponse(
                 book,
                 getGenreNames(book.getBookId()),
                 discount,
-                discountPricingService.calculateFinalPrice(book.getPrice(), discount));
+                discountPricingService.calculateFinalPrice(book.getPrice(), discount),
+                available);
     }
 
     @Override
@@ -132,6 +149,7 @@ public class BookServiceImpl implements BookService {
         Book book = bookRepo.findByBookIdAndIsDeletedFalse(bookId)
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy sách có ID: " + bookId));
         bookRepo.softDeleteBook(LocalDateTime.now(), book.getBookId());
+        cartService.removeBookFromAllCarts(book.getBookId());
     }
 
     @Override
@@ -156,9 +174,15 @@ public class BookServiceImpl implements BookService {
             oldBook.setPublicId(publicId);
         }
 
-        return bookRepo.updateBook(oldBook.getName(), oldBook.getAuthor(), oldBook.getDescription(), oldBook.getPrice(),
+        Book updated = bookRepo.updateBook(oldBook.getName(), oldBook.getAuthor(), oldBook.getDescription(), oldBook.getPrice(),
                 oldBook.getQuantityInStock(), oldBook.isVip(), oldBook.isDeleted(), oldBook.getDeletedAt(),
                 oldBook.getPageCount(), oldBook.getPublisher(), oldBook.getPublishYear(), oldBook.getBookId());
+
+        if (oldBook.isDeleted()) {
+            cartService.removeBookFromAllCarts(oldBook.getBookId());
+        }
+
+        return updated;
     }
 
     @Override

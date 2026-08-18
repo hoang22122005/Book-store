@@ -65,7 +65,7 @@ def load_data():
     
     # 4. Load book genres
     cursor.execute("""
-        SELECT bg.book_id, g.name 
+        SELECT bg.book_id, g.name, g.genre_id 
         FROM book_genre bg 
         JOIN genre g ON bg.genre_id = g.genre_id
     """)
@@ -83,10 +83,17 @@ def preprocess_items(books, book_genres):
     
     # Group genres by book_id
     book_genres_dict = {}
-    for book_id, genre_name in book_genres:
+    book_genre_ids_dict = {}
+    for item in book_genres:
+        book_id = item[0]
+        genre_name = item[1]
+        genre_id = item[2] if len(item) > 2 else None
         if book_id not in book_genres_dict:
             book_genres_dict[book_id] = set()
+            book_genre_ids_dict[book_id] = set()
         book_genres_dict[book_id].add(genre_name)
+        if genre_id is not None:
+            book_genre_ids_dict[book_id].add(genre_id)
         
     # Build maps and clean properties
     book_ids = []
@@ -119,7 +126,7 @@ def preprocess_items(books, book_genres):
     popular_scores.sort(key=lambda x: x[1], reverse=True)
     popular_books = [x[0] for x in popular_scores]
     
-    return book_ids, titles, descriptions, authors, years, book_genres_dict, popular_books
+    return book_ids, titles, descriptions, authors, years, book_genres_dict, book_genre_ids_dict, popular_books
 
 def build_content_model(book_ids, titles, descriptions, authors, years, book_genres_dict):
     """Build Content-Based similarity matrix"""
@@ -231,7 +238,7 @@ def train_model():
     """Main training pipeline"""
     users, books, ratings, book_genres = load_data()
     
-    book_ids, titles, descriptions, authors, years, book_genres_dict, popular_books = preprocess_items(books, book_genres)
+    book_ids, titles, descriptions, authors, years, book_genres_dict, book_genre_ids_dict, popular_books = preprocess_items(books, book_genres)
     
     content_similarity = build_content_model(book_ids, titles, descriptions, authors, years, book_genres_dict)
     
@@ -246,7 +253,9 @@ def train_model():
         "cf_similarity": cf_similarity,
         "content_similarity": content_similarity,
         "user_means": user_means,
-        "popular_books": popular_books
+        "popular_books": popular_books,
+        "book_genres_dict": book_genres_dict,
+        "book_genre_ids_dict": book_genre_ids_dict
     }
     
     output_path = os.path.join("recommendation", "recommendation_model.pkl")

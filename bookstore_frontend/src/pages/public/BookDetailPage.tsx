@@ -5,7 +5,11 @@ import { useAddManyToCartMutation } from '../../features/cart';
 import { useBookDetail } from '../../features/catalog/hooks/useBookDetail';
 import { useSimilarBooks } from '../../features/catalog/hooks/useSimilarBooks';
 import { useBookComments, useBookRatings } from '../../features/catalog/hooks/useCustomerReviews';
-import { useSubmitBookReview } from '../../features/catalog/hooks/useSubmitBookReview';
+import {
+  useCheckBookPurchased,
+  useSubmitComment,
+  useSubmitRating,
+} from '../../features/catalog/hooks/useSubmitBookReview';
 import { formatCurrency } from '../../utils';
 
 const StarRating: React.FC<{ value: number; size?: string }> = ({ value, size = 'text-[18px]' }) => (
@@ -26,17 +30,20 @@ export const BookDetailPage: React.FC = () => {
   const location = useLocation();
   const { isAuthenticated, user } = useAuth();
   const addToCart = useAddManyToCartMutation();
-  const submitReview = useSubmitBookReview();
+  const submitRatingMutation = useSubmitRating();
+  const submitCommentMutation = useSubmitComment();
+  const { data: hasPurchased } = useCheckBookPurchased(isValidBookId ? bookId : 0, isAuthenticated);
   const { data: book, isLoading, isError, refetch } = useBookDetail(isValidBookId ? bookId : 0);
   const { data: similarData, isLoading: isLoadingSimilar } = useSimilarBooks(isValidBookId ? bookId : 0, 0, 4);
-  const { data: commentsData, isLoading: isLoadingComments } = useBookComments(isValidBookId ? bookId : 0, 8);
+  const { data: commentsData, isLoading: isLoadingComments } = useBookComments(isValidBookId ? bookId : 0, 12);
   const { data: ratingsData } = useBookRatings(isValidBookId ? bookId : 0, 100);
   const [quantityByBookId, setQuantityByBookId] = useState<Record<number, number>>({});
   const [failedImageBookIds, setFailedImageBookIds] = useState<Set<number>>(() => new Set());
   const [message, setMessage] = useState<string | null>(null);
   const [reviewContent, setReviewContent] = useState('');
   const [selectedRatingByBookId, setSelectedRatingByBookId] = useState<Record<number, number>>({});
-  const [reviewError, setReviewError] = useState<string | null>(null);
+  const [ratingError, setRatingError] = useState<string | null>(null);
+  const [commentError, setCommentError] = useState<string | null>(null);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -53,15 +60,9 @@ export const BookDetailPage: React.FC = () => {
     [ratingsData],
   );
 
-  const existingUserRating = useMemo(() => {
-    const currentUserId = Number(user?.id);
-    if (!Number.isFinite(currentUserId)) return undefined;
-    return ratingsData?.content.find((rating) => rating.userId === currentUserId);
-  }, [ratingsData, user?.id]);
-
   const quantity = quantityByBookId[bookId] ?? 1;
   const imageFailed = failedImageBookIds.has(bookId);
-  const selectedRating = selectedRatingByBookId[bookId] ?? existingUserRating?.ratingValue ?? 0;
+  const selectedRating = selectedRatingByBookId[bookId] ?? 5;
 
   const setQuantity = (updater: (current: number) => number) => {
     setQuantityByBookId((current) => ({ ...current, [bookId]: updater(current[bookId] ?? 1) }));
@@ -71,36 +72,55 @@ export const BookDetailPage: React.FC = () => {
     setSelectedRatingByBookId((current) => ({ ...current, [bookId]: value }));
   };
 
-  const handleSubmitReview = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setReviewError(null);
+  const handleRatingSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setRatingError(null);
 
     if (!isAuthenticated) {
       navigate('/login', { state: { from: location.pathname } });
       return;
     }
-    if (selectedRating < 1 || selectedRating > 5) {
-      setReviewError('Vui lòng chọn số sao đánh giá.');
-      return;
-    }
-    if (!reviewContent.trim()) {
-      setReviewError('Vui lòng nhập nội dung bình luận.');
+    if (!hasPurchased) {
+      setRatingError('Bạn cần mua cuốn sách này trước khi đánh giá.');
       return;
     }
 
-    submitReview.mutate(
+    submitRatingMutation.mutate(
+      { bookId, ratingValue: selectedRating },
       {
-        bookId,
-        content: reviewContent,
-        ratingValue: selectedRating,
-        existingRatingId: existingUserRating?.ratingId,
+        onSuccess: () => {
+          setMessage(`Đã gửi đánh giá ${selectedRating} sao thành công!`);
+        },
+        onError: (err) => setRatingError((err as Error).message || 'Không thể gửi đánh giá.'),
       },
+    );
+  };
+
+  const handleCommentSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setCommentError(null);
+
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: location.pathname } });
+      return;
+    }
+    if (!hasPurchased) {
+      setCommentError('Bạn cần mua cuốn sách này trước khi bình luận.');
+      return;
+    }
+    if (!reviewContent.trim()) {
+      setCommentError('Vui lòng nhập nội dung bình luận.');
+      return;
+    }
+
+    submitCommentMutation.mutate(
+      { bookId, content: reviewContent },
       {
         onSuccess: () => {
           setReviewContent('');
-          setMessage(existingUserRating ? 'Đã cập nhật đánh giá và gửi bình luận.' : 'Đã gửi đánh giá và bình luận.');
+          setMessage('Đã gửi bình luận thành công!');
         },
-        onError: (error) => setReviewError((error as Error).message || 'Không thể gửi đánh giá lúc này.'),
+        onError: (err) => setCommentError((err as Error).message || 'Không thể gửi bình luận.'),
       },
     );
   };
@@ -186,7 +206,7 @@ export const BookDetailPage: React.FC = () => {
           <div className="flex flex-wrap items-center gap-4 py-4 border-y border-surface-variant">
             <span className="flex items-center gap-2"><StarRating value={book.avgRating} /><strong>{book.avgRating.toFixed(1)}</strong><span className="text-sm text-on-surface-variant">({book.cntRating} đánh giá)</span></span>
             <span className="text-sm text-on-surface-variant">Đã bán: <strong className="text-on-surface">{book.buyCount}</strong></span>
-            <span className={book.quantityInStock > 0 ? 'text-green-700 font-bold text-sm' : 'text-error font-bold text-sm'}>{book.quantityInStock > 0 ? `Còn ${book.quantityInStock} cuốn` : 'Hết hàng'}</span>
+            <span className={book.quantityInStock > 0 ? 'text-emerald-500 font-bold text-sm' : 'text-rose-400 font-bold text-sm'}>{book.quantityInStock > 0 ? `Còn ${book.quantityInStock} cuốn (Khả dụng)` : 'Hết hàng (0 cuốn khả dụng)'}</span>
           </div>
 
           <div className="rounded-2xl bg-surface-container-low p-5 flex flex-wrap items-baseline gap-3">
@@ -201,11 +221,18 @@ export const BookDetailPage: React.FC = () => {
             <div><span className="block text-on-surface-variant">ISBN</span><strong>{book.isbn || 'Đang cập nhật'}</strong></div>
           </div>
 
-
+          <div className="flex flex-wrap items-center gap-4">
+            <span className="font-bold">Số lượng</span>
+            <div className="inline-flex items-center rounded-xl border border-surface-variant overflow-hidden">
+              <button onClick={() => setQuantity((current) => Math.max(1, current - 1))} disabled={quantity === 1} className="w-11 h-11 hover:bg-surface-container disabled:opacity-40 cursor-pointer"><span className="material-symbols-outlined">remove</span></button>
+              <strong className="w-12 text-center">{quantity}</strong>
+              <button onClick={() => setQuantity((current) => current + 1)} className="w-11 h-11 hover:bg-surface-container disabled:opacity-40 cursor-pointer"><span className="material-symbols-outlined">add</span></button>
+            </div>
+          </div>
 
           <div className="grid sm:grid-cols-2 gap-3">
-            <button onClick={() => addBookToCart(book.id, quantity)} disabled={book.quantityInStock <= 0 || addToCart.isPending} className="min-h-12 rounded-xl bg-primary-fixed text-primary font-bold hover:bg-primary hover:text-white disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"><span className="material-symbols-outlined">add_shopping_cart</span>Thêm vào giỏ hàng</button>
-            <button onClick={() => addBookToCart(book.id, quantity, true)} disabled={book.quantityInStock <= 0 || addToCart.isPending} className="min-h-12 rounded-xl bg-primary text-white font-bold hover:bg-secondary disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"><span className="material-symbols-outlined">bolt</span>Mua ngay</button>
+            <button onClick={() => addBookToCart(book.id, quantity)} disabled={addToCart.isPending} className="min-h-12 rounded-xl bg-primary-fixed text-primary font-bold hover:bg-primary hover:text-white disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"><span className="material-symbols-outlined">add_shopping_cart</span>Thêm vào giỏ hàng</button>
+            <button onClick={() => addBookToCart(book.id, quantity, true)} disabled={addToCart.isPending} className="min-h-12 rounded-xl bg-primary text-white font-bold hover:bg-secondary disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"><span className="material-symbols-outlined">bolt</span>Mua ngay</button>
           </div>
         </div>
       </section>
@@ -215,52 +242,153 @@ export const BookDetailPage: React.FC = () => {
         <p className="text-on-surface-variant leading-8 whitespace-pre-line">{book.description || 'Nội dung mô tả đang được cập nhật.'}</p>
       </section>
 
-      <section>
-        <div className="flex items-end justify-between gap-4 mb-5"><div><h2 className="text-2xl font-bold text-primary">Đánh giá & bình luận</h2><p className="text-sm text-on-surface-variant mt-1">Cảm nhận của độc giả về cuốn sách.</p></div><div className="text-right"><strong className="text-3xl text-primary">{book.avgRating.toFixed(1)}</strong><div><StarRating value={book.avgRating} /></div></div></div>
-        <form onSubmit={handleSubmitReview} className="rounded-2xl border border-surface-variant bg-surface-container-lowest p-5 md:p-6 mb-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+      <section className="space-y-6">
+        <div className="flex items-end justify-between gap-4 mb-2">
+          <div>
+            <h2 className="text-2xl font-bold text-primary">Đánh giá & Bình luận</h2>
+            <p className="text-sm text-on-surface-variant mt-1">Cảm nhận và chia sẻ của độc giả về cuốn sách này.</p>
+          </div>
+          <div className="text-right">
+            <strong className="text-3xl text-primary">{book.avgRating.toFixed(1)}</strong>
+            <div><StarRating value={book.avgRating} /></div>
+            <p className="text-xs text-on-surface-variant mt-0.5">{book.cntRating} lượt đánh giá</p>
+          </div>
+        </div>
+
+        {!isAuthenticated ? (
+          <div className="rounded-2xl border border-surface-variant bg-surface-container-low p-6 text-center">
+            <span className="material-symbols-outlined text-4xl text-primary mb-2">lock</span>
+            <p className="font-semibold text-on-surface">Bạn cần đăng nhập và mua sách này để có thể đánh giá và bình luận</p>
+            <button
+              onClick={() => navigate('/login', { state: { from: location.pathname } })}
+              className="mt-4 px-6 py-2.5 rounded-xl bg-primary text-white font-bold hover:bg-secondary cursor-pointer"
+            >
+              Đăng nhập ngay
+            </button>
+          </div>
+        ) : !hasPurchased ? (
+          <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-5 flex items-center gap-3.5 text-amber-900 dark:text-amber-200">
+            <span className="material-symbols-outlined text-3xl text-amber-500 shrink-0">verified_user</span>
             <div>
-              <h3 className="font-bold text-lg text-on-surface">Viết đánh giá của bạn</h3>
-              <p className="text-sm text-on-surface-variant">{isAuthenticated ? 'Chọn số sao và chia sẻ cảm nhận về cuốn sách.' : 'Bạn cần đăng nhập để gửi đánh giá.'}</p>
+              <p className="font-bold text-sm">Chỉ độc giả đã mua cuốn sách này mới có thể đánh giá và bình luận</p>
+              <p className="text-xs opacity-80 mt-0.5">Hãy đặt mua cuốn sách để trải nghiệm và chia sẻ cảm nhận chân thực nhất của bạn nhé!</p>
             </div>
-            <div className="flex items-center gap-1" role="radiogroup" aria-label="Chọn số sao">
-              {Array.from({ length: 5 }).map((_, index) => {
-                const value = index + 1;
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Box 1: Đánh giá sao */}
+            <div className="rounded-2xl border border-surface-variant bg-surface-container-lowest p-5 md:p-6 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="material-symbols-outlined text-amber-500 text-2xl">star</span>
+                  <h3 className="font-bold text-lg text-on-surface">Đánh giá số sao</h3>
+                </div>
+                <p className="text-sm text-on-surface-variant mb-4">
+                  Bạn có thể đánh giá nhiều lần để cập nhật cảm nhận của mình.
+                </p>
+                <div className="flex items-center gap-1.5 py-3" role="radiogroup" aria-label="Chọn số sao">
+                  {Array.from({ length: 5 }).map((_, index) => {
+                    const value = index + 1;
+                    return (
+                      <button
+                        key={value}
+                        type="button"
+                        role="radio"
+                        aria-checked={selectedRating === value}
+                        aria-label={`${value} sao`}
+                        onClick={() => setSelectedRating(value)}
+                        className="p-1 text-amber-500 hover:scale-125 transition-transform cursor-pointer"
+                      >
+                        <span data-weight={value <= selectedRating ? 'fill' : undefined} className="material-symbols-outlined text-[36px]">
+                          star
+                        </span>
+                      </button>
+                    );
+                  })}
+                  <span className="ml-3 font-bold text-lg text-amber-500">{selectedRating} / 5 sao</span>
+                </div>
+              </div>
+
+              {ratingError && <p className="text-xs font-semibold text-error mb-3">{ratingError}</p>}
+
+              <button
+                type="button"
+                onClick={handleRatingSubmit}
+                disabled={submitRatingMutation.isPending}
+                className="mt-4 w-full rounded-xl bg-amber-500 text-slate-950 font-bold py-3 hover:bg-amber-400 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer transition shadow-sm"
+              >
+                <span className="material-symbols-outlined text-[20px]">grade</span>
+                {submitRatingMutation.isPending ? 'Đang lưu đánh giá...' : 'Gửi đánh giá sao'}
+              </button>
+            </div>
+
+            {/* Box 2: Viết bình luận */}
+            <div className="rounded-2xl border border-surface-variant bg-surface-container-lowest p-5 md:p-6 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="material-symbols-outlined text-primary text-2xl">chat</span>
+                  <h3 className="font-bold text-lg text-on-surface">Viết bình luận</h3>
+                </div>
+                <p className="text-sm text-on-surface-variant mb-3">
+                  Chia sẻ nhận xét hoặc thảo luận về nội dung cuốn sách.
+                </p>
+                <textarea
+                  value={reviewContent}
+                  onChange={(event) => setReviewContent(event.target.value)}
+                  rows={3}
+                  maxLength={1000}
+                  placeholder="Viết cảm nhận của bạn về cuốn sách này..."
+                  className="w-full resize-none rounded-xl border border-surface-variant bg-surface px-4 py-2.5 text-sm text-on-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary-fixed"
+                />
+              </div>
+
+              {commentError && <p className="text-xs font-semibold text-error my-2">{commentError}</p>}
+
+              <button
+                type="button"
+                onClick={handleCommentSubmit}
+                disabled={submitCommentMutation.isPending}
+                className="mt-4 w-full rounded-xl bg-primary text-white font-bold py-3 hover:bg-secondary disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer transition shadow-sm"
+              >
+                <span className="material-symbols-outlined text-[20px]">send</span>
+                {submitCommentMutation.isPending ? 'Đang gửi bình luận...' : 'Gửi bình luận'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Danh sách bình luận & đánh giá */}
+        <div>
+          <h3 className="text-lg font-bold text-on-surface mb-4">Danh sách bình luận độc giả</h3>
+          {isLoadingComments ? (
+            <div className="h-32 rounded-2xl bg-surface-variant animate-pulse" />
+          ) : commentsData?.content.length ? (
+            <div className="grid md:grid-cols-2 gap-4">
+              {commentsData.content.map((comment) => {
+                const rating = ratingByUser.get(comment.userId);
                 return (
-                  <button
-                    key={value}
-                    type="button"
-                    role="radio"
-                    aria-checked={selectedRating === value}
-                    aria-label={`${value} sao`}
-                    onClick={() => setSelectedRating(value)}
-                    className="p-1 text-amber-500 hover:scale-110 transition-transform cursor-pointer"
-                  >
-                    <span data-weight={value <= selectedRating ? 'fill' : undefined} className="material-symbols-outlined text-[30px]">star</span>
-                  </button>
+                  <article key={comment.commentId} className="rounded-2xl border border-surface-variant bg-surface-container-lowest p-5">
+                    <div className="flex justify-between gap-3 mb-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className="w-10 h-10 shrink-0 rounded-full bg-primary text-white flex items-center justify-center font-bold">
+                          {(comment.userName || 'Đ').charAt(0).toUpperCase()}
+                        </span>
+                        <div className="min-w-0">
+                          <strong className="block truncate">{comment.userName || 'Độc giả'}</strong>
+                          <span className="text-xs text-on-surface-variant">{new Date(comment.createdAt).toLocaleDateString('vi-VN')}</span>
+                        </div>
+                      </div>
+                      {rating ? <StarRating value={rating} size="text-[16px]" /> : null}
+                    </div>
+                    <p className="text-on-surface-variant leading-7">{comment.content}</p>
+                  </article>
                 );
               })}
             </div>
-          </div>
-          <textarea
-            value={reviewContent}
-            onChange={(event) => setReviewContent(event.target.value)}
-            rows={4}
-            maxLength={1000}
-            placeholder="Cuốn sách này mang lại cho bạn điều gì?"
-            className="w-full resize-y rounded-xl border border-surface-variant bg-surface px-4 py-3 text-on-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary-fixed"
-          />
-          <div className="flex flex-wrap items-center justify-between gap-3 mt-3">
-            <div>{reviewError && <p className="text-sm font-medium text-error">{reviewError}</p>}</div>
-            <button type="submit" disabled={submitReview.isPending} className="rounded-xl bg-primary text-white font-bold px-5 py-2.5 hover:bg-secondary disabled:opacity-50 flex items-center gap-2 cursor-pointer">
-              <span className="material-symbols-outlined text-[19px]">rate_review</span>
-              {submitReview.isPending ? 'Đang gửi...' : existingUserRating ? 'Cập nhật & bình luận' : 'Gửi đánh giá'}
-            </button>
-          </div>
-        </form>
-        {isLoadingComments ? <div className="h-32 rounded-2xl bg-surface-variant animate-pulse" /> : commentsData?.content.length ? (
-          <div className="grid md:grid-cols-2 gap-4">{commentsData.content.map((comment) => { const rating = ratingByUser.get(comment.userId); return <article key={comment.commentId} className="rounded-2xl border border-surface-variant bg-surface-container-lowest p-5"><div className="flex justify-between gap-3 mb-3"><div className="flex items-center gap-3 min-w-0"><span className="w-10 h-10 shrink-0 rounded-full bg-primary text-white flex items-center justify-center font-bold">{(comment.userName || 'Đ').charAt(0).toUpperCase()}</span><div className="min-w-0"><strong className="block truncate">{comment.userName || 'Độc giả'}</strong><span className="text-xs text-on-surface-variant">{new Date(comment.createdAt).toLocaleDateString('vi-VN')}</span></div></div>{rating ? <StarRating value={rating} size="text-[16px]" /> : null}</div><p className="text-on-surface-variant leading-7">{comment.content}</p></article>; })}</div>
-        ) : <div className="rounded-2xl bg-surface-container-low p-6 text-on-surface-variant">Chưa có bình luận cho cuốn sách này.</div>}
+          ) : (
+            <div className="rounded-2xl bg-surface-container-low p-6 text-on-surface-variant">Chưa có bình luận cho cuốn sách này.</div>
+          )}
+        </div>
       </section>
 
       <section>

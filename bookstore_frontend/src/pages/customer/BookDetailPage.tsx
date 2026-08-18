@@ -217,14 +217,13 @@ export const BookDetailPage: React.FC = () => {
               </span>
               <button
                 onClick={handleIncreaseQuantity}
-                disabled={quantity >= (book.quantityInStock || 10)}
                 className="w-10 h-10 flex items-center justify-center hover:bg-surface-container-low disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
               >
                 <Plus size={16} />
               </button>
             </div>
-            <span className="text-on-surface-variant text-sm">
-              {book.quantityInStock > 0 ? `Còn hàng (${book.quantityInStock} sản phẩm)` : 'Hết hàng'}
+            <span className={`text-sm font-semibold ${book.quantityInStock > 0 ? 'text-emerald-500' : 'text-rose-400'}`}>
+              {book.quantityInStock > 0 ? `Còn ${book.quantityInStock} cuốn (Khả dụng)` : 'Hết hàng (0 cuốn khả dụng)'}
             </span>
           </div>
 
@@ -232,16 +231,14 @@ export const BookDetailPage: React.FC = () => {
           <div className="flex flex-col sm:flex-row gap-3">
             <button
               onClick={handleAddToCart}
-              disabled={book.quantityInStock === 0}
-              className="flex items-center justify-center gap-2 px-6 py-3 border-2 border-primary text-primary font-label-md rounded-lg hover:bg-primary-fixed transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+              className="flex items-center justify-center gap-2 px-6 py-3 border-2 border-primary text-primary font-label-md rounded-lg hover:bg-primary-fixed transition-colors cursor-pointer"
             >
               <ShoppingCart size={20} />
               Thêm vào giỏ hàng
             </button>
             <button
               onClick={handleBuyNow}
-              disabled={book.quantityInStock === 0}
-              className="flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white font-label-md rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+              className="flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white font-label-md rounded-lg hover:bg-primary/90 transition-colors cursor-pointer"
             >
               <Zap size={20} />
               Mua ngay

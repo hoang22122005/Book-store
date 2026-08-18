@@ -17,6 +17,7 @@ import com.bookstore.models.User;
 import com.bookstore.repository.BookRepo;
 import com.bookstore.repository.CommentRepository;
 import com.bookstore.repository.UserRepository;
+import com.bookstore.repository.BillDetailRepository;
 import com.bookstore.services.CommentService;
 
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ public class CommentServiceImpl implements CommentService {
     private final CommentRepository commentRepository;
     private final BookRepo bookRepo;
     private final UserRepository userRepository;
+    private final BillDetailRepository billDetailRepository;
 
     @Override
     public PageResponse<CommentResponse> getComments(Integer bookId, Pageable pageable) {
@@ -45,6 +47,10 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional
     public CommentResponse createComment(int userId, CommentRequest request) {
+        if (!billDetailRepository.hasUserPurchasedBook(userId, request.getBookId())) {
+            throw new com.bookstore.exception.ForbiddenException("Bạn cần mua cuốn sách này trước khi bình luận");
+        }
+
         Comment comment = new Comment();
         comment.setBook(bookRepo.findByBookIdAndIsDeletedFalse(request.getBookId())
                 .orElseThrow(() -> new NotFoundException("Khong tim thay sach")));

@@ -1,8 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { useCartDetailsQuery } from '../../features/cart';
 import { useMyVouchersQuery } from '../../features/vouchers';
 import { useCheckoutMutation } from '../../features/checkout';
+import { useUserProfile, useUpdateProfile } from '../../features/user/hooks';
 import { formatCurrency } from '../../utils';
 import type { VoucherResponse } from '../../types/api/voucher';
 
@@ -22,6 +23,8 @@ export const CheckoutPage: React.FC = () => {
 
   const { data: cartItems = [], isLoading: isCartLoading } = useCartDetailsQuery();
   const { data: vouchersPage, isLoading: isVouchersLoading } = useMyVouchersQuery();
+  const { data: user } = useUserProfile();
+  const updateProfileMutation = useUpdateProfile();
   const checkoutMutation = useCheckoutMutation();
 
   // Filter items in checkout
@@ -37,6 +40,19 @@ export const CheckoutPage: React.FC = () => {
   const [manualVoucherCode, setManualVoucherCode] = useState<string>('');
   const [showVoucherModal, setShowVoucherModal] = useState<boolean>(false);
   const [appliedVoucher, setAppliedVoucher] = useState<VoucherResponse | null>(null);
+
+  // Address modal states
+  const [showAddressModal, setShowAddressModal] = useState<boolean>(false);
+  const [addressInput, setAddressInput] = useState<string>('');
+  const [phoneInput, setPhoneInput] = useState<string>('');
+  const [addressError, setAddressError] = useState<string>('');
+
+  useEffect(() => {
+    if (user) {
+      setAddressInput(user.address || '');
+      setPhoneInput(user.phone || '');
+    }
+  }, [user]);
 
   // Subtotal calculation
   const subTotal = useMemo(() => {
@@ -109,8 +125,8 @@ export const CheckoutPage: React.FC = () => {
     setManualVoucherCode('');
   };
 
-  // Submit checkout
-  const handleSubmitCheckout = () => {
+  // Execute checkout mutation
+  const executeCheckout = () => {
     if (checkoutItems.length === 0) return;
 
     checkoutMutation.mutate(
@@ -130,6 +146,43 @@ export const CheckoutPage: React.FC = () => {
         },
       }
     );
+  };
+
+  // Submit checkout with address validation
+  const handleSubmitCheckout = () => {
+    if (checkoutItems.length === 0) return;
+
+    const currentAddress = user?.address?.trim();
+    if (!currentAddress) {
+      setAddressInput(user?.address || '');
+      setPhoneInput(user?.phone || '');
+      setAddressError('');
+      setShowAddressModal(true);
+      return;
+    }
+
+    executeCheckout();
+  };
+
+  // Save address from modal then continue checkout
+  const handleSaveAddressAndCheckout = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmedAddress = addressInput.trim();
+    if (!trimmedAddress) {
+      setAddressError('Vui lòng nhập địa chỉ nhận hàng để giao sách.');
+      return;
+    }
+    setAddressError('');
+    try {
+      await updateProfileMutation.mutateAsync({
+        address: trimmedAddress,
+        phone: phoneInput.trim() || undefined,
+      });
+      setShowAddressModal(false);
+      executeCheckout();
+    } catch (err) {
+      setAddressError((err as Error)?.message || 'Không thể cập nhật địa chỉ');
+    }
   };
 
   return (
@@ -180,7 +233,62 @@ export const CheckoutPage: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-stack-lg items-start">
           {/* Main Info */}
           <div className="lg:col-span-2 space-y-6">
-            {/* 1. Selected items section */}
+            {/* 1. Shipping Address Section */}
+            <div className="bg-surface-container-lowest border border-surface-variant rounded-2xl p-5 md:p-6 shadow-sm space-y-3">
+              <div className="flex items-center justify-between">
+                <h2 className="font-headline-sm text-headline-sm font-bold text-primary flex items-center gap-2">
+                  <span className="material-symbols-outlined text-primary">location_on</span>
+                  Địa chỉ nhận hàng
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAddressInput(user?.address || '');
+                    setPhoneInput(user?.phone || '');
+                    setAddressError('');
+                    setShowAddressModal(true);
+                  }}
+                  className="text-sm font-bold text-secondary hover:text-primary transition-colors flex items-center gap-1 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-sm">edit</span>
+                  <span>{user?.address ? 'Thay đổi' : 'Thêm địa chỉ'}</span>
+                </button>
+              </div>
+
+              {user?.address ? (
+                <div className="p-3.5 bg-surface rounded-xl border border-surface-variant text-body-md space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-on-surface">{user.name}</span>
+                    {user.phone && <span className="text-on-surface-variant text-sm font-medium">({user.phone})</span>}
+                  </div>
+                  <p className="text-on-surface-variant text-sm flex items-start gap-1.5 pt-0.5">
+                    <span className="material-symbols-outlined text-base text-primary mt-0.5 shrink-0">pin_drop</span>
+                    <span>{user.address}</span>
+                  </p>
+                </div>
+              ) : (
+                <div className="p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-xl text-body-md text-amber-800 dark:text-amber-300 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-amber-600 dark:text-amber-400">warning</span>
+                    <span className="text-sm font-medium">Bạn chưa cập nhật địa chỉ giao hàng.</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAddressInput('');
+                      setPhoneInput(user?.phone || '');
+                      setAddressError('');
+                      setShowAddressModal(true);
+                    }}
+                    className="px-3.5 py-1.5 bg-amber-600 text-white font-bold rounded-lg text-xs hover:bg-amber-700 transition-colors cursor-pointer whitespace-nowrap shadow-xs"
+                  >
+                    Nhập địa chỉ ngay
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* 2. Selected items section */}
             <div className="bg-surface-container-lowest border border-surface-variant rounded-2xl p-5 md:p-6 shadow-sm space-y-4">
               <h2 className="font-headline-sm text-headline-sm font-bold text-primary flex items-center gap-2">
                 <span className="material-symbols-outlined">shopping_bag</span>
@@ -486,6 +594,94 @@ export const CheckoutPage: React.FC = () => {
                 ))}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Address Input Modal */}
+      {showAddressModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-surface-container-lowest border border-surface-variant rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl animate-fade-in">
+            <div className="flex justify-between items-center pb-3 border-b border-surface-variant">
+              <h3 className="font-headline-sm font-bold text-primary flex items-center gap-2">
+                <span className="material-symbols-outlined">location_on</span>
+                Địa chỉ nhận hàng
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowAddressModal(false)}
+                className="text-on-surface-variant hover:text-error cursor-pointer"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            <p className="text-body-md text-on-surface-variant text-sm">
+              Vui lòng cung cấp địa chỉ nhận hàng để chúng tôi giao sách tới bạn chính xác nhất.
+            </p>
+
+            <form onSubmit={handleSaveAddressAndCheckout} className="space-y-4">
+              <div>
+                <label className="text-caption font-semibold text-on-surface-variant block mb-1">
+                  Số điện thoại liên hệ
+                </label>
+                <input
+                  type="text"
+                  value={phoneInput}
+                  onChange={(e) => setPhoneInput(e.target.value)}
+                  placeholder="Số điện thoại người nhận (vd: 0912345678)..."
+                  className="w-full px-3.5 py-2.5 bg-surface border border-surface-variant rounded-xl text-body-md focus:outline-none focus:border-primary"
+                />
+              </div>
+
+              <div>
+                <label className="text-caption font-semibold text-on-surface-variant block mb-1">
+                  Địa chỉ nhận hàng <span className="text-error">*</span>
+                </label>
+                <textarea
+                  rows={3}
+                  value={addressInput}
+                  onChange={(e) => setAddressInput(e.target.value)}
+                  placeholder="Nhập số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố..."
+                  className="w-full px-3.5 py-2.5 bg-surface border border-surface-variant rounded-xl text-body-md focus:outline-none focus:border-primary resize-none"
+                  required
+                  autoFocus
+                />
+              </div>
+
+              {addressError && (
+                <div className="p-2.5 bg-error-container text-on-error-container text-xs rounded-xl font-medium">
+                  {addressError}
+                </div>
+              )}
+
+              <div className="flex gap-3 justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAddressModal(false)}
+                  className="px-4 py-2.5 rounded-xl border border-surface-variant font-semibold text-on-surface text-sm hover:bg-surface-variant/30 cursor-pointer"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  disabled={updateProfileMutation.isPending}
+                  className="px-5 py-2.5 bg-primary text-white font-bold rounded-xl hover:bg-secondary disabled:opacity-50 transition-all text-sm flex items-center gap-2 cursor-pointer shadow-md"
+                >
+                  {updateProfileMutation.isPending ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Đang lưu...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Lưu & Tiếp tục</span>
+                      <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

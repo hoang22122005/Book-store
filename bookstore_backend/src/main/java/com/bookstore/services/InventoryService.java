@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import com.bookstore.exception.ConflictException;
 import com.bookstore.exception.NotFoundException;
 import com.bookstore.models.BillDetail;
+import com.bookstore.models.Book;
 import com.bookstore.models.CartDetail;
 import com.bookstore.repository.BookRepo;
 import com.bookstore.repository.InventoryRepository;
@@ -20,14 +21,25 @@ public class InventoryService {
     private final InventoryRepository inventoryRepository;
     private final BookRepo bookRepository;
 
+    private String getBookDisplayName(int bookId, Book book) {
+        if (book != null && book.getName() != null && !book.getName().isBlank()) {
+            return book.getName();
+        }
+        return bookRepository.findById(bookId)
+                .map(Book::getName)
+                .filter(name -> name != null && !name.isBlank())
+                .orElse("ID: " + bookId);
+    }
+
     public void ensureAvailable(int bookId, int requestedQuantity) {
         Integer available = inventoryRepository.findAvailableQuantity(bookId);
+        String bookName = getBookDisplayName(bookId, null);
         if (available == null) {
-            throw new NotFoundException("Khong tim thay ton kho cua sach " + bookId);
+            throw new NotFoundException("Không tìm thấy tồn kho của sách \"" + bookName + "\"");
         }
         if (requestedQuantity > available) {
             throw new ConflictException(
-                    "Sach " + bookId + " chi con " + available + " san pham co the mua");
+                    "Sách \"" + bookName + "\" chỉ còn " + available + " sản phẩm có thể mua");
         }
     }
 
@@ -39,8 +51,9 @@ public class InventoryService {
                             detail.getBook().getBookId(),
                             detail.getQuantity());
                     if (updated != 1) {
+                        String bookName = getBookDisplayName(detail.getBook().getBookId(), detail.getBook());
                         throw new ConflictException(
-                                "Sach " + detail.getBook().getBookId() + " khong du ton kho");
+                                "Sách \"" + bookName + "\" không đủ tồn kho");
                     }
                 });
     }
@@ -51,15 +64,18 @@ public class InventoryService {
             requireUpdated(
                     inventoryRepository.deductReservation(bookId, detail.getQuantity()),
                     bookId,
-                    "Khong the tru ton kho da giu cho sach ");
+                    detail.getBook(),
+                    "Không thể trừ tồn kho đã giữ cho sách ");
             requireUpdated(
                     bookRepository.deductStock(bookId, detail.getQuantity()),
                     bookId,
-                    "Khong the dong bo ton kho sach ");
+                    detail.getBook(),
+                    "Không thể đồng bộ tồn kho sách ");
             requireUpdated(
                     bookRepository.increaseBuyCount(bookId, detail.getQuantity()),
                     bookId,
-                    "Khong the cap nhat luot mua cho sach ");
+                    detail.getBook(),
+                    "Không thể cập nhật lượt mua cho sách ");
         });
     }
 
@@ -69,7 +85,8 @@ public class InventoryService {
                         detail.getBook().getBookId(),
                         detail.getQuantity()),
                 detail.getBook().getBookId(),
-                "Khong the giai phong ton kho cho sach "));
+                detail.getBook(),
+                "Không thể giải phóng tồn kho cho sách "));
     }
 
     public void restock(List<BillDetail> billDetails) {
@@ -78,15 +95,18 @@ public class InventoryService {
             requireUpdated(
                     inventoryRepository.restock(bookId, detail.getQuantity()),
                     bookId,
-                    "Khong the hoan kho cho sach ");
+                    detail.getBook(),
+                    "Không thể hoàn kho cho sách ");
             requireUpdated(
                     bookRepository.increaseStock(bookId, detail.getQuantity()),
                     bookId,
-                    "Khong the dong bo ton kho sach ");
+                    detail.getBook(),
+                    "Không thể đồng bộ tồn kho sách ");
             requireUpdated(
                     bookRepository.decreaseBuyCount(bookId, detail.getQuantity()),
                     bookId,
-                    "Khong the cap nhat luot mua cho sach ");
+                    detail.getBook(),
+                    "Không thể cập nhật lượt mua cho sách ");
         });
     }
 
@@ -96,9 +116,10 @@ public class InventoryService {
                 .toList();
     }
 
-    private void requireUpdated(int updated, int bookId, String message) {
+    private void requireUpdated(int updated, int bookId, Book book, String message) {
         if (updated != 1) {
-            throw new ConflictException(message + bookId);
+            String bookName = getBookDisplayName(bookId, book);
+            throw new ConflictException(message + "\"" + bookName + "\"");
         }
     }
 }

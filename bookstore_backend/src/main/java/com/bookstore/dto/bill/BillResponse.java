@@ -33,6 +33,8 @@ public class BillResponse {
     BigDecimal totalAmount;
     String status;
     String inventoryStatus;
+    String paymentMethod;
+    String paymentStatus;
     LocalDateTime createdAt;
     List<BillDetailResponse> details;
 

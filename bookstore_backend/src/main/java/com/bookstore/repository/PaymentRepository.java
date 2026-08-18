@@ -18,6 +18,8 @@ import jakarta.persistence.LockModeType;
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
     Optional<Payment> findByTxnRef(String txnRef);
 
+    List<Payment> findByBill_BillIdOrderByPaymentIdDesc(int billId);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select p from Payment p where p.txnRef = :txnRef")
     Optional<Payment> findByTxnRefForUpdate(@Param("txnRef") String txnRef);

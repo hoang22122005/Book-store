@@ -17,6 +17,7 @@ import com.bookstore.models.User;
 import com.bookstore.repository.BookRepo;
 import com.bookstore.repository.RatingRepository;
 import com.bookstore.repository.UserRepository;
+import com.bookstore.repository.BillDetailRepository;
 import com.bookstore.services.RatingService;
 
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ public class RatingServiceImpl implements RatingService {
     private final RatingRepository ratingRepository;
     private final BookRepo bookRepo;
     private final UserRepository userRepository;
+    private final BillDetailRepository billDetailRepository;
 
     @Override
     public PageResponse<RatingResponse> getRatings(Integer bookId, Pageable pageable) {
@@ -45,8 +47,8 @@ public class RatingServiceImpl implements RatingService {
     @Override
     @Transactional
     public RatingResponse createRating(int userId, RatingRequest request) {
-        if (ratingRepository.existsByBookBookIdAndUserUserId(request.getBookId(), userId)) {
-            throw new ConflictException("User already rated this book");
+        if (!billDetailRepository.hasUserPurchasedBook(userId, request.getBookId())) {
+            throw new ForbiddenException("Bạn cần mua cuốn sách này trước khi đánh giá");
         }
 
         Rating rating = new Rating();
@@ -64,12 +66,6 @@ public class RatingServiceImpl implements RatingService {
     public RatingResponse updateRating(int ratingId, int userId, RatingRequest request) {
         Rating rating = findRating(ratingId);
         ensureRatingOwner(rating, userId);
-
-        ratingRepository.findByBookBookIdAndUserUserId(request.getBookId(), userId)
-                .filter(existingRating -> existingRating.getRatingId() != ratingId)
-                .ifPresent(existingRating -> {
-                    throw new ConflictException("User already rated this book");
-                });
 
         int oldBookId = rating.getBook().getBookId();
         rating.setBook(findBook(request.getBookId()));

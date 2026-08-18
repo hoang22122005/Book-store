@@ -8,6 +8,7 @@ import {
   ChevronRight,
   ChevronUp,
   ClipboardCheck,
+  CreditCard,
   PackageCheck,
   PackageOpen,
   RefreshCw,
@@ -16,7 +17,7 @@ import {
   Truck,
   X,
 } from 'lucide-react';
-import { useAdvanceDirectOrder, useDirectStaffOrders } from '../../features/staffOrders';
+import { useAdvanceDirectOrder, useAllStaffOrders } from '../../features/staffOrders';
 import type { BillResponse } from '../../types/api/bill';
 import { formatCurrency, getErrorMessage } from '../../utils';
 
@@ -63,7 +64,7 @@ export const StaffOrderManagementPage: React.FC = () => {
   const [confirmingBillId, setConfirmingBillId] = useState<number | null>(null);
   const [successMessage, setSuccessMessage] = useState('');
 
-  const ordersQuery = useDirectStaffOrders(page, PAGE_SIZE);
+  const ordersQuery = useAllStaffOrders(page, PAGE_SIZE);
   const advanceMutation = useAdvanceDirectOrder();
 
   const orders = useMemo(() => {
@@ -106,14 +107,14 @@ export const StaffOrderManagementPage: React.FC = () => {
             <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-amber-400/20 bg-amber-400/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-amber-300">
               <ShieldCheck size={13} /> Khu vực STAFF
             </div>
-            <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">Duyệt đơn thanh toán trực tiếp</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">Quản lý & Duyệt đơn hàng</h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-400">
-              Kiểm tra đơn COD/DIRECT đang chờ xử lý. Khi duyệt, hệ thống chuyển đơn sang đã xác nhận và trừ phần tồn kho đã giữ.
+              Kiểm tra và xử lý đơn hàng COD, VNPAY trong hệ thống. Quản lý trạng thái từ Chờ duyệt, Đang giao đến Hoàn tất.
             </p>
           </div>
           <div className="grid grid-cols-2 gap-3 sm:min-w-[310px]">
             <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4">
-              <p className="text-xs text-slate-500">Tổng đơn trực tiếp</p>
+              <p className="text-xs text-slate-500">Tổng đơn hàng</p>
               <p className="mt-1 text-2xl font-bold text-white">{totalElements.toLocaleString('vi-VN')}</p>
             </div>
             <div className="rounded-2xl border border-amber-400/20 bg-amber-400/10 p-4">
@@ -232,9 +233,15 @@ export const StaffOrderManagementPage: React.FC = () => {
                           <p className="mt-1 text-xs text-slate-500">User #{order.userId}</p>
                         </td>
                         <td className="px-5 py-4">
-                          <span className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-slate-300">
-                            <Banknote size={14} className="text-emerald-400" /> DIRECT / COD
-                          </span>
+                          {order.paymentMethod === 'VNPAY' ? (
+                            <span className="inline-flex items-center gap-1.5 rounded-lg border border-cyan-700/50 bg-cyan-950/40 px-2.5 py-1.5 text-xs font-semibold text-cyan-300">
+                              <CreditCard size={14} className="text-cyan-400" /> VNPAY
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-slate-300">
+                              <Banknote size={14} className="text-emerald-400" /> DIRECT / COD
+                            </span>
+                          )}
                         </td>
                         <td className="px-5 py-4">
                           <p className="font-bold text-white">{formatCurrency(Number(order.totalAmount))}</p>

@@ -27,7 +27,9 @@ import com.bookstore.dto.book.BookUpdateRequest;
 import com.bookstore.dto.product.BookResponse;
 import com.bookstore.dto.product.GenreResponse;
 import com.bookstore.models.Book;
-import com.bookstore.services.impl.BookServiceImpl;
+import com.bookstore.repository.BillDetailRepository;
+import com.bookstore.security.CurrentUser;
+import com.bookstore.services.BookService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +38,9 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api")
 @RequiredArgsConstructor
 public class BookController {
-    private final BookServiceImpl bookService;
+    private final BookService bookService;
+    private final BillDetailRepository billDetailRepository;
+    private final CurrentUser currentUser;
 
     @GetMapping("/public/books")
     public ResponseEntity<ApiResponse<PageResponse<BookResponse>>> getBooks(
@@ -69,6 +73,13 @@ public class BookController {
     public ResponseEntity<ApiResponse<List<String>>> getAuthors() {
         List<String> authors = bookService.getDistinctAuthors();
         return ResponseEntity.ok(ApiResponse.success("Authors fetched successfully", authors));
+    }
+
+    @GetMapping("/books/{bookId}/purchased")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<Boolean>> hasPurchasedBook(@PathVariable int bookId) {
+        boolean purchased = billDetailRepository.hasUserPurchasedBook(currentUser.getUserId(), bookId);
+        return ResponseEntity.ok(ApiResponse.success("Purchase status fetched successfully", purchased));
     }
 
     @PostMapping("/admin/books")

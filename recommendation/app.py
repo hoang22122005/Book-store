@@ -173,9 +173,30 @@ def get_content_score(user_idx: int, book_idx: int) -> float:
     sum_sims = np.sum(sims[pos_idx])
     return float(weighted_sum / sum_sims)
 
-def predict_score(user_idx: int, book_idx: int) -> float:
+def get_user_genre_preferences(user_id: int):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT genre_id FROM user_genre_preference WHERE user_id = %s", (user_id,))
+        rows = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return set(r[0] for r in rows)
+    except Exception as e:
+        print(f"Error fetching user preferences: {e}")
+        return set()
+
+def predict_score(user_idx: int, book_idx: int, user_genre_prefs: set = None) -> float:
     cf_val = get_cf_score(user_idx, book_idx)
     content_val = get_content_score(user_idx, book_idx)
+    
+    if user_genre_prefs and len(user_genre_prefs) > 0 and model_data is not None:
+        bid = model_data["book_ids"][book_idx]
+        book_genre_ids = model_data.get("book_genre_ids_dict", {}).get(bid, set())
+        overlap = len(book_genre_ids.intersection(user_genre_prefs))
+        genre_bonus = (overlap / max(1, len(user_genre_prefs))) * 5.0
+        return 0.55 * cf_val + 0.30 * content_val + 0.15 * genre_bonus
+        
     return 0.7 * cf_val + 0.3 * content_val
 
 @app.get("/recommend")
@@ -186,12 +207,51 @@ def recommend(user_id: int = Query(..., description="ID of the user to get recom
         
     book_ids = model_data["book_ids"]
     user_idx = get_user_idx(user_id)
+    user_genre_prefs = get_user_genre_preferences(user_id)
     
     # Cold Start / Fallback if user is new or has less than 10 ratings
     R = model_data["R"]
     num_ratings = np.sum(R[user_idx] > 0) if user_idx is not None else 0
     if user_idx is None or num_ratings < 10:
-        print(f"Cold start/fallback triggered for user_id={user_id} (ratings={num_ratings} < 10)")
+        print(f"Cold start/few ratings (< 10) triggered for user_id={user_id} (ratings={num_ratings}, pref_genres={user_genre_prefs})")
+        if user_genre_prefs and len(user_genre_prefs) > 0:
+            genre_map = model_data.get("book_genre_ids_dict", {})
+            pop_books = model_data.get("popular_books", [])
+            pop_rank = {bid: i for i, bid in enumerate(pop_books)}
+            total_books = max(1, len(book_ids))
+            
+            rated_indices = set(np.where(R[user_idx] > 0)[0]) if user_idx is not None else set()
+            
+            cold_scores = []
+            for idx, bid in enumerate(book_ids):
+                if idx in rated_indices:
+                    continue
+                bg = genre_map.get(bid, set())
+                overlap = len(bg.intersection(user_genre_prefs))
+                
+                # 1. Trọng số thể loại yêu thích: Chiếm 50% (0.50)
+                genre_score = (overlap / max(1, len(user_genre_prefs))) * 0.50
+                
+                # 2. Thành phần bổ trợ: Chiếm 50% (0.50)
+                rank = pop_rank.get(bid, total_books)
+                pop_score = (total_books - rank) / total_books
+                
+                if user_idx is not None and num_ratings > 0:
+                    # Nếu user có ít đánh giá (1-9 ratings): kết hợp độ tương đồng nội dung và tương tác
+                    content_score = get_content_score(user_idx, idx) / 5.0
+                    cf_score = get_cf_score(user_idx, idx) / 5.0
+                    other_score = 0.30 * content_score + 0.20 * cf_score
+                else:
+                    other_score = 0.50 * pop_score
+                    
+                total_score = genre_score + other_score
+                cold_scores.append((bid, total_score))
+                
+            cold_scores.sort(key=lambda x: x[1], reverse=True)
+            top_scores = cold_scores[:limit]
+            rec_ids = [bid for bid, _ in top_scores]
+            return get_detailed_books(rec_ids)
+            
         rec_ids = model_data["popular_books"][:limit]
         return get_detailed_books(rec_ids)
         
@@ -202,7 +262,7 @@ def recommend(user_id: int = Query(..., description="ID of the user to get recom
     for idx, bid in enumerate(book_ids):
         if idx in rated_indices:
             continue
-        score = predict_score(user_idx, idx)
+        score = predict_score(user_idx, idx, user_genre_prefs)
         scores.append((bid, score))
         
     # Sort by predicted score descending

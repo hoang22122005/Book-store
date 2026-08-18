@@ -1,11 +1,15 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useLocation, useSearchParams, Link } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { formatCurrency } from '../../utils';
 import type { CheckoutResponse } from '../../types/api/bill';
+import { apiClient } from '../../lib/apiClient';
+import { CART_QUERY_KEY } from '../../features/cart/hooks/useCartQueries';
 
 export const OrderSuccessPage: React.FC = () => {
   const location = useLocation();
   const [searchParams] = useSearchParams();
+  const queryClient = useQueryClient();
 
   // Check if returned from VNPay redirect
   const vnpResponseCode = searchParams.get('vnp_ResponseCode');
@@ -16,6 +20,21 @@ export const OrderSuccessPage: React.FC = () => {
 
   const isVnPayReturn = Boolean(vnpResponseCode);
   const isVnPaySuccess = vnpResponseCode === '00';
+
+  useEffect(() => {
+    if (isVnPayReturn) {
+      const params = Object.fromEntries(searchParams.entries());
+      apiClient.get('/api/payments/vnpay/return', { params })
+        .then(() => {
+          queryClient.invalidateQueries({ queryKey: CART_QUERY_KEY });
+          queryClient.invalidateQueries({ queryKey: ['my-orders'] });
+          queryClient.invalidateQueries({ queryKey: ['staff-orders'] });
+        })
+        .catch((err) => {
+          console.error('Lỗi xác thực thanh toán VNPAY:', err);
+        });
+    }
+  }, [isVnPayReturn, searchParams, queryClient]);
 
   const checkoutData = (location.state as { checkoutData?: CheckoutResponse })?.checkoutData;
   const bill = checkoutData?.bill;

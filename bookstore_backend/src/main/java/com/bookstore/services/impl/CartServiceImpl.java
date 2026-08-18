@@ -58,10 +58,12 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
+    @Transactional
     public List<CartDetail> getCartDetails(int cartId) {
-        return cartDetailRepo.findAllCartDetails(cartId).stream()
-                .filter(detail -> !detail.getBook().isDeleted())
-                .toList();
+        cartDetailRepo.purgeDeletedBooksByCartId(cartId);
+        List<CartDetail> details = cartDetailRepo.findAllCartDetails(cartId);
+        recalculateCartTotal(cartId);
+        return details;
     }
 
     @Override
@@ -85,8 +87,6 @@ public class CartServiceImpl implements CartService {
             createCart(userId);
 
         CartDetail currentDetail = cartDetailRepo.findById(cartDetailId).orElse(null);
-        int requestedQuantity = currentDetail == null ? 1 : currentDetail.getQuantity() + 1;
-        inventoryService.ensureAvailable(cartDetailId.getBookId(), requestedQuantity);
 
         if (currentDetail == null)
             cartDetailRepo.addCartDetail(cartDetailId.getCartId(), cartDetailId.getBookId(), 1, LocalDateTime.now());
@@ -104,9 +104,6 @@ public class CartServiceImpl implements CartService {
 
         CartDetail cartDetail = cartDetailRepo.findById(cartDetailId)
                 .orElseThrow(() -> new NotFoundException("Khong tim thay san pham trong gio hang"));
-        inventoryService.ensureAvailable(
-                cartDetailId.getBookId(),
-                cartDetail.getQuantity() + 1);
 
         cartDetailRepo.increaseQuatityCartDetail(cartDetailId.getCartId(), cartDetailId.getBookId());
 
@@ -129,6 +126,16 @@ public class CartServiceImpl implements CartService {
         cartDetailRepo.decreaseQuatityCartDetail(cartDetailId.getCartId(), cartDetailId.getBookId());
 
         recalculateCartTotal(cartDetailId.getCartId());
+    }
+
+    @Override
+    @Transactional
+    public void removeBookFromAllCarts(int bookId) {
+        List<Integer> affectedCartIds = cartDetailRepo.findCartIdsByBookId(bookId);
+        cartDetailRepo.deleteByBookId(bookId);
+        for (Integer cartId : affectedCartIds) {
+            cartRepo.findById(cartId).ifPresent(this::recalculateCartTotal);
+        }
     }
 
     private void recalculateCartTotal(int cartId) {

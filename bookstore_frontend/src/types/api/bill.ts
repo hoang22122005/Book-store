@@ -24,6 +24,8 @@ export interface BillResponse {
   totalAmount: Decimal
   status: string | null
   inventoryStatus: string | null
+  paymentMethod?: string | null
+  paymentStatus?: string | null
   createdAt: DateTime
   details: BillDetailResponse[]
 }

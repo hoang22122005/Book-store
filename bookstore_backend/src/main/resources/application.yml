@@ -64,11 +64,11 @@ vnpay:
   hash-secret: ${VNP_HASH_SECRET:${VNPAY_HASH_SECRET:}}
   payment-url: ${VNP_URL:${VNPAY_PAYMENT_URL:https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}}
   return-url: ${VNP_RETURN_URL:${VNPAY_RETURN_URL:https://frontend.sachhay.click/order-success}}
-  expire-minutes: ${VNPAY_EXPIRE_MINUTES:15}
+  expire-minutes: ${VNPAY_EXPIRE_MINUTES:10}
 
 app:
   frontend:
-    url: ${FRONTEND_URL:http://localhost:5173}
+    url: ${FRONTEND_URL:https://frontend.sachhay.click}
   refresh-token:
     expiration-days: ${REFRESH_TOKEN_EXPIRATION_DAYS:7}
   cors:

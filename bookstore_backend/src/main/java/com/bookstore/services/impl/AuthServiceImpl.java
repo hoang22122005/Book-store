@@ -134,8 +134,7 @@ public class AuthServiceImpl implements AuthService {
         Optional<VerificationToken> vtOpt = verificationTokenRepository.findByToken(token);
         
         if (vtOpt.isEmpty()) {
-          
-            return;
+            throw new BadRequestException("Token xác minh không hợp lệ hoặc tài khoản đã được kích hoạt");
         }
 
         VerificationToken vt = vtOpt.get();

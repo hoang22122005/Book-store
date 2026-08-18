@@ -56,12 +56,21 @@ public class BookResponse {
             List<String> genres,
             ActiveBookDiscount discount,
             BigDecimal salePrice) {
+        return toBookResponse(book, genres, discount, salePrice, book.getQuantityInStock());
+    }
+
+    public static BookResponse toBookResponse(
+            Book book,
+            List<String> genres,
+            ActiveBookDiscount discount,
+            BigDecimal salePrice,
+            int availableQuantity) {
         return BookResponse.builder()
                 .bookId(book.getBookId())
                 .name(book.getName())
                 .author(book.getAuthor())
                 .description(book.getDescription())
-                .quantityInStock(book.getQuantityInStock())
+                .quantityInStock(availableQuantity)
                 .publisher(book.getPublisher())
                 .publishYear(book.getPublishYear())
                 .price(book.getPrice())

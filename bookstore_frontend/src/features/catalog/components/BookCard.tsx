@@ -41,7 +41,6 @@ export const BookCard: React.FC<BookCardProps> = ({
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (isOut) return;
     if (onAddToCart) {
       onAddToCart(id, e);
     }
@@ -96,7 +95,7 @@ export const BookCard: React.FC<BookCardProps> = ({
 
           {/* Out of Stock Overlay Badge */}
           {isOut && (
-            <div className="absolute inset-0 bg-black/45 backdrop-blur-[1px] z-20 flex items-center justify-center">
+            <div className="absolute inset-0 bg-black/45 backdrop-blur-[1px] z-20 flex items-center justify-center pointer-events-none">
               <span className="px-3 py-1 bg-error text-white font-bold text-caption uppercase tracking-wider rounded-md shadow-md border border-white/20 flex items-center gap-1">
                 <span className="material-symbols-outlined text-[16px]">block</span>
                 Hết hàng
@@ -130,17 +129,12 @@ export const BookCard: React.FC<BookCardProps> = ({
 
             <button
               onClick={handleAddToCart}
-              disabled={isOut}
-              aria-label={isOut ? 'Sách đã hết hàng' : 'Thêm vào giỏ hàng'}
-              className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors cursor-pointer ${
-                isOut
-                  ? 'bg-surface-variant text-outline opacity-50 cursor-not-allowed'
-                  : 'bg-primary-fixed text-primary hover:bg-primary hover:text-white'
-              }`}
-              title={isOut ? 'Sách đã hết hàng' : 'Thêm vào giỏ hàng'}
+              aria-label="Thêm vào giỏ hàng"
+              className="w-8 h-8 rounded-full flex items-center justify-center transition-colors cursor-pointer bg-primary-fixed text-primary hover:bg-primary hover:text-white"
+              title="Thêm vào giỏ hàng"
             >
               <span className="material-symbols-outlined text-[18px]">
-                {isOut ? 'remove_shopping_cart' : 'add_shopping_cart'}
+                add_shopping_cart
               </span>
             </button>
           </div>

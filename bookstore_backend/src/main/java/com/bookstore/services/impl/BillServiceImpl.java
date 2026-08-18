@@ -548,8 +548,15 @@ public class BillServiceImpl implements BillService {
     }
 
     private BillResponse toBillResponse(Bill bill) {
-        return BillResponse.from(
+        BillResponse response = BillResponse.from(
                 bill,
                 billDetailRepository.findByBillBillId(bill.getBillId()));
+        List<Payment> payments = paymentRepository.findByBill_BillIdOrderByPaymentIdDesc(bill.getBillId());
+        if (!payments.isEmpty()) {
+            Payment latestPayment = payments.get(0);
+            response.setPaymentMethod(latestPayment.getPaymentMethod() != null ? latestPayment.getPaymentMethod().name() : null);
+            response.setPaymentStatus(latestPayment.getStatus() != null ? latestPayment.getStatus().name() : null);
+        }
+        return response;
     }
 }

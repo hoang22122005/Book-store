@@ -21,4 +21,7 @@ export const commentService = {
 
   updateRating: (ratingId: number, request: RatingRequest) =>
     apiClient.put<ApiResponse<RatingResponse>>(`/api/ratings/${ratingId}`, request),
+
+  checkBookPurchased: (bookId: number) =>
+    apiClient.get<ApiResponse<boolean>>(`/api/books/${bookId}/purchased`),
 };

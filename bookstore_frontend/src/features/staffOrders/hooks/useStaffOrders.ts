@@ -5,6 +5,9 @@ import { staffOrderService } from '../services/staffOrderService';
 
 export const staffOrderQueryKeys = {
   all: ['staff-orders'] as const,
+  lists: () => [...staffOrderQueryKeys.all, 'list'] as const,
+  list: (page: number, size: number) =>
+    [...staffOrderQueryKeys.lists(), { page, size }] as const,
   directLists: () => [...staffOrderQueryKeys.all, 'direct'] as const,
   directList: (page: number, size: number) =>
     [...staffOrderQueryKeys.directLists(), { page, size }] as const,
@@ -19,6 +22,16 @@ const requireData = <T>(
   }
   return response.data.data;
 };
+
+export const useAllStaffOrders = (page: number, size = 10) =>
+  useQuery<PageResponse<BillResponse>, Error>({
+    queryKey: staffOrderQueryKeys.list(page, size),
+    queryFn: async () => {
+      const response = await staffOrderService.getAllOrders(page, size);
+      return requireData(response, 'Không thể tải danh sách đơn hàng');
+    },
+    staleTime: 30_000,
+  });
 
 export const useDirectStaffOrders = (page: number, size = 10) =>
   useQuery<PageResponse<BillResponse>, Error>({
@@ -44,7 +57,7 @@ export const useAdvanceDirectOrder = () => {
       return requireData(response, 'Không thể cập nhật trạng thái đơn hàng');
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: staffOrderQueryKeys.directLists() });
+      queryClient.invalidateQueries({ queryKey: staffOrderQueryKeys.all });
     },
   });
 };
